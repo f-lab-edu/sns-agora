@@ -10,10 +10,7 @@ import java.sql.Date;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
-
-    private int rowNum;
-
+public class UserJoin {
     private String userId;
 
     private String password;
