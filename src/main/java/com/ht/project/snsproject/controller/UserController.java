@@ -5,10 +5,7 @@ import com.ht.project.snsproject.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
@@ -18,8 +15,33 @@ public class UserController {
     UserService userService;
 
     @PostMapping
-    public ResponseEntity<String> join(@RequestBody UserJoin userJoin){
+    public ResponseEntity<Result> join(@RequestBody UserJoin userJoin){
         userService.join(userJoin);
-        return new ResponseEntity<>("success", HttpStatus.CREATED);
+        return new ResponseEntity<>(Result.SUCCESS, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public  ResponseEntity<Result> userIdCheck(@RequestParam String userId){
+        if(userService.userIdCheck(userId)==0){
+            return new ResponseEntity<>(Result.SUCCESS,HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(Result.CONFLICT,HttpStatus.CONFLICT);
+        }
+    }
+}
+
+enum Result {
+    SUCCESS("SUCCESS"),
+    CONFLICT("CONFLICT");
+
+    private final String text;
+
+    Result(final String text){
+        this.text = text;
+    }
+
+    @Override
+    public String toString() {
+        return text;
     }
 }

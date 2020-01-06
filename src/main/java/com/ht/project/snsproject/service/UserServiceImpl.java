@@ -16,4 +16,9 @@ public class UserServiceImpl implements UserService{
     public void join(UserJoin userJoin) {
         userMapper.join(userJoin);
     }
+
+    @Override
+    public int userIdCheck(String userId) {
+        return userMapper.userIdCheck(userId);
+    }
 }

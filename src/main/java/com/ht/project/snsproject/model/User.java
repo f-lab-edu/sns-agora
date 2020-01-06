@@ -1,18 +1,13 @@
 package com.ht.project.snsproject.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import lombok.Value;
 import java.sql.Date;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class User {
+@Value
+public final class User {
 
-    private int rowNum;
+    private int id;
 
     private String userId;
 
