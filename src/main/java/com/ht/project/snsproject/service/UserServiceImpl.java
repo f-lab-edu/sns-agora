@@ -2,6 +2,7 @@ package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.mapper.UserMapper;
 import com.ht.project.snsproject.model.UserJoin;
+import com.ht.project.snsproject.model.UserProfile;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -13,12 +14,18 @@ public class UserServiceImpl implements UserService{
     UserMapper userMapper;
 
     @Override
-    public void join(UserJoin userJoin) {
-        userMapper.join(userJoin);
+    public void joinUser(UserJoin userJoin) {
+        userMapper.joinUser(userJoin);
     }
 
     @Override
-    public int userIdCheck(String userId) {
-        return userMapper.userIdCheck(userId);
+    public boolean checkDuplicateUserId(String userId) {
+        return userMapper.checkDuplicateUserId(userId);
     }
+
+    @Override
+    public void updateUserProfile(UserProfile userProfile) {
+        userMapper.updateUserProfile(userProfile);
+    }
+
 }

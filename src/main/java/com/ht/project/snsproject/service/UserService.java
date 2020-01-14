@@ -1,10 +1,14 @@
 package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.model.UserJoin;
+import com.ht.project.snsproject.model.UserProfile;
 
 public interface UserService {
 
-    void join(UserJoin userJoin);
+    void joinUser(UserJoin userJoin);
 
-    int userIdCheck(String userId);
+    boolean checkDuplicateUserId(String userId);
+
+    void updateUserProfile(UserProfile userProfile);
+
 }
