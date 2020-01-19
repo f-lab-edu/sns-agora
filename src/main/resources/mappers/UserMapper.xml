@@ -19,4 +19,11 @@
         birth = #{birth}
         where id = #{id}
     </update>
+
+    <select id="login" parameterType="com.ht.project.snsproject.model.UserLogin" resultType="com.ht.project.snsproject.model.User">
+        SELECT id, userId, name, nickname, email, birth
+        FROM users
+        WHERE userId = #{userId} AND password = #{password}
+    </select>
+
 </mapper>

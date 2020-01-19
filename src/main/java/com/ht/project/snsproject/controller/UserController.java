@@ -1,11 +1,16 @@
 package com.ht.project.snsproject.controller;
 
+import com.ht.project.snsproject.model.User;
 import com.ht.project.snsproject.model.UserJoin;
+import com.ht.project.snsproject.model.UserLogin;
 import com.ht.project.snsproject.model.UserProfile;
 import com.ht.project.snsproject.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/users")
@@ -35,4 +40,14 @@ public class UserController {
         return HttpStatus.OK;
     }
 
+
+    @PostMapping("/login")
+    public HttpStatus login(@RequestBody UserLogin userLogin, HttpSession httpSession) {
+
+        if(userService.login(userLogin)==null){
+            return HttpStatus.BAD_REQUEST;
+        }
+        httpSession.setAttribute("userInfo", userService.login(userLogin));
+        return HttpStatus.OK;
+    }
 }

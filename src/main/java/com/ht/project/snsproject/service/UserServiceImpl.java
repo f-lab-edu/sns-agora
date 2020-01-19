@@ -1,11 +1,14 @@
 package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.mapper.UserMapper;
+import com.ht.project.snsproject.model.User;
 import com.ht.project.snsproject.model.UserJoin;
+import com.ht.project.snsproject.model.UserLogin;
 import com.ht.project.snsproject.model.UserProfile;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -27,5 +30,11 @@ public class UserServiceImpl implements UserService{
     public void updateUserProfile(UserProfile userProfile) {
         userMapper.updateUserProfile(userProfile);
     }
+
+    @Override
+    public User login(UserLogin userLogin) {
+        return userMapper.login(userLogin);
+    }
+
 
 }
