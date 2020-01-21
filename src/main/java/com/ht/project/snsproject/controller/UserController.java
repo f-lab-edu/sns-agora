@@ -1,5 +1,6 @@
 package com.ht.project.snsproject.controller;
 
+import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.model.User;
 import com.ht.project.snsproject.model.UserJoin;
 import com.ht.project.snsproject.model.UserLogin;
@@ -34,6 +35,7 @@ public class UserController {
         }
     }
 
+    @LoginCheck
     @PutMapping("/{id}")
     public HttpStatus updateUserProfile(@RequestBody UserProfile userProfile){
         userService.updateUserProfile(userProfile);
@@ -42,12 +44,13 @@ public class UserController {
 
 
     @PostMapping("/login")
-    public HttpStatus login(@RequestBody UserLogin userLogin, HttpSession httpSession) {
+    public HttpStatus getUser(@RequestBody UserLogin userLogin, HttpSession httpSession) {
+        User userInfo = userService.getUser(userLogin);
 
-        if(userService.login(userLogin)==null){
+        if(userInfo==null){
             return HttpStatus.BAD_REQUEST;
         }
-        httpSession.setAttribute("userInfo", userService.login(userLogin));
+        httpSession.setAttribute("userInfo", userInfo);
         return HttpStatus.OK;
     }
 }

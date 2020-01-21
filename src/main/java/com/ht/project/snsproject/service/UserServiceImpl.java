@@ -8,7 +8,6 @@ import com.ht.project.snsproject.model.UserProfile;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpSession;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -32,8 +31,8 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public User login(UserLogin userLogin) {
-        return userMapper.login(userLogin);
+    public User getUser(UserLogin userLogin) {
+        return userMapper.getUser(userLogin);
     }
 
 

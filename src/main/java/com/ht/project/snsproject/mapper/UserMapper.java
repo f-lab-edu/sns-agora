@@ -15,6 +15,6 @@ public interface UserMapper {
 
     void updateUserProfile(UserProfile userProfile);
 
-    User login(UserLogin userLogin);
+    User getUser(UserLogin userLogin);
 
 }
