@@ -30,6 +30,7 @@ public class UserServiceImpl implements UserService{
         userMapper.updateUserProfile(userProfile);
     }
 
+    // jetbrain notnull annotation
     @Override
     public User getUser(UserLogin userLogin) {
         return userMapper.getUser(userLogin);

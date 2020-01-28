@@ -44,7 +44,7 @@ public class UserController {
 
 
     @PostMapping("/login")
-    public HttpStatus getUser(@RequestBody UserLogin userLogin, HttpSession httpSession) {
+    public HttpStatus login(@RequestBody UserLogin userLogin, HttpSession httpSession) {
         User userInfo = userService.getUser(userLogin);
 
         if(userInfo==null){
