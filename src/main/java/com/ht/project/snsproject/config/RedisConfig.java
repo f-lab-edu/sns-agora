@@ -31,7 +31,6 @@ public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
     private int port;
 
     @Bean
-
     public RedisConnectionFactory redisConnectionFactory() {
         // 서버 환경 설정
         RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(host, port);
@@ -42,7 +41,6 @@ public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
     }
 
     @Bean
-
     public RedisTemplate<String, User> redisTemplate() {
         RedisTemplate<String, User> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory());

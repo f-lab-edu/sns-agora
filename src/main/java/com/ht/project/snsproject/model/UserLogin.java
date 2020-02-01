@@ -2,10 +2,14 @@ package com.ht.project.snsproject.model;
 
 import lombok.Value;
 
+import javax.validation.constraints.NotBlank;
+
 @Value
 public class UserLogin {
 
-    String userId;
+    @NotBlank(message = "아이디를 입력하세요.")
+    private String userId;
 
-    String password;
+    @NotBlank(message = "비밀번호를 입력하세요.")
+    private String password;
 }

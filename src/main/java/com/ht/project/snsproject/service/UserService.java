@@ -1,10 +1,9 @@
 package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
-import com.ht.project.snsproject.model.User;
-import com.ht.project.snsproject.model.UserJoin;
-import com.ht.project.snsproject.model.UserLogin;
-import com.ht.project.snsproject.model.UserProfile;
+import com.ht.project.snsproject.model.*;
+
+import javax.servlet.http.HttpSession;
 
 public interface UserService {
 
@@ -14,5 +13,11 @@ public interface UserService {
 
     void updateUserProfile(UserProfile userProfile);
 
-    User getUser(UserLogin userLogin);
+    boolean getUser(UserLogin userLogin, HttpSession httpSession);
+
+    boolean verifyPassword(String userId, String password);
+
+    void deleteUser(String userId);
+
+    void updateUserPassword(String userId, UserPassword userPassword);
 }

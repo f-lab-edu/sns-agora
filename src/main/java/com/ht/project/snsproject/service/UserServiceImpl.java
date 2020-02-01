@@ -1,13 +1,14 @@
 package com.ht.project.snsproject.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.ht.project.snsproject.mapper.UserMapper;
-import com.ht.project.snsproject.model.User;
-import com.ht.project.snsproject.model.UserJoin;
-import com.ht.project.snsproject.model.UserLogin;
-import com.ht.project.snsproject.model.UserProfile;
+import com.ht.project.snsproject.model.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -32,9 +33,29 @@ public class UserServiceImpl implements UserService{
 
     // jetbrain notnull annotation
     @Override
-    public User getUser(UserLogin userLogin) {
-        return userMapper.getUser(userLogin);
+    public boolean getUser(UserLogin userLogin, HttpSession httpSession) {
+        User userInfo = userMapper.getUser(userLogin);
+
+        if(userInfo==null){
+            return false;
+        }
+        httpSession.setAttribute("userInfo", userInfo);
+        return true;
     }
 
+    @Override
+    public boolean verifyPassword(String userId, String password) {
+        return userMapper.verifyPassword(userId, password);
+    }
+
+    @Override
+    public void deleteUser(String userId) {
+        userMapper.deleteUser(userId);
+    }
+
+    @Override
+    public void updateUserPassword(String userId, UserPassword userPassword) {
+        userMapper.updateUserPassword(userId, userPassword.getCurrentPassword(), userPassword.getNewPassword());
+    }
 
 }

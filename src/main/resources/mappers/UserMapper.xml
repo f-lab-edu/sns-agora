@@ -17,7 +17,7 @@
         SET nickname = #{nickname},
         email = #{email},
         birth = #{birth}
-        where id = #{id}
+        WHERE id = #{id}
     </update>
 
     <select id="getUser" parameterType="com.ht.project.snsproject.model.UserLogin" resultType="com.ht.project.snsproject.model.User">
@@ -26,4 +26,19 @@
         WHERE userId = #{userId} AND password = #{password}
     </select>
 
+    <select id="verifyPassword" parameterType="String" resultType="boolean">
+        SELECT EXISTS
+        (SELECT userId FROM users WHERE userId = #{userId} AND password = #{password})
+    </select>
+
+    <delete id="deleteUser" parameterType="String">
+        DELETE FROM users
+        WHERE userId = #{userId}
+    </delete>
+
+    <update id="updateUserPassword" parameterType="String">
+        UPDATE users
+        SET password = #{newPw}
+        WHERE userId = #{userId} AND password= #{currentPw}
+    </update>
 </mapper>
