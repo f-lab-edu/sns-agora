@@ -1,7 +1,7 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
-import com.ht.project.snsproject.model.*;
+import com.ht.project.snsproject.model.user.*;
 import com.ht.project.snsproject.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,8 +24,8 @@ public class UserController {
     }
 
     @GetMapping
-    public HttpStatus checkDuplicateUserId(@RequestParam String userId){
-        if(!userService.checkDuplicateUserId(userId)){
+    public HttpStatus IsDuplicateUserId(@RequestParam String userId){
+        if(!userService.IsDuplicateUserId(userId)){
             return HttpStatus.OK;
         } else {
             return HttpStatus.CONFLICT;
@@ -33,9 +33,13 @@ public class UserController {
     }
 
     @LoginCheck
-    @PutMapping("/{id}")
-    public HttpStatus updateUserProfile(@PathVariable("id") int id, @RequestBody UserProfileParam userProfileParam){
-        UserProfile userProfile = new UserProfile(id, userProfileParam.getNickname(), userProfileParam.getEmail(), userProfileParam.getBirth());
+    @PutMapping("/account")
+    public HttpStatus updateUserProfile(@RequestBody UserProfileParam userProfileParam, HttpSession httpSession){
+        User userInfo = (User) httpSession.getAttribute("userInfo");
+        UserProfile userProfile = new UserProfile(userInfo.getId(),
+                userProfileParam.getNickname(),
+                userProfileParam.getEmail(),
+                userProfileParam.getBirth());
         userService.updateUserProfile(userProfile);
         return HttpStatus.OK;
     }
@@ -44,7 +48,7 @@ public class UserController {
     @PostMapping("/login")
     public HttpStatus login(@RequestBody @Valid UserLogin userLogin, HttpSession httpSession) {
 
-        if(!userService.getUser(userLogin, httpSession)){
+        if(!userService.existUser(userLogin, httpSession)){
             return HttpStatus.BAD_REQUEST;
         }
         return HttpStatus.OK;
@@ -58,10 +62,10 @@ public class UserController {
     }
 
     @LoginCheck
-    @DeleteMapping("/{id}")
-    public HttpStatus deleteUser(@RequestBody UserPasswordVerify password, HttpSession httpSession){
+    @DeleteMapping("/account")
+    public HttpStatus deleteUser(@RequestBody String password, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");
-        if(!userService.verifyPassword(userInfo.getUserId(), password.getPassword())){
+        if(!userService.verifyPassword(userInfo.getUserId(), password)){
             return HttpStatus.BAD_REQUEST;
         }
         userService.deleteUser(userInfo.getUserId());
@@ -70,12 +74,11 @@ public class UserController {
     }
 
     @LoginCheck
-    @PutMapping("/{id}/password")
+    @PutMapping("/account/password")
     public HttpStatus updateUserPassword(@RequestBody @Valid UserPassword userPassword, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");
         userService.updateUserPassword(userInfo.getUserId(),userPassword);
         return HttpStatus.OK;
     }
-
 
 }

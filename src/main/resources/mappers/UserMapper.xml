@@ -2,17 +2,17 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.ht.project.snsproject.mapper.UserMapper">
-    <insert id="joinUser" parameterType="com.ht.project.snsproject.model.UserJoin">
+    <insert id="joinUser" parameterType="com.ht.project.snsproject.model.user.UserJoin">
         INSERT INTO users(userId, password, email, name, nickname, birth)
         VALUES(#{userId}, #{password}, #{email}, #{name}, #{nickname}, #{birth})
     </insert>
 
-    <select id="checkDuplicateUserId" parameterType="String" resultType="boolean">
+    <select id="IsDuplicateUserId" parameterType="String" resultType="boolean">
         SELECT EXISTS
         (SELECT userId FROM users WHERE userId = #{userId})
     </select>
 
-    <update id="updateUserProfile" parameterType="com.ht.project.snsproject.model.UserProfile">
+    <update id="updateUserProfile" parameterType="com.ht.project.snsproject.model.user.UserProfile">
         UPDATE users
         SET nickname = #{nickname},
         email = #{email},
@@ -20,15 +20,14 @@
         WHERE id = #{id}
     </update>
 
-    <select id="getUser" parameterType="com.ht.project.snsproject.model.UserLogin" resultType="com.ht.project.snsproject.model.User">
+    <select id="getUser" parameterType="com.ht.project.snsproject.model.user.UserLogin" resultType="com.ht.project.snsproject.model.user.User">
         SELECT id, userId, name, nickname, email, birth
         FROM users
         WHERE userId = #{userId} AND password = #{password}
     </select>
 
-    <select id="verifyPassword" parameterType="String" resultType="boolean">
-        SELECT EXISTS
-        (SELECT userId FROM users WHERE userId = #{userId} AND password = #{password})
+    <select id="getPassword" parameterType="String" resultType="String">
+        SELECT password FROM users WHERE userId = #{userId}
     </select>
 
     <delete id="deleteUser" parameterType="String">

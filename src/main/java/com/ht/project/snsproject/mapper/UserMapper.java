@@ -1,12 +1,10 @@
 package com.ht.project.snsproject.mapper;
 
-import com.ht.project.snsproject.model.User;
-import com.ht.project.snsproject.model.UserJoin;
-import com.ht.project.snsproject.model.UserLogin;
-import com.ht.project.snsproject.model.UserProfile;
+import com.ht.project.snsproject.model.user.User;
+import com.ht.project.snsproject.model.user.UserJoin;
+import com.ht.project.snsproject.model.user.UserLogin;
+import com.ht.project.snsproject.model.user.UserProfile;
 import org.apache.ibatis.annotations.Mapper;
-
-import javax.validation.constraints.NotNull;
 
 @Mapper
 public interface UserMapper {
@@ -19,7 +17,7 @@ public interface UserMapper {
 
     User getUser(UserLogin userLogin);
 
-    boolean verifyPassword(String userId, String password);
+    String getPassword(String userId);
 
     void deleteUser(String userId);
 

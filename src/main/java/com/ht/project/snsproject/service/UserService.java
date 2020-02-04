@@ -1,7 +1,9 @@
 package com.ht.project.snsproject.service;
 
-import com.ht.project.snsproject.annotation.LoginCheck;
-import com.ht.project.snsproject.model.*;
+import com.ht.project.snsproject.model.user.UserJoin;
+import com.ht.project.snsproject.model.user.UserLogin;
+import com.ht.project.snsproject.model.user.UserPassword;
+import com.ht.project.snsproject.model.user.UserProfile;
 
 import javax.servlet.http.HttpSession;
 
@@ -9,11 +11,11 @@ public interface UserService {
 
     void joinUser(UserJoin userJoin);
 
-    boolean checkDuplicateUserId(String userId);
+    boolean IsDuplicateUserId(String userId);
 
     void updateUserProfile(UserProfile userProfile);
 
-    boolean getUser(UserLogin userLogin, HttpSession httpSession);
+    boolean existUser(UserLogin userLogin, HttpSession httpSession);
 
     boolean verifyPassword(String userId, String password);
 

@@ -1,4 +1,4 @@
-package com.ht.project.snsproject.model;
+package com.ht.project.snsproject.model.user;
 
 
 import lombok.Value;

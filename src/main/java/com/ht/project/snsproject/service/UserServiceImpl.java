@@ -1,14 +1,11 @@
 package com.ht.project.snsproject.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.ht.project.snsproject.mapper.UserMapper;
-import com.ht.project.snsproject.model.*;
+import com.ht.project.snsproject.model.user.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
-import javax.validation.Valid;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -22,7 +19,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public boolean checkDuplicateUserId(String userId) {
+    public boolean IsDuplicateUserId(String userId) {
         return userMapper.checkDuplicateUserId(userId);
     }
 
@@ -33,7 +30,7 @@ public class UserServiceImpl implements UserService{
 
     // jetbrain notnull annotation
     @Override
-    public boolean getUser(UserLogin userLogin, HttpSession httpSession) {
+    public boolean existUser(UserLogin userLogin, HttpSession httpSession) {
         User userInfo = userMapper.getUser(userLogin);
 
         if(userInfo==null){
@@ -45,7 +42,8 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public boolean verifyPassword(String userId, String password) {
-        return userMapper.verifyPassword(userId, password);
+        String currentPassword = userMapper.getPassword(userId);
+        return currentPassword.equals(password);
     }
 
     @Override
