@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
@@ -26,11 +27,21 @@ public class FileServiceAws implements FileService {
     @Value("${aws.s3.bucketName}")
     private String bucketName;
 
+    /* ThreadLocal 객체를 사용하면 SimpleDateFormat 의 Thread Safety 를 보장할 수 있다.
+    * ThreadLocal 은 한 쓰레드에서 실행되는 코드가 동일한 객체를 사용할 수 있도록 해 주기 때문에
+    * 쓰레드와 관련된 코드에서 파라미터를 사용하지 않고 객체를 전파하기 위한 용도로 주로 사용된다.
+    * */
+    private static ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>(){
+        @Override
+        protected DateFormat initialValue() {
+            return new SimpleDateFormat("yyyyMMdd_HHmmSS");
+        }
+    };
+
     @Override
     public String fileUpload(List<MultipartFile> files, String userId) {
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmSS");
-        String time = dateFormat.format(System.currentTimeMillis());
+        String time = dateFormat.get().format(System.currentTimeMillis());
         String dirPath = time + userId;
         ObjectMetadata metadata = new ObjectMetadata();
 
@@ -44,8 +55,9 @@ public class FileServiceAws implements FileService {
                 S3Client.putObject(bucketName, keyName, file.getInputStream(), metadata);
             }
         } catch (IOException ioe){
-
             throw new FileUploadException("파일 업로드에 실패하였습니다.");
+        }finally {
+            dateFormat.remove();
         }
 
         return dirPath;
