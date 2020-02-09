@@ -11,11 +11,11 @@ public class FeedInsert {
 
     String title;
 
-    String path;
-
     String content;
+
+    String path;
 
     Timestamp date;
 
-    int publicScope;
+    Integer publicScope;
 }

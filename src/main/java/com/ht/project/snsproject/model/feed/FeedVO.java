@@ -9,5 +9,5 @@ public class FeedVO {
 
     String content;
 
-    String publicScope;
+    Integer publicScope;
 }

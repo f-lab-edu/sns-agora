@@ -14,13 +14,13 @@ public class UserServiceImpl implements UserService{
     UserMapper userMapper;
 
     @Override
-    public void joinUser(UserJoin userJoin) {
-        userMapper.joinUser(userJoin);
+    public void joinUser(UserInsert userInsert) {
+        userMapper.insertUser(userInsert);
     }
 
     @Override
-    public boolean IsDuplicateUserId(String userId) {
-        return userMapper.checkDuplicateUserId(userId);
+    public boolean isDuplicateUserId(String userId) {
+        return userMapper.isDuplicateUserId(userId);
     }
 
     @Override
@@ -28,7 +28,6 @@ public class UserServiceImpl implements UserService{
         userMapper.updateUserProfile(userProfile);
     }
 
-    // jetbrain notnull annotation
     @Override
     public boolean existUser(UserLogin userLogin, HttpSession httpSession) {
         User userInfo = userMapper.getUser(userLogin);

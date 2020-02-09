@@ -18,14 +18,14 @@ public class UserController {
     UserService userService;
 
     @PostMapping
-    public HttpStatus joinUser(@RequestBody @Valid UserJoin userJoin){
+    public HttpStatus joinUser(@RequestBody @Valid UserInsert userJoin){
         userService.joinUser(userJoin);
         return HttpStatus.CREATED;
     }
 
     @GetMapping
-    public HttpStatus IsDuplicateUserId(@RequestParam String userId){
-        if(!userService.IsDuplicateUserId(userId)){
+    public HttpStatus isDuplicateUserId(@RequestParam String userId){
+        if(!userService.isDuplicateUserId(userId)){
             return HttpStatus.OK;
         } else {
             return HttpStatus.CONFLICT;
@@ -63,9 +63,9 @@ public class UserController {
 
     @LoginCheck
     @DeleteMapping("/account")
-    public HttpStatus deleteUser(@RequestBody String password, HttpSession httpSession){
+    public HttpStatus deleteUser(@RequestBody UserPasswordVerify userPasswordVerify, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");
-        if(!userService.verifyPassword(userInfo.getUserId(), password)){
+        if(!userService.verifyPassword(userInfo.getUserId(), userPasswordVerify.getPassword())){
             return HttpStatus.BAD_REQUEST;
         }
         userService.deleteUser(userInfo.getUserId());
