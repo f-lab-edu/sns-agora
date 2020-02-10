@@ -14,8 +14,8 @@ public class UserServiceImpl implements UserService{
     UserMapper userMapper;
 
     @Override
-    public void joinUser(UserInsert userInsert) {
-        userMapper.insertUser(userInsert);
+    public void joinUser(UserJoinRequest userJoinRequest) {
+        userMapper.insertUser(userJoinRequest);
     }
 
     @Override

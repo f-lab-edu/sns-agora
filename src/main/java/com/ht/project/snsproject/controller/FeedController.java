@@ -25,7 +25,7 @@ public class FeedController {
     FeedService feedService;
 
     @Autowired
-    @Qualifier("mainFileService")
+    @Qualifier("localFileService")
     FileService fileService;
 
     @LoginCheck

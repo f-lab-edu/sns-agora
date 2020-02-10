@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.ht.project.snsproject.mapper.UserMapper">
-    <insert id="insertUser" parameterType="com.ht.project.snsproject.model.user.UserInsert">
+    <insert id="insertUser" parameterType="com.ht.project.snsproject.model.user.UserJoinRequest">
         INSERT INTO users(userId, password, email, name, nickname, birth)
         VALUES(#{userId}, #{password}, #{email}, #{name}, #{nickname}, #{birth})
     </insert>

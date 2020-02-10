@@ -1,7 +1,7 @@
 package com.ht.project.snsproject.mapper;
 
 import com.ht.project.snsproject.model.user.User;
-import com.ht.project.snsproject.model.user.UserInsert;
+import com.ht.project.snsproject.model.user.UserJoinRequest;
 import com.ht.project.snsproject.model.user.UserLogin;
 import com.ht.project.snsproject.model.user.UserProfile;
 import org.apache.ibatis.annotations.Mapper;
@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface UserMapper {
 
-    void insertUser(UserInsert userInsert);
+    void insertUser(UserJoinRequest userJoinRequest);
 
     boolean isDuplicateUserId(String userId);
 

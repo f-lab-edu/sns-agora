@@ -8,7 +8,7 @@ import javax.validation.constraints.Pattern;
 import java.sql.Date;
 
 @Value
-public class UserInsert {
+public class UserJoinRequest {
 
     @NotBlank(message = "아이디는 필수 입력사항입니다.(영문 소문자, 숫자 6~20자이내)")
     @Pattern(regexp = "^[0-9a-z].{6,20}$")

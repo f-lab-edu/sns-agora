@@ -18,8 +18,8 @@ public class UserController {
     UserService userService;
 
     @PostMapping
-    public HttpStatus joinUser(@RequestBody @Valid UserInsert userJoin){
-        userService.joinUser(userJoin);
+    public HttpStatus joinUser(@RequestBody @Valid UserJoinRequest userJoinRequest){
+        userService.joinUser(userJoinRequest);
         return HttpStatus.CREATED;
     }
 
