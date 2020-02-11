@@ -4,14 +4,18 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.ht.project.snsproject.Exception.FileUploadException;
 import com.ht.project.snsproject.enumeration.ErrorCode;
+import com.ht.project.snsproject.mapper.FileMapper;
+import com.ht.project.snsproject.model.feed.FileInsert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -29,6 +33,8 @@ public class FileServiceAws implements FileService {
     @Value("${aws.s3.bucketName}")
     private String bucketName;
 
+    @Autowired
+    FileMapper fileMapper;
     /** ThreadLocal 객체를 사용하면 SimpleDateFormat 의 Thread Safety 를 보장할 수 있다.
      * ThreadLocal 은 한 쓰레드에서 실행되는 코드가 동일한 객체를 사용할 수 있도록 해 주기 때문에
      * 쓰레드와 관련된 코드에서 파라미터를 사용하지 않고 객체를 전파하기 위한 용도로 주로 사용된다.
@@ -50,20 +56,24 @@ public class FileServiceAws implements FileService {
     };
 
     @Override
+    @Transactional
     public String fileUpload(List<MultipartFile> files, String userId) {
 
         String time = dateFormat.get().format(new Date());
-        String dirPath = time + userId;
+        String dirPath = userId + File.separator + time;
         ObjectMetadata metadata = new ObjectMetadata();
+        int fileIndex = 1;
 
         try {
             for (MultipartFile file : files) {
 
                 metadata.setContentType(MediaType.IMAGE_JPEG_VALUE);
                 metadata.setContentLength(file.getSize());
-                String keyName = dirPath + "/" + file.getOriginalFilename();
+                String keyName = dirPath + File.separator + file.getOriginalFilename();
 
+                fileMapper.fileUpload(new FileInsert(userId, dirPath, file.getOriginalFilename(), fileIndex));
                 S3Client.putObject(bucketName, keyName, file.getInputStream(), metadata);
+                fileIndex++;
             }
         } catch (IOException ioe){
             throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
@@ -73,4 +83,5 @@ public class FileServiceAws implements FileService {
 
         return dirPath;
     }
+
 }

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -32,17 +33,22 @@ public class FileServiceLocal implements FileService {
      * 그러므로 LocalDateTime, DateTimeFormatter 두 객체를 조합하여 사용하면
      * 쓰레드에 안전하고 빠른 원하는 포맷의 날짜 객체를 사용할 수 있다.
      */
+
+    @Override
+    @Transactional
     public String fileUpload(List<MultipartFile> files, String userId) {
 
         String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmSS"));
         String dirPath= localPath + userId + File.separator + time;
+        int fileIndex = 1;// file 순서를 정해줄 index
+
         try {
             File destDir = new File(dirPath);
 
             if (!destDir.exists()) {
                 destDir.mkdirs();
             }
-            int fileIndex = 1;// file 순서를 정해줄 index
+
             for(MultipartFile file:files) {
                 String originalFileName = file.getOriginalFilename();
                 String filePath = dirPath + File.separator + originalFileName;
@@ -58,4 +64,5 @@ public class FileServiceLocal implements FileService {
         }
         return dirPath;
     }
+
 }

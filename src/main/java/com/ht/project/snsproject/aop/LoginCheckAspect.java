@@ -20,7 +20,7 @@ public class LoginCheckAspect {
     @Autowired
     UserService userService;
 
-    @Before("@annotation(com.ht.project.snsproject.annotation.LoginCheck)")
+    @Before("@annotation(com.ht.project.snsproject.annotation.LoginMethodCheck)")
     public void loginCheck(JoinPoint joinPoint) {
 
         HttpSession httpSession = ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest().getSession();
