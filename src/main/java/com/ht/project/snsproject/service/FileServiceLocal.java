@@ -3,7 +3,7 @@ package com.ht.project.snsproject.service;
 import com.ht.project.snsproject.Exception.FileUploadException;
 import com.ht.project.snsproject.enumeration.ErrorCode;
 import com.ht.project.snsproject.mapper.FileMapper;
-import com.ht.project.snsproject.model.feed.FileInsert;
+import com.ht.project.snsproject.model.feed.FileInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -36,11 +37,12 @@ public class FileServiceLocal implements FileService {
 
     @Override
     @Transactional
-    public String fileUpload(List<MultipartFile> files, String userId) {
+    public void fileUpload(List<MultipartFile> files, String userId, int feedId) {
 
         String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmSS"));
         String dirPath= localPath + userId + File.separator + time;
         int fileIndex = 1;// file 순서를 정해줄 index
+        List<FileInfo> fileInfoList = new ArrayList<>();
 
         try {
             File destDir = new File(dirPath);
@@ -54,15 +56,15 @@ public class FileServiceLocal implements FileService {
                 String filePath = dirPath + File.separator + originalFileName;
                 File destFile = new File(filePath);
 
-                fileMapper.fileUpload(new FileInsert(userId, dirPath, originalFileName, fileIndex));
+                fileInfoList.add(new FileInfo(dirPath, originalFileName, fileIndex, feedId));
                 file.transferTo(destFile);
 
                 fileIndex++;
             }
+            fileMapper.fileListUpload(fileInfoList);
         } catch (IOException ioe) {
             throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
         }
-        return dirPath;
     }
 
 }

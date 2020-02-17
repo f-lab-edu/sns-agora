@@ -2,23 +2,19 @@ package com.ht.project.snsproject.aop;
 
 import com.ht.project.snsproject.Exception.UnauthorizedException;
 import com.ht.project.snsproject.model.user.User;
-import com.ht.project.snsproject.service.UserService;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
 import javax.servlet.http.HttpSession;
 
 
 @Aspect
 @Component
 public class LoginCheckAspect {
-
-    @Autowired
-    UserService userService;
 
     @Before("@annotation(com.ht.project.snsproject.annotation.LoginMethodCheck)")
     public void loginCheck(JoinPoint joinPoint) {

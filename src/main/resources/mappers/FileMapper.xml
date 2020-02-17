@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ht.project.snsproject.mapper.FileMapper">
-    <insert id="fileUpload" parameterType="com.ht.project.snsproject.model.feed.FileVo">
-        INSERT INTO images(userId, path, fileName, fileIndex)
-        Values(#{userId}, #{path}, #{fileName}, #{fileIndex})
+    <insert id="fileListUpload" parameterType="java.util.List">
+        INSERT INTO images(path, fileName, fileIndex, feedId)
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=",">
+            (#{item.path}, #{item.fileName}, #{item.fileIndex}, #{item.feedId})
+        </foreach>
     </insert>
 </mapper>

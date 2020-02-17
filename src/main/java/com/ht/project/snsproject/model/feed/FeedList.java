@@ -1,5 +1,6 @@
 package com.ht.project.snsproject.model.feed;
 
+import com.ht.project.snsproject.enumeration.PublicScope;
 import lombok.Data;
 import java.sql.Timestamp;
 import java.util.List;
@@ -19,7 +20,9 @@ public class FeedList {
 
     Timestamp date;
 
-    Integer publicScope;
+    PublicScope publicScope;
+
+    int like;
 
     List<FileVo> files;
 }

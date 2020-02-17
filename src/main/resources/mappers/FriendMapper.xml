@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ht.project.snsproject.mapper.FriendMapper">
+    <insert id="requestFriend" parameterType="java.util.Map">
+        INSERT INTO friends(userId, targetId, friendStatus)
+        VALUES (#{userId}, #{targetId}, #{friendStatus})
+    </insert>
+
+    <select id="getFriendStatus" parameterType="String" resultType="com.ht.project.snsproject.model.friend.Friend">
+        SELECT IFNULL(MAX(friendStatus),'NONE')
+        AS friendStatus
+        FROM friends
+        WHERE userId = #{userId} AND targetId= #{targetId}
+    </select>
+
+    <delete id="deleteFriendRequest" parameterType="String">
+        DELETE FROM friends
+        WHERE userId = #{userId} AND targetId=#{targetId}
+    </delete>
+</mapper>

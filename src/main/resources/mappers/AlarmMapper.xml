@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ht.project.snsproject.mapper.AlarmMapper">
+    <insert id="insertAlarm" parameterType="com.ht.project.snsproject.model.alarm.AlarmInsert">
+        INSERT INTO alarms(userId, targetId, type, date, readCheck, url)
+        VALUES (#{userId}, #{targetId}, #{type}, #{date}, #{readCheck}, #{url})
+    </insert>
+
+    <delete id="deleteAlarm" parameterType="com.ht.project.snsproject.model.alarm.AlarmDelete">
+        DELETE FROM alarms
+        WHERE userId = #{userId} AND targetId = #{targetId} AND type = #{type}
+    </delete>
+
+    <select id="getAlarmList" parameterType="java.util.Map" resultType="com.ht.project.snsproject.model.alarm.Alarm">
+        SELECT id, userId, targetId, type, date, readCheck, url
+        FROM alarms
+        WHERE
+        <if test="pagination.cursor != null">
+            id<![CDATA[<]]>#{pagination.cursor} AND
+        </if>
+        userId = #{userId}
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize}
+    </select>
+</mapper>

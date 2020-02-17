@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.ht.project.snsproject.Exception.FileUploadException;
 import com.ht.project.snsproject.enumeration.ErrorCode;
 import com.ht.project.snsproject.mapper.FileMapper;
-import com.ht.project.snsproject.model.feed.FileInsert;
+import com.ht.project.snsproject.model.feed.FileInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -57,12 +58,13 @@ public class FileServiceAws implements FileService {
 
     @Override
     @Transactional
-    public String fileUpload(List<MultipartFile> files, String userId) {
+    public void fileUpload(List<MultipartFile> files, String userId, int feedId) {
 
         String time = dateFormat.get().format(new Date());
         String dirPath = userId + File.separator + time;
         ObjectMetadata metadata = new ObjectMetadata();
         int fileIndex = 1;
+        List<FileInfo> fileInfoList = new ArrayList<>();
 
         try {
             for (MultipartFile file : files) {
@@ -71,17 +73,17 @@ public class FileServiceAws implements FileService {
                 metadata.setContentLength(file.getSize());
                 String keyName = dirPath + File.separator + file.getOriginalFilename();
 
-                fileMapper.fileUpload(new FileInsert(userId, dirPath, file.getOriginalFilename(), fileIndex));
+                fileInfoList.add(new FileInfo(dirPath, file.getOriginalFilename(), fileIndex, feedId));
                 S3Client.putObject(bucketName, keyName, file.getInputStream(), metadata);
                 fileIndex++;
             }
+            fileMapper.fileListUpload(fileInfoList);
         } catch (IOException ioe){
             throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
         }finally {
             dateFormat.remove();
         }
 
-        return dirPath;
     }
 
 }

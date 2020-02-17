@@ -7,7 +7,7 @@ import com.ht.project.snsproject.model.feed.FeedVO;
 import java.util.List;
 
 public interface FeedService {
-    void feedUpload(FeedVO feedVo, String userId, String path);
+    int feedUpload(FeedVO feedVo, String userId);
 
     List<FeedList> getFeedList(String userId, Pagination pagination);
 

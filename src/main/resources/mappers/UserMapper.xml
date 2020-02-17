@@ -43,4 +43,10 @@
         SET password = #{newPw}
         WHERE userId = #{userId} AND password= #{currentPw}
     </update>
+
+    <select id="getUserProfile" parameterType="String" resultType="com.ht.project.snsproject.model.user.UserProfile">
+        SELECT id, nickname, email, birth
+        FROM users
+        WHERE userId = #{targetId}
+    </select>
 </mapper>

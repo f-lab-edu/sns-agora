@@ -55,4 +55,9 @@ public class UserServiceImpl implements UserService{
         userMapper.updateUserPassword(userId, userPassword.getCurrentPassword(), userPassword.getNewPassword());
     }
 
+    @Override
+    public UserProfile getUserProfile(String userId){
+        return userMapper.getUserProfile(userId);
+    }
+
 }

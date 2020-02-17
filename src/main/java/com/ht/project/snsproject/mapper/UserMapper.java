@@ -23,4 +23,6 @@ public interface UserMapper {
 
     void updateUserPassword(String userId, String currentPw, String newPw);
 
+    UserProfile getUserProfile(String targetId);
+
 }

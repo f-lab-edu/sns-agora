@@ -32,8 +32,8 @@ public class FeedController {
     @PostMapping("/upload")
     public HttpStatus feedUpload(@RequestParam("file") List<MultipartFile> files, FeedVO feedVO, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");
-        String path = fileService.fileUpload(files, userInfo.getUserId());
-        feedService.feedUpload(feedVO,userInfo.getUserId(),path);
+        int feedId = feedService.feedUpload(feedVO,userInfo.getUserId());
+        fileService.fileUpload(files, userInfo.getUserId(), feedId);
         return HttpStatus.OK;
     }
 

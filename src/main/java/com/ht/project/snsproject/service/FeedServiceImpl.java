@@ -19,16 +19,20 @@ public class FeedServiceImpl implements FeedService{
     FeedMapper feedMapper;
 
     @Override
-    public void feedUpload(FeedVO feedVo, String userId, String path) {
+    public int feedUpload(FeedVO feedVo, String userId) {
+
         Timestamp date = Timestamp.valueOf(LocalDateTime.now());
-        FeedInsert feedInsert = new FeedInsert(userId,
-                feedVo.getTitle(),
-                feedVo.getContent(),
-                path,
-                date,
-                feedVo.getPublicScope());
+        FeedInsert feedInsert = new FeedInsert();
+        feedInsert.setUserId(userId);
+        feedInsert.setTitle(feedVo.getTitle());
+        feedInsert.setContent(feedVo.getContent());
+        feedInsert.setDate(date);
+        feedInsert.setPublicScope(feedVo.getPublicScope());
+        feedInsert.setLike(0);
 
         feedMapper.feedUpload(feedInsert);
+
+        return feedInsert.getId();
     }
 
     @Override

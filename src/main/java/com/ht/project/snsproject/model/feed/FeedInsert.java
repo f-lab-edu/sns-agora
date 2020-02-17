@@ -1,11 +1,14 @@
 package com.ht.project.snsproject.model.feed;
 
-import lombok.Value;
+import com.ht.project.snsproject.enumeration.PublicScope;
+import lombok.Data;
 
 import java.sql.Timestamp;
 
-@Value
+@Data
 public class FeedInsert {
+
+    int id;
 
     String userId;
 
@@ -13,9 +16,9 @@ public class FeedInsert {
 
     String content;
 
-    String path;
-
     Timestamp date;
 
-    Integer publicScope;
+    PublicScope publicScope;
+
+    int like;
 }

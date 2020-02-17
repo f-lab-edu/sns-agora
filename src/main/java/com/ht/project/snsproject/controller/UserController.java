@@ -5,6 +5,7 @@ import com.ht.project.snsproject.model.user.*;
 import com.ht.project.snsproject.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
@@ -79,6 +80,12 @@ public class UserController {
         User userInfo = (User) httpSession.getAttribute("userInfo");
         userService.updateUserPassword(userInfo.getUserId(),userPassword);
         return HttpStatus.OK;
+    }
+
+    @LoginMethodCheck
+    @GetMapping("/{targetId}")
+    public ResponseEntity<UserProfile> getUserProfile(@PathVariable String targetId){
+        return new ResponseEntity<>(userService.getUserProfile(targetId), HttpStatus.OK);
     }
 
 }

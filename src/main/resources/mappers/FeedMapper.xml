@@ -7,34 +7,36 @@
         <result property="userId" column="userId"/>
         <result property="title" column="title"/>
         <result property="content" column="content"/>
-        <result property="path" column="path"/>
         <result property="date" column="date"/>
         <result property="publicScope" column="publicScope"/>
+        <result property="like" column="like"/>
         <collection property="files" javaType="java.util.ArrayList" resultMap="getFileVo"/>
     </resultMap>
 
     <resultMap id="getFileVo" type="java.util.HashMap">
+        <result property="path" column="path"/>
         <result property="fileIndex" column="fileIndex"/>
         <result property="fileName" column="fileName"/>
     </resultMap>
 
-    <insert id="feedUpload" parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
-        INSERT INTO feeds(userId, title, path, content, date, publicScope)
-        Values(#{userId}, #{title}, #{path}, #{content}, #{date}, #{publicScope})
+    <insert id="feedUpload" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
+        INSERT INTO feeds(userId, title, content, date, publicScope, like)
+        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope}, #{like})
     </insert>
 
-    <select id="getFeedList" parameterType="com.ht.project.snsproject.model.Pagination" resultMap="feedList">
+    <select id="getFeedList" parameterType="java.util.Map" resultMap="feedList">
         SELECT a.id, a.userId,
         a.title, a.content,
-        a.path, a.date, a.publicScope,
-        b.fileName, b.fileIndex
+        a.date, a.publicScope, a.like
+        b.path, b.fileName, b.fileIndex
         FROM feeds a LEFT JOIN images b
-        on (a.path = b.path)
+        ON (a.id = b.feedId)
         AND (a.userId = #{userId})
-        <if test="cursor != null">
-            WHERE a.id<![CDATA[<]]>#{cursor}
+        <if test="pagination.cursor != null">
+            WHERE a.id<![CDATA[<]]>#{pagination.cursor}
         </if>
         ORDER BY a.id DESC
-        LIMIT #{listSize}
+        LIMIT #{pagination.listSize}
     </select>
 </mapper>
