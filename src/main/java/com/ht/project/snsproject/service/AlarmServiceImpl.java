@@ -1,6 +1,6 @@
 package com.ht.project.snsproject.service;
 
-import com.ht.project.snsproject.enumeration.Type;
+import com.ht.project.snsproject.enumeration.AlarmType;
 import com.ht.project.snsproject.mapper.AlarmMapper;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.alarm.Alarm;
@@ -20,16 +20,16 @@ public class AlarmServiceImpl implements AlarmService {
     AlarmMapper alarmMapper;
 
     @Override
-    public void insertAlarm(String userId, String targetId, Type type, String url) {
+    public void insertAlarm(String userId, String targetId, AlarmType alarmType) {
 
         Timestamp dateTime = Timestamp.valueOf(LocalDateTime.now());
-        AlarmInsert alarmInsert = new AlarmInsert(userId, targetId, type, dateTime, url);
+        AlarmInsert alarmInsert = new AlarmInsert(userId, targetId, alarmType, dateTime);
         alarmMapper.insertAlarm(alarmInsert);
     }
 
     @Override
-    public void deleteAlarm(String userId, String targetId, Type type) {
-        alarmMapper.deleteAlarm(new AlarmDelete(userId,targetId,type));
+    public void deleteAlarm(String userId, String targetId, AlarmType alarmType) {
+        alarmMapper.deleteAlarm(new AlarmDelete(userId,targetId,alarmType));
     }
 
     @Override

@@ -16,13 +16,11 @@ public class FeedList {
 
     String content;
 
-    String path;
-
     Timestamp date;
 
     PublicScope publicScope;
 
-    int like;
+    int recommend;
 
     List<FileVo> files;
 }

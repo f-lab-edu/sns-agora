@@ -6,6 +6,6 @@ import lombok.Value;
 public class Pagination {
 
     private Integer cursor;
-    private int listSize = 3;//2개씩 불러온다.
+    private int listSize = 3;
 
 }

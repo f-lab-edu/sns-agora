@@ -1,6 +1,6 @@
 package com.ht.project.snsproject.model.alarm;
 
-import com.ht.project.snsproject.enumeration.Type;
+import com.ht.project.snsproject.enumeration.AlarmType;
 import lombok.Value;
 
 import java.sql.Timestamp;
@@ -12,12 +12,10 @@ public class AlarmInsert {
 
     String targetId;
 
-    Enum<Type> type;
+    AlarmType alarmType;
 
     Timestamp date;
 
     boolean readCheck = false;
-
-    String url;
 
 }

@@ -1,6 +1,6 @@
 package com.ht.project.snsproject.controller;
 
-import com.ht.project.snsproject.annotation.LoginMethodCheck;
+import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.FeedList;
 import com.ht.project.snsproject.model.feed.FeedVO;
@@ -28,7 +28,7 @@ public class FeedController {
     @Qualifier("localFileService")
     FileService fileService;
 
-    @LoginMethodCheck
+    @LoginCheck
     @PostMapping("/upload")
     public HttpStatus feedUpload(@RequestParam("file") List<MultipartFile> files, FeedVO feedVO, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");
@@ -39,11 +39,11 @@ public class FeedController {
 
 
     //[WIP] 친구관계 추가, 읽기 권한 추가 필요
-    @LoginMethodCheck
+    @LoginCheck
     @GetMapping("/{userId}")
     public ResponseEntity<List<FeedList>> getFeedList(@PathVariable String userId, @RequestParam(required = false) Integer cursor){
         Pagination pagination = new Pagination(cursor);
-        return new ResponseEntity<>(feedService.getFeedList(userId, pagination),HttpStatus.OK);
+        return ResponseEntity.ok(feedService.getFeedList(userId, pagination));
     }
 
     @GetMapping

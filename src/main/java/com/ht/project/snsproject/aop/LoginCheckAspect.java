@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
 @Component
 public class LoginCheckAspect {
 
-    @Before("@annotation(com.ht.project.snsproject.annotation.LoginMethodCheck)")
+    @Before("@annotation(com.ht.project.snsproject.annotation.LoginCheck)")
     public void loginCheck(JoinPoint joinPoint) {
 
         HttpSession httpSession = ((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest().getSession();

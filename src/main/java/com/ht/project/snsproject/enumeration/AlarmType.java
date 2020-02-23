@@ -1,16 +1,16 @@
 package com.ht.project.snsproject.enumeration;
 
-public enum Type {
+public enum AlarmType {
 
     FRIEND_REQ(1), FRIEND_RES(2), COMMENT(3), LIKE(4);
 
     private final int value;
 
-    Type(int value){
+    AlarmType(int value){
         this.value = value;
     }
 
-    public static Type valueOf(int value){
+    public static AlarmType valueOf(int value){
         switch (value){
             case 1: return FRIEND_REQ;
             case 2: return FRIEND_RES;

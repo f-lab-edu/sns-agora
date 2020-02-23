@@ -1,6 +1,6 @@
 package com.ht.project.snsproject.controller;
 
-import com.ht.project.snsproject.annotation.LoginMethodCheck;
+import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.model.user.*;
 import com.ht.project.snsproject.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,7 @@ public class UserController {
         }
     }
 
-    @LoginMethodCheck
+    @LoginCheck
     @PutMapping("/account")
     public HttpStatus updateUserProfile(@RequestBody UserProfileParam userProfileParam, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");
@@ -55,14 +55,14 @@ public class UserController {
         return HttpStatus.OK;
     }
 
-    @LoginMethodCheck
+    @LoginCheck
     @PostMapping("/logout")
     public HttpStatus logout(HttpSession httpSession) {
         httpSession.invalidate();
         return HttpStatus.NO_CONTENT;
     }
 
-    @LoginMethodCheck
+    @LoginCheck
     @DeleteMapping("/account")
     public HttpStatus deleteUser(@RequestBody UserPasswordVerify userPasswordVerify, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");
@@ -74,7 +74,7 @@ public class UserController {
         return HttpStatus.NO_CONTENT;
     }
 
-    @LoginMethodCheck
+    @LoginCheck
     @PutMapping("/account/password")
     public HttpStatus updateUserPassword(@RequestBody @Valid UserPassword userPassword, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");
@@ -82,10 +82,10 @@ public class UserController {
         return HttpStatus.OK;
     }
 
-    @LoginMethodCheck
+    @LoginCheck
     @GetMapping("/{targetId}")
     public ResponseEntity<UserProfile> getUserProfile(@PathVariable String targetId){
-        return new ResponseEntity<>(userService.getUserProfile(targetId), HttpStatus.OK);
+        return ResponseEntity.ok(userService.getUserProfile(targetId));
     }
 
 }

@@ -9,7 +9,7 @@
         <result property="content" column="content"/>
         <result property="date" column="date"/>
         <result property="publicScope" column="publicScope"/>
-        <result property="like" column="like"/>
+        <result property="recommend" column="recommend"/>
         <collection property="files" javaType="java.util.ArrayList" resultMap="getFileVo"/>
     </resultMap>
 
@@ -21,16 +21,16 @@
 
     <insert id="feedUpload" useGeneratedKeys="true" keyProperty="id"
             parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
-        INSERT INTO feeds(userId, title, content, date, publicScope, like)
-        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope}, #{like})
+        INSERT INTO feeds(userId, title, content, date, publicScope, recommend)
+        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope}, #{recommend})
     </insert>
 
     <select id="getFeedList" parameterType="java.util.Map" resultMap="feedList">
         SELECT a.id, a.userId,
         a.title, a.content,
-        a.date, a.publicScope, a.like
+        a.date, a.publicScope, a.recommend,
         b.path, b.fileName, b.fileIndex
-        FROM feeds a LEFT JOIN images b
+        FROM feeds a INNER JOIN images b
         ON (a.id = b.feedId)
         AND (a.userId = #{userId})
         <if test="pagination.cursor != null">

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ht.project.snsproject.mapper.FriendMapper">
-    <insert id="requestFriend" parameterType="java.util.Map">
+    <insert id="requestFriend" parameterType="String">
         INSERT INTO friends(userId, targetId, friendStatus)
-        VALUES (#{userId}, #{targetId}, #{friendStatus})
+        VALUES (#{userId}, #{targetId}, 'REQUEST'),
+        (#{targetId}, #{userId}, 'RECEIVE')
     </insert>
 
     <select id="getFriendStatus" parameterType="String" resultType="com.ht.project.snsproject.model.friend.Friend">
@@ -13,8 +14,16 @@
         WHERE userId = #{userId} AND targetId= #{targetId}
     </select>
 
+    <update id="updateFriendRequestToFriend" parameterType="com.ht.project.snsproject.model.friend.FriendStatusInsert">
+        UPDATE friends
+        SET friendStatus = #{friendStatus}
+        WHERE (userId = #{userId} AND targetId = #{targetId})
+        OR (userId = #{targetId} AND targetId = #{userId})
+    </update>
+
     <delete id="deleteFriendRequest" parameterType="String">
         DELETE FROM friends
-        WHERE userId = #{userId} AND targetId=#{targetId}
+        WHERE (userId = #{userId} AND targetId = #{targetId})
+        OR (userId = #{targetId} AND targetId = #{userId})
     </delete>
 </mapper>

@@ -22,14 +22,15 @@ public class FeedServiceImpl implements FeedService{
     public int feedUpload(FeedVO feedVo, String userId) {
 
         Timestamp date = Timestamp.valueOf(LocalDateTime.now());
-        FeedInsert feedInsert = new FeedInsert();
-        feedInsert.setUserId(userId);
-        feedInsert.setTitle(feedVo.getTitle());
-        feedInsert.setContent(feedVo.getContent());
-        feedInsert.setDate(date);
-        feedInsert.setPublicScope(feedVo.getPublicScope());
-        feedInsert.setLike(0);
+        FeedInsert.FeedInsertBuilder builder = FeedInsert.builder();
+        builder.userId(userId);
+        builder.title(feedVo.getTitle());
+        builder.content(feedVo.getContent());
+        builder.date(date);
+        builder.publicScope(feedVo.getPublicScope());
+        builder.recommend(0);
 
+        FeedInsert feedInsert = builder.build();
         feedMapper.feedUpload(feedInsert);
 
         return feedInsert.getId();
