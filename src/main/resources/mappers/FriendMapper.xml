@@ -7,7 +7,8 @@
         (#{targetId}, #{userId}, 'RECEIVE')
     </insert>
 
-    <select id="getFriendStatus" parameterType="String" resultType="com.ht.project.snsproject.model.friend.Friend">
+    <select id="getFriendRelationStatus" parameterType="String"
+            resultType="com.ht.project.snsproject.model.friend.Friend">
         SELECT IFNULL(MAX(friendStatus),'NONE')
         AS friendStatus
         FROM friends
@@ -21,7 +22,29 @@
         OR (userId = #{targetId} AND targetId = #{userId})
     </update>
 
-    <delete id="deleteFriendRequest" parameterType="String">
+    <select id="getFriendList" parameterType="com.ht.project.snsproject.model.friend.FriendListParam"
+            resultType="com.ht.project.snsproject.model.friend.FriendList">
+        SELECT id, targetId
+        FROM friends
+        WHERE userId = #{userId} AND friendStatus = #{friendStatus}
+        <if test="pagination.cursor!=null">
+            AND id <![CDATA[<]]> #{pagination.cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize}
+    </select>
+
+    <insert id="blockUser" parameterType="String">
+        INSERT INTO friends(userId, targetId, friendStatus)
+        VALUES (#{userId}, #{targetId}, 'BLOCK')
+    </insert>
+
+    <delete id="deleteBlockUser" parameterType="String">
+        DELETE FROM friends
+        WHERE userId = #{userId} AND targetId = #{targetId} AND friendStatus = 'BLOCK'
+    </delete>
+
+    <delete id="deleteFriend" parameterType="String">
         DELETE FROM friends
         WHERE (userId = #{userId} AND targetId = #{targetId})
         OR (userId = #{targetId} AND targetId = #{userId})
