@@ -1,6 +1,7 @@
 package com.ht.project.snsproject.model.alarm;
 
 import com.ht.project.snsproject.enumeration.AlarmType;
+import com.ht.project.snsproject.enumeration.ReadStatus;
 import lombok.Value;
 
 import java.sql.Timestamp;
@@ -16,6 +17,8 @@ public class AlarmInsert {
 
     Timestamp date;
 
-    boolean readCheck = false;
+    Integer feedId = 0;
+
+    ReadStatus readCheck = ReadStatus.NO_READ;
 
 }

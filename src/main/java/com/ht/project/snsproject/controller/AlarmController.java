@@ -5,17 +5,15 @@ import com.ht.project.snsproject.model.alarm.Alarm;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.AlarmService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @RestController
-@RequestMapping("/alarm")
+@RequestMapping("/alarms")
 public class AlarmController {
 
     @Autowired
@@ -26,6 +24,26 @@ public class AlarmController {
     public ResponseEntity<List<Alarm>> getAlarmList(@RequestParam(required = false) Integer cursor, HttpSession httpSession){
 
         User userInfo = (User) httpSession.getAttribute("userInfo");
+
         return ResponseEntity.ok(alarmService.getAlarmList(cursor, userInfo.getUserId()));
+    }
+
+    @LoginCheck
+    @GetMapping("/{id}")
+    public ResponseEntity<Alarm> getAlarm(@PathVariable int id, HttpSession httpSession){
+
+        User userInfo = (User) httpSession.getAttribute("userInfo");
+
+        return ResponseEntity.ok(alarmService.getAlarm(id,userInfo.getUserId()));
+    }
+
+    @LoginCheck
+    @DeleteMapping("/{id}")
+    public HttpStatus deleteAlarm(@PathVariable int id, HttpSession httpSession){
+
+        User userInfo = (User) httpSession.getAttribute("userInfo");
+        alarmService.deleteAlarm(id, userInfo.getUserId());
+
+        return HttpStatus.NO_CONTENT;
     }
 }

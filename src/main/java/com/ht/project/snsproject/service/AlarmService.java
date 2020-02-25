@@ -9,7 +9,11 @@ public interface AlarmService {
 
     void insertAlarm(String userId, String targetId, AlarmType alarmType);
 
-    void deleteAlarm(String userId, String targetId, AlarmType alarmType);
+    void deleteRequestAlarm(String userId, String targetId, AlarmType alarmType);
 
     List<Alarm> getAlarmList(Integer cursor, String userId);
+
+    Alarm getAlarm(int id, String userId);
+
+    void deleteAlarm(int id, String userId);
 }

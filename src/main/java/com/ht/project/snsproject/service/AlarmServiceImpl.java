@@ -6,6 +6,7 @@ import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.alarm.Alarm;
 import com.ht.project.snsproject.model.alarm.AlarmDelete;
 import com.ht.project.snsproject.model.alarm.AlarmInsert;
+import com.ht.project.snsproject.model.alarm.AlarmRead;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,8 +29,8 @@ public class AlarmServiceImpl implements AlarmService {
     }
 
     @Override
-    public void deleteAlarm(String userId, String targetId, AlarmType alarmType) {
-        alarmMapper.deleteAlarm(new AlarmDelete(userId,targetId,alarmType));
+    public void deleteRequestAlarm(String userId, String targetId, AlarmType alarmType) {
+        alarmMapper.deleteRequestAlarm(new AlarmDelete(userId,targetId,alarmType));
     }
 
     @Override
@@ -38,4 +39,21 @@ public class AlarmServiceImpl implements AlarmService {
         return alarmMapper.getAlarmList(userId, pagination);
     }
 
+    @Override
+    public Alarm getAlarm(int id, String userId) {
+
+        AlarmRead alarmRead = AlarmRead.create(id, userId);
+        alarmMapper.readAlarm(alarmRead);
+
+        return alarmMapper.getAlarm(alarmRead);
+    }
+
+    @Override
+    public void deleteAlarm(int id, String userId) {
+        boolean result = alarmMapper.deleteAlarm(AlarmRead.create(id, userId));
+
+        if(!result){
+            throw new IllegalArgumentException("일치하는 자료가 없습니다.");
+        }
+    }
 }

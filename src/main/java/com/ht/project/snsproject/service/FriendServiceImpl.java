@@ -52,7 +52,7 @@ public class FriendServiceImpl implements FriendService {
         switch(status){
             case REQUEST:
                 friendMapper.deleteFriend(userId, targetId);
-                alarmService.deleteAlarm(userId, targetId, AlarmType.FRIEND_REQ);
+                alarmService.deleteRequestAlarm(userId, targetId, AlarmType.FRIEND_REQ);
                 break;
 
             case RECEIVE:
