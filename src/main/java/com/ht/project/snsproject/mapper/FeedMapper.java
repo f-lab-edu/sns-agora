@@ -15,4 +15,6 @@ public interface FeedMapper {
     List<FeedList> getFeedList(FeedListParam feedListParam);
 
     List<FeedList> getFriendsFeedList(FriendsFeedList friendsFeedList);
+
+    boolean deleteFeed(FeedDeleteParam feedDeleteParam);
 }

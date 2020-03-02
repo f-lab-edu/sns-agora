@@ -29,7 +29,7 @@ public class FeedServiceImpl implements FeedService{
     FriendMapper friendMapper;
 
     @Autowired
-    @Qualifier("localFileService")
+    @Qualifier("awsFileService")
     FileService fileService;
 
     @Autowired
@@ -152,5 +152,16 @@ public class FeedServiceImpl implements FeedService{
         }
 
         return feeds;
+    }
+
+    @Transactional
+    @Override
+    public void deleteFeed(int id, String userId) {
+        boolean result = feedMapper.deleteFeed(new FeedDeleteParam(id, userId));
+
+        if(!result){
+            throw new InvalidApproachException("일치하는 데이터가 없습니다.");
+        }
+        fileService.deleteFile(id);
     }
 }

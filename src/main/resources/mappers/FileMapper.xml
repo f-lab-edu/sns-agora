@@ -9,4 +9,18 @@
         </foreach>
     </insert>
 
+    <select id="getFilePath" parameterType="int" resultType="String">
+        SELECT path From images
+        WHERE feedId = #{feedId} AND fileIndex = '1'
+    </select>
+
+    <select id="getFiles" parameterType="int" resultType="com.ht.project.snsproject.model.feed.FileVo">
+        SELECT fileIndex, path, fileName FROM images
+        WHERE feedId = #{feedId}
+    </select>
+
+    <delete id="deleteFile" parameterType="int">
+        DELETE FROM images
+        WHERE feedId = #{feedId}
+    </delete>
 </mapper>

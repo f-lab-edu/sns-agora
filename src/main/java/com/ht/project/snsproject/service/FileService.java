@@ -8,4 +8,5 @@ public interface FileService {
 
     void fileUpload(List<MultipartFile> files, String userId, int feedId);
 
+    void deleteFile(int feedId);
 }
