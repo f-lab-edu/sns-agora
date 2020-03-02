@@ -9,6 +9,8 @@ import com.ht.project.snsproject.model.alarm.AlarmInsert;
 import com.ht.project.snsproject.model.alarm.AlarmRead;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -39,6 +41,7 @@ public class AlarmServiceImpl implements AlarmService {
         return alarmMapper.getAlarmList(userId, pagination);
     }
 
+    @Transactional
     @Override
     public Alarm getAlarm(int id, String userId) {
 

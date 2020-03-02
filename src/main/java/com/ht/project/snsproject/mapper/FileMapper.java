@@ -8,4 +8,5 @@ import java.util.List;
 @Mapper
 public interface FileMapper {
     void fileListUpload(List<FileInfo> fileInfo);
+
 }

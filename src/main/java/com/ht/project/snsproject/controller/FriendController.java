@@ -39,6 +39,15 @@ public class FriendController {
     }
 
     @LoginCheck
+    @DeleteMapping("/{targetId}/requests/deny")
+    public HttpStatus denyFriendRequest(@PathVariable String targetId, HttpSession httpSession){
+        User userInfo = (User) httpSession.getAttribute("userInfo");
+        String userId = userInfo.getUserId();
+        friendService.denyFriendRequest(userId, targetId);
+        return HttpStatus.NO_CONTENT;
+    }
+
+    @LoginCheck
     @PutMapping("/{targetId}/requests")
     public HttpStatus permitFriendRequest(@PathVariable String targetId, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");

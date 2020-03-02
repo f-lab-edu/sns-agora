@@ -1,12 +1,16 @@
 package com.ht.project.snsproject.model.feed;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
-import lombok.Value;
+import lombok.*;
 
 import java.sql.Timestamp;
+import java.util.List;
 
-@Value
-public class FeedList {
+@Builder
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Feed {
 
     int id;
 
@@ -22,7 +26,5 @@ public class FeedList {
 
     int recommend;
 
-    String path;
-
-    String fileNames;
+    List<FileVo> files;
 }

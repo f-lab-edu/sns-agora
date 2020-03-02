@@ -8,4 +8,5 @@
             (#{item.path}, #{item.fileName}, #{item.fileIndex}, #{item.feedId})
         </foreach>
     </insert>
+
 </mapper>

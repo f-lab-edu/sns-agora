@@ -12,6 +12,7 @@ import com.ht.project.snsproject.model.friend.FriendListParam;
 import com.ht.project.snsproject.model.friend.FriendStatusInsert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class FriendServiceImpl implements FriendService {
     @Autowired
     AlarmService alarmService;
 
+    @Transactional
     @Override
     public void requestFriend(String userId, String targetId) {
 
@@ -44,26 +46,34 @@ public class FriendServiceImpl implements FriendService {
 
     }
 
+    @Transactional
     @Override
     public void deleteFriendRequest(String userId, String targetId) {
 
         FriendStatus status = friendMapper.getFriendRelationStatus(userId, targetId).getFriendStatus();
 
-        switch(status){
-            case REQUEST:
-                friendMapper.deleteFriend(userId, targetId);
-                alarmService.deleteRequestAlarm(userId, targetId, AlarmType.FRIEND_REQ);
-                break;
-
-            case RECEIVE:
-                friendMapper.deleteFriend(userId, targetId);
-                break;
-
-            default:
-                throw new InvalidApproachException("유효하지 않은 접근입니다.");
+        if(status != FriendStatus.REQUEST){
+            throw new InvalidApproachException("유효하지 않은 접근입니다.");
         }
+
+        friendMapper.deleteFriend(userId, targetId);
+        alarmService.deleteRequestAlarm(userId, targetId, AlarmType.FRIEND_REQ);
     }
 
+    @Transactional
+    @Override
+    public void denyFriendRequest(String userId, String targetId) {
+
+        FriendStatus status = friendMapper.getFriendRelationStatus(userId, targetId).getFriendStatus();
+
+        if(status != FriendStatus.RECEIVE){
+            throw new InvalidApproachException("유효하지 않은 접근입니다.");
+        }
+
+        friendMapper.deleteFriend(userId, targetId);
+    }
+
+    @Transactional
     @Override
     public void permitFriendRequest(String userId, String targetId) {
 
@@ -77,6 +87,7 @@ public class FriendServiceImpl implements FriendService {
         alarmService.insertAlarm(userId, targetId, AlarmType.FRIEND_RES);
     }
 
+    @Transactional
     @Override
     public void cancelFriend(String userId, String targetId) {
 
@@ -98,14 +109,36 @@ public class FriendServiceImpl implements FriendService {
         return friendMapper.getFriendList(FriendListParam.create(userId,pagination,FriendStatus.FRIEND));
     }
 
+    @Transactional
     @Override
     public void blockUser(String userId, String targetId) {
-        friendMapper.deleteFriend(userId,targetId);
-        friendMapper.blockUser(userId, targetId);
+
+        FriendStatus friendStatus = friendMapper.getFriendRelationStatus(userId, targetId).getFriendStatus();
+
+        switch(friendStatus){
+            case NONE:
+                friendMapper.blockUser(userId, targetId);
+                break;
+            case BLOCK:
+                throw new DuplicateRequestException("중복된 요청입니다.");
+            case ME:
+                throw new InvalidApproachException("유효하지 않은 접근입니다.");
+            default:
+                friendMapper.deleteFriend(userId,targetId);
+                friendMapper.blockUser(userId, targetId);
+        }
     }
 
+    @Transactional
     @Override
     public void unblockUser(String userId, String targetId) {
+
+        FriendStatus friendStatus = friendMapper.getFriendRelationStatus(userId, targetId).getFriendStatus();
+
+        if(friendStatus!=FriendStatus.BLOCK){
+            throw new InvalidApproachException("유효하지 않은 접근입니다.");
+        }
+
         friendMapper.deleteBlockUser(userId, targetId);
     }
 

@@ -12,6 +12,8 @@ public interface FriendService {
 
     void deleteFriendRequest(String userId, String targetId);
 
+    void denyFriendRequest(String userId, String targetId);
+
     void permitFriendRequest(String userId, String targetId);
 
     void cancelFriend(String userId, String targetId);

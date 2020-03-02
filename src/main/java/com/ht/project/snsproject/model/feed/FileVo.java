@@ -1,13 +1,19 @@
 package com.ht.project.snsproject.model.feed;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class FileVo {
-
-    String path;
 
     int fileIndex;
 
+    String path;
+
     String fileName;
+
+    public static FileVo getInstance(int fileIndex, String path, String fileName){
+        return new FileVo(fileIndex,path,fileName);
+    }
 }
