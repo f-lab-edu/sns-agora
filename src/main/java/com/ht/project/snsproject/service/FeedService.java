@@ -19,4 +19,6 @@ public interface FeedService {
 
     void deleteFeed(int id, String userId);
 
+    void updateFeed(List<MultipartFile> files, FeedUpdateParam feedUpdateParam, int feedId, String userId);
+
 }

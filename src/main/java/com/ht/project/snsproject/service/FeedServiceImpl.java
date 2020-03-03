@@ -29,7 +29,7 @@ public class FeedServiceImpl implements FeedService{
     FriendMapper friendMapper;
 
     @Autowired
-    @Qualifier("awsFileService")
+    @Qualifier("localFileService")
     FileService fileService;
 
     @Autowired
@@ -163,5 +163,24 @@ public class FeedServiceImpl implements FeedService{
             throw new InvalidApproachException("일치하는 데이터가 없습니다.");
         }
         fileService.deleteFile(id);
+    }
+
+    @Transactional
+    @Override
+    public void updateFeed(List<MultipartFile> files, FeedUpdateParam feedUpdateParam, int feedId, String userId) {
+        Timestamp date = Timestamp.valueOf(LocalDateTime.now());
+        FeedInsert.FeedInsertBuilder builder = FeedInsert.builder();
+        builder.id(feedId);
+        builder.userId(userId);
+        builder.title(feedUpdateParam.getTitle());
+        builder.content(feedUpdateParam.getContent());
+        builder.date(date);
+        builder.publicScope(feedUpdateParam.getPublicScope());
+        builder.recommend(feedUpdateParam.getRecommend());
+        FeedInsert feedInsert = builder.build();
+
+        feedMapper.updateFeed(feedInsert);
+        fileService.deleteFile(feedId);
+        fileService.fileUpload(files, userId, feedId);
     }
 }

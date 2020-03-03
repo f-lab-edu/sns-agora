@@ -96,4 +96,15 @@
         DELETE FROM feeds
         WHERE id = #{id} AND userId = #{userId}
     </delete>
+
+    <update id="updateFeed" parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
+        UPDATE feeds
+        SET userId = #{userId},
+        title = #{title},
+        content = #{content},
+        date = #{date},
+        publicScope = #{publicScope},
+        recommend = #{recommend}
+        WHERE id = #{id}
+    </update>
 </mapper>
