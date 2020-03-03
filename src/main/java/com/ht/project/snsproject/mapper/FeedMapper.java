@@ -18,5 +18,5 @@ public interface FeedMapper {
 
     boolean deleteFeed(FeedDeleteParam feedDeleteParam);
 
-    void updateFeed(FeedInsert feedInsert);
+    boolean updateFeed(FeedInsert feedInsert);
 }

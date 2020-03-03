@@ -99,12 +99,11 @@
 
     <update id="updateFeed" parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
         UPDATE feeds
-        SET userId = #{userId},
-        title = #{title},
+        SET title = #{title},
         content = #{content},
         date = #{date},
         publicScope = #{publicScope},
         recommend = #{recommend}
-        WHERE id = #{id}
+        WHERE id = #{id} AND userId = #{userId}
     </update>
 </mapper>

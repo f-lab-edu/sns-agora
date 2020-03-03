@@ -179,7 +179,10 @@ public class FeedServiceImpl implements FeedService{
         builder.recommend(feedUpdateParam.getRecommend());
         FeedInsert feedInsert = builder.build();
 
-        feedMapper.updateFeed(feedInsert);
+        boolean result = feedMapper.updateFeed(feedInsert);
+        if(!result){
+            throw new InvalidApproachException("일치하는 데이터가 없습니다.");
+        }
         fileService.deleteFile(feedId);
         fileService.fileUpload(files, userId, feedId);
     }
