@@ -1,13 +1,15 @@
 package com.ht.project.snsproject.service;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
+import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.ht.project.snsproject.Exception.FileUploadException;
 import com.ht.project.snsproject.enumeration.ErrorCode;
 import com.ht.project.snsproject.mapper.FileMapper;
-import com.ht.project.snsproject.model.feed.FileInfo;
-import com.ht.project.snsproject.model.feed.FileVo;
+import com.ht.project.snsproject.model.feed.*;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,16 +27,22 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @Service
 @Qualifier("awsFileService")
 @PropertySource("application-aws.properties")
 public class FileServiceAws implements FileService {
 
     @Autowired
-    private AmazonS3 S3Client;
+    private AmazonS3 s3Client;
 
     @Value("${aws.s3.bucketName}")
     private String bucketName;
+
+    @Autowired
+    private FileServiceAws fileServiceAws;
+
+    private static final Logger logger = LoggerFactory.getLogger(FileServiceAws.class);
 
     @Autowired
     FileMapper fileMapper;
@@ -76,7 +84,7 @@ public class FileServiceAws implements FileService {
                 String keyName = dirPath + File.separator + file.getOriginalFilename();
 
                 fileInfoList.add(new FileInfo(dirPath, file.getOriginalFilename(), fileIndex, feedId));
-                S3Client.putObject(bucketName, keyName, file.getInputStream(), metadata);
+                s3Client.putObject(bucketName, keyName, file.getInputStream(), metadata);
                 fileIndex++;
             }
             fileMapper.fileListUpload(fileInfoList);
@@ -90,16 +98,117 @@ public class FileServiceAws implements FileService {
 
     @Transactional
     @Override
-    public void deleteFile(int feedId) {
+    public void deleteAllFiles(int feedId) {
 
         List<FileVo> files = fileMapper.getFiles(feedId);
+        List<DeleteObjectsRequest.KeyVersion> keyVersions = new ArrayList<>();
+
         if(files!=null){
             for (FileVo file : files) {
-                String keyName = file.getPath() + File.separator + file.getFileName();
-
-                S3Client.deleteObject(new DeleteObjectRequest(bucketName,keyName));
+                keyVersions.add(new DeleteObjectsRequest.KeyVersion(file.getFilePath()
+                        +File.separator
+                        +file.getFileName()));
             }
+
+            DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName).withKeys(keyVersions);
+            s3Client.deleteObjects(deleteObjectsRequest);
         }
         fileMapper.deleteFile(feedId);
+    }
+
+    @Transactional
+    @Override
+    public void updateFiles(List<MultipartFile> files, String userId, int feedId) {
+
+        List<String> originFiles = fileMapper.getFileNames(feedId);
+        List<FileAdd> uploadFiles = new ArrayList<>();
+        List<FileUpdate> fileUpdateList = new ArrayList<>();
+
+        int fileIndex = 0;
+
+        if(originFiles.isEmpty()){
+            fileServiceAws.fileUpload(files,userId,feedId);
+            return;
+        }
+
+        if(!files.isEmpty()) {
+            for (MultipartFile file : files) {
+                String fileName = file.getOriginalFilename();
+                ++fileIndex;
+                if (originFiles.contains(fileName)) {
+                    fileUpdateList.add(FileUpdate.create(feedId, fileIndex, fileName));
+                    originFiles.remove(fileName);
+                } else {
+                    uploadFiles.add(FileAdd.create(fileIndex, file));
+                }
+            }
+        } else{
+            deleteAllFiles(feedId);
+            return;
+        }
+
+        if(!fileUpdateList.isEmpty()) {
+            fileMapper.updateFiles(fileUpdateList);
+        }
+
+        if(!uploadFiles.isEmpty()){
+            fileServiceAws.addFiles(feedId, uploadFiles);
+        }
+
+        if(!originFiles.isEmpty()){
+            fileServiceAws.deleteFiles(feedId, originFiles);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void deleteFiles(int feedId, List<String> fileNames) {
+
+        String path = fileMapper.getFilePath(feedId);
+
+        List<FileDelete> fileDeleteList = new ArrayList<>();
+        List<DeleteObjectsRequest.KeyVersion> keyVersionList = new ArrayList<>();
+
+        if (path != null) {
+            for(String fileName : fileNames){
+                fileDeleteList.add(FileDelete.create(feedId,fileName));
+                keyVersionList.add(new DeleteObjectsRequest.KeyVersion(path+File.separator+fileName));
+            }
+            fileMapper.deleteFiles(fileDeleteList);
+            DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName).withKeys(keyVersionList);
+            s3Client.deleteObjects(deleteObjectsRequest);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void addFiles(int feedId, List<FileAdd> fileAddList) {
+
+
+        String path = fileMapper.getFilePath(feedId);
+        logger.info(path);
+
+        List<FileInfo> fileInfoList = new ArrayList<>();
+        ObjectMetadata objectMetadata =new ObjectMetadata();
+
+        try {
+            for (FileAdd fileAdd : fileAddList) {
+
+                MultipartFile file = fileAdd.getFile();
+                String originalFileName = file.getOriginalFilename();
+                objectMetadata.setContentType(MediaType.IMAGE_JPEG_VALUE);
+                objectMetadata.setContentLength(file.getSize());
+                String keyName = path + File.separator + originalFileName;
+                int fileIndex = fileAdd.getFileIndex();
+
+                fileInfoList.add(new FileInfo(path, originalFileName, fileIndex, feedId));
+                s3Client.putObject(bucketName, keyName, file.getInputStream(), objectMetadata);
+            }
+            fileMapper.fileListUpload(fileInfoList);
+        }catch (IOException ioe){
+            throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+        }finally {
+            dateFormat.remove();
+        }
     }
 }

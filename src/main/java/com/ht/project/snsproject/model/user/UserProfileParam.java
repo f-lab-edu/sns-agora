@@ -7,9 +7,9 @@ import java.sql.Date;
 @Value
 public class UserProfileParam {
 
-    private String nickname;
+    String nickname;
 
-    private String email;
+    String email;
 
-    private Date birth;
+    Date birth;
 }

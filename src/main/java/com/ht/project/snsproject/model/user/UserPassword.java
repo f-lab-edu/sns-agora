@@ -9,9 +9,9 @@ import javax.validation.constraints.Pattern;
 public class UserPassword {
 
     @NotNull
-    private String currentPassword;
+    String currentPassword;
 
     @NotNull
     @Pattern(regexp = "^(?=.*\\d)(?=.*[~!@#$%^&()_+])(?=.*[a-z])(?=.*[A-Z]).{8,12}$")
-    private String newPassword;
+    String newPassword;
 }

@@ -2,20 +2,21 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ht.project.snsproject.mapper.FileMapper">
     <insert id="fileListUpload" parameterType="java.util.List">
-        INSERT INTO images(path, fileName, fileIndex, feedId)
+        INSERT INTO images(filePath, fileName, fileIndex, feedId)
         VALUES
         <foreach item="item" index="index" collection="list" separator=",">
-            (#{item.path}, #{item.fileName}, #{item.fileIndex}, #{item.feedId})
+            (#{item.filePath}, #{item.fileName}, #{item.fileIndex}, #{item.feedId})
         </foreach>
     </insert>
 
     <select id="getFilePath" parameterType="int" resultType="String">
-        SELECT path From images
-        WHERE feedId = #{feedId} AND fileIndex = '1'
+        SELECT filePath From images
+        WHERE feedId = #{feedId}
+        LIMIT 1
     </select>
 
     <select id="getFiles" parameterType="int" resultType="com.ht.project.snsproject.model.feed.FileVo">
-        SELECT fileIndex, path, fileName FROM images
+        SELECT fileIndex, filePath, fileName FROM images
         WHERE feedId = #{feedId}
     </select>
 
@@ -23,4 +24,25 @@
         DELETE FROM images
         WHERE feedId = #{feedId}
     </delete>
+
+    <delete id="deleteFiles" parameterType="java.util.List">
+        <foreach item="item" index="index" collection="list" separator=";">
+            DELETE FROM images
+            WHERE feedId = #{item.feedId} AND fileName=#{item.fileName}
+        </foreach>
+    </delete>
+
+    <update id="updateFiles" parameterType="java.util.List">
+        <foreach item="item" index="index" collection="list" separator=";">
+            UPDATE images
+            SET
+            fileIndex=#{item.fileIndex}
+            WHERE feedId=#{item.feedId} AND fileName=#{item.fileName}
+        </foreach>
+    </update>
+
+    <select id="getFileNames" parameterType="int" resultType="String">
+        SELECT fileName FROM images
+        WHERE feedId = #{feedId}
+    </select>
 </mapper>

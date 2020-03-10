@@ -5,7 +5,7 @@ import lombok.Value;
 @Value
 public class FileInfo {
 
-    String path;
+    String filePath;
 
     String fileName;
 

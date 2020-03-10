@@ -12,22 +12,22 @@ public class UserJoinRequest {
 
     @NotBlank(message = "아이디는 필수 입력사항입니다.(영문 소문자, 숫자 6~20자이내)")
     @Pattern(regexp = "^[0-9a-z].{6,20}$")
-    private String userId;
+    String userId;
 
     @NotBlank(message = "비밀번호는 필수 입력사항입니다.")
     @Pattern(regexp = "^(?=.*\\d)(?=.*[~!@#$%^&()_+])(?=.*[a-z])(?=.*[A-Z]).{8,12}$",
             message = "비밀번호는 영문 대소문자, 숫자, 특수문자를 각 1개 이상 포함합니다.(~!@#$%^&*()_+)(8~12자 이내)")
-    private String password;
+    String password;
 
     @NotBlank
     @Email
-    private String email;
+    String email;
 
     @NotBlank
-    private String name;
+    String name;
 
     @NotBlank
-    private String nickname;
+    String nickname;
 
-    private Date birth;
+    Date birth;
 }

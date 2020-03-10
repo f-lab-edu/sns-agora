@@ -7,11 +7,11 @@ import java.sql.Date;
 @Value
 public class UserProfile {
 
-    private int id;
+    int id;
 
-    private String nickname;
+    String nickname;
 
-    private String email;
+    String email;
 
-    private Date birth;
+    Date birth;
 }

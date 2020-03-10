@@ -29,7 +29,7 @@ public class FeedServiceImpl implements FeedService{
     FriendMapper friendMapper;
 
     @Autowired
-    @Qualifier("localFileService")
+    @Qualifier("awsFileService")
     FileService fileService;
 
     @Autowired
@@ -50,7 +50,9 @@ public class FeedServiceImpl implements FeedService{
 
         FeedInsert feedInsert = builder.build();
         feedMapper.feedUpload(feedInsert);
-        fileService.fileUpload(files, userId, feedInsert.getId());
+        if(!files.isEmpty()) {
+            fileService.fileUpload(files, userId, feedInsert.getId());
+        }
     }
 
     @Transactional
@@ -106,7 +108,6 @@ public class FeedServiceImpl implements FeedService{
         for(FeedList feed:feedList){
             Feed.FeedBuilder builder = Feed.builder();
             List<FileVo> files = new ArrayList<>();
-            StringTokenizer st = new StringTokenizer(feed.getFileNames(),",");
             int fileIndex = 0;
             builder.id(feed.getId());
             builder.userId(feed.getUserId());
@@ -115,11 +116,14 @@ public class FeedServiceImpl implements FeedService{
             builder.date(feed.getDate());
             builder.publicScope(feed.getPublicScope());
             builder.recommend(feed.getRecommend());
-            while(st.hasMoreTokens()){
-                FileVo tmpFile = FileVo.getInstance(++fileIndex,feed.getPath(),st.nextToken());
-                files.add(tmpFile);
+            if(feed.getFileNames()!=null) {
+                StringTokenizer st = new StringTokenizer(feed.getFileNames(), ",");
+                while (st.hasMoreTokens()) {
+                    FileVo tmpFile = FileVo.getInstance(++fileIndex, feed.getPath(), st.nextToken());
+                    files.add(tmpFile);
+                }
+                builder.files(files);
             }
-            builder.files(files);
             Feed tmp = builder.build();
             feeds.add(tmp);
         }
@@ -162,28 +166,26 @@ public class FeedServiceImpl implements FeedService{
         if(!result){
             throw new InvalidApproachException("일치하는 데이터가 없습니다.");
         }
-        fileService.deleteFile(id);
+        fileService.deleteAllFiles(id);
     }
 
     @Transactional
     @Override
     public void updateFeed(List<MultipartFile> files, FeedUpdateParam feedUpdateParam, int feedId, String userId) {
         Timestamp date = Timestamp.valueOf(LocalDateTime.now());
-        FeedInsert.FeedInsertBuilder builder = FeedInsert.builder();
+        FeedUpdate.FeedUpdateBuilder builder = FeedUpdate.builder();
         builder.id(feedId);
         builder.userId(userId);
         builder.title(feedUpdateParam.getTitle());
         builder.content(feedUpdateParam.getContent());
         builder.date(date);
         builder.publicScope(feedUpdateParam.getPublicScope());
-        builder.recommend(feedUpdateParam.getRecommend());
-        FeedInsert feedInsert = builder.build();
+        FeedUpdate feedUpdate = builder.build();
 
-        boolean result = feedMapper.updateFeed(feedInsert);
+        boolean result = feedMapper.updateFeed(feedUpdate);
         if(!result){
             throw new InvalidApproachException("일치하는 데이터가 없습니다.");
         }
-        fileService.deleteFile(feedId);
-        fileService.fileUpload(files, userId, feedId);
+        fileService.updateFiles(files,userId,feedId);
     }
 }

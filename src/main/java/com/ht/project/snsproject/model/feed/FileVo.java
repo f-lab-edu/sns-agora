@@ -9,11 +9,11 @@ public class FileVo {
 
     int fileIndex;
 
-    String path;
+    String filePath;
 
     String fileName;
 
-    public static FileVo getInstance(int fileIndex, String path, String fileName){
-        return new FileVo(fileIndex,path,fileName);
+    public static FileVo getInstance(int fileIndex, String filePath, String fileName){
+        return new FileVo(fileIndex,filePath,fileName);
     }
 }
