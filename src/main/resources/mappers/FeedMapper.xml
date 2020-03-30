@@ -2,50 +2,40 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ht.project.snsproject.mapper.FeedMapper">
 
-    <resultMap id="feedList" type="com.ht.project.snsproject.model.feed.Feed">
-        <id property="id" column="id"/>
-        <result property="userId" column="userId"/>
-        <result property="title" column="title"/>
-        <result property="content" column="content"/>
-        <result property="date" column="date"/>
-        <result property="publicScope" column="publicScope"/>
-        <result property="recommend" column="recommend"/>
-        <collection property="files" ofType="com.ht.project.snsproject.model.feed.FileVo" resultMap="getFileVo"/>
-    </resultMap>
-
-    <resultMap id="getFileVo" type="com.ht.project.snsproject.model.feed.FileVo">
-        <result property="filePath" column="filePath"/>
-        <result property="fileIndex" column="fileIndex"/>
-        <result property="fileName" column="fileName"/>
-    </resultMap>
-
     <insert id="feedUpload" useGeneratedKeys="true" keyProperty="id"
             parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
         INSERT INTO feeds(userId, title, content, date, publicScope, recommend)
         VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope}, #{recommend})
     </insert>
 
-    <select id="getFeed" parameterType="com.ht.project.snsproject.model.feed.FeedParam" resultMap="feedList">
+    <select id="getFeed" parameterType="com.ht.project.snsproject.model.feed.FeedParam"
+            resultType="com.ht.project.snsproject.model.feed.FeedInfo">
         SELECT a.id, a.userId,
         a.title, a.content,
-        a.date, a.publicScope, a.recommend,
-        b.filePath, b.fileName, b.fileIndex
-        FROM feeds a INNER JOIN images b
+        a.date, a.publicScope,
+        b.filePath, GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
+        FROM feeds a LEFT JOIN images b
         ON (a.id = b.feedId)
-        AND a.id = #{id}
+        WHERE a.id = #{id}
         AND a.userId = #{userId}
-        WHERE a.publicScope = 'ALL'
+        AND (a.publicScope = 'ALL'
         <if test="friendStatus.name() == 'ME'">
             OR a.publicScope = 'FRIENDS'
-            OR a.publicScope = 'ME'
+            OR a.publicScope = 'ME')
         </if>
         <if test="friendStatus.name() == 'FRIEND'">
-            OR a.publicScope = 'FRIENDS'
+            OR a.publicScope = 'FRIENDS')
         </if>
     </select>
 
+    <!--LEFT JOIN 사용 이유
+        - 피드를 가져오기 위해서는 피드 정보와 파일정보를 동시에 가져와야하기 때문에
+          JOIN 을 사용하여 feeds 테이블과 images 테이블의 정보들을 조회하고자 하였습니다.
+        - INNER JOIN 을 사용하지 않고, LEFT JOIN 을 사용한 이유는
+          모든 피드가 파일 정보를 포함하지 않기 때문에 피드 정보만을 조회할 수 있도록 하기 위해서는
+          LEFT JOIN 을 통해 조회해야겠다고 생각하여 사용하게 되었습니다.-->
     <select id="getFeedList" parameterType="com.ht.project.snsproject.model.feed.FeedListParam"
-            resultType="com.ht.project.snsproject.model.feed.FeedList">
+            resultType="com.ht.project.snsproject.model.feed.FeedInfo">
         SELECT a.id, a.userId,
         a.title, a.content,
         a.date, a.publicScope, a.recommend,
@@ -72,7 +62,7 @@
 
     <select id="getFriendsFeedList"
             parameterType="com.ht.project.snsproject.model.feed.FriendsFeedList"
-            resultType="com.ht.project.snsproject.model.feed.FeedList">
+            resultType="com.ht.project.snsproject.model.feed.FeedInfo">
         SELECT a.id, a.userId,
         a.title, a.content,
         a.date, a.publicScope, a.recommend,

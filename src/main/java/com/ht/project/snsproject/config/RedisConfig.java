@@ -51,6 +51,7 @@ import org.springframework.session.web.context.AbstractHttpSessionApplicationIni
  *                        이 변환기는 타입이 지정된 빈들 혹은 타입이 지정되지 않은 HashMap 인스턴스들을
  *                        바인딩 하는데 사용된다.
  */
+
 @Configuration
 @EnableRedisHttpSession(maxInactiveIntervalInSeconds = 1800)
 public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
@@ -75,13 +76,15 @@ public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
     }
 
     @Bean
-    public RedisTemplate<String, User> redisTemplate() {
+    public RedisTemplate<String, Object> redisTemplate() {
 
-        RedisTemplate<String, User> redisTemplate = new RedisTemplate<>();
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory());
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(User.class));
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
 
         return redisTemplate;
     }
+
+    
 }

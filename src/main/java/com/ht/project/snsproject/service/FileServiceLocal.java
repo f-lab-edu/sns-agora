@@ -6,7 +6,6 @@ import com.ht.project.snsproject.mapper.FileMapper;
 import com.ht.project.snsproject.model.feed.FileAdd;
 import com.ht.project.snsproject.model.feed.FileDelete;
 import com.ht.project.snsproject.model.feed.FileInfo;
-import com.ht.project.snsproject.model.feed.FileUpdate;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,9 +80,8 @@ public class FileServiceLocal implements FileService {
 
     @Transactional
     @Override
-    public void deleteFiles(int feedId, List<String> fileNames) {
+    public void deleteFiles(int feedId, String path, List<String> fileNames) {
 
-        String path = fileMapper.getFilePath(feedId);
         List<FileDelete> fileDeleteList = new ArrayList<>();
 
         if (path != null) {
@@ -98,9 +96,7 @@ public class FileServiceLocal implements FileService {
 
     @Transactional
     @Override
-    public void addFiles(int feedId, List<FileAdd> fileAddList) {
-
-        String path = fileMapper.getFilePath(feedId);
+    public List<FileInfo> addFiles(int feedId, String path, List<FileAdd> fileAddList) {
 
         List<FileInfo> fileInfoList = new ArrayList<>();
 
@@ -111,10 +107,11 @@ public class FileServiceLocal implements FileService {
                 String filePath = path + File.separator + originalFileName;
                 File destFile = new File(filePath);
                 int fileIndex = fileAdd.getFileIndex();
+
                 fileInfoList.add(new FileInfo(path, originalFileName, fileIndex, feedId));
                 file.transferTo(destFile);
             }
-            fileMapper.fileListUpload(fileInfoList);
+            return fileInfoList;
         }catch (IOException ioe){
             throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
         }
@@ -125,7 +122,6 @@ public class FileServiceLocal implements FileService {
     public void deleteAllFiles(int feedId){
 
         String path = fileMapper.getFilePath(feedId);
-
         if(path!=null) {
             File dir = new File(path);
 
@@ -150,8 +146,10 @@ public class FileServiceLocal implements FileService {
     public void updateFiles(List<MultipartFile> files, String userId, int feedId) {
 
         List<String> originFiles = fileMapper.getFileNames(feedId);
+        String path = fileMapper.getFilePath(feedId);
+
         List<FileAdd> uploadFiles = new ArrayList<>();
-        List<FileUpdate> fileUpdateList = new ArrayList<>();
+        List<FileInfo> fileInfoList = new ArrayList<>();
 
         int fileIndex = 0;
 
@@ -165,7 +163,7 @@ public class FileServiceLocal implements FileService {
                 String fileName = file.getOriginalFilename();
                 ++fileIndex;
                 if (originFiles.contains(fileName)) {
-                    fileUpdateList.add(FileUpdate.create(feedId, fileIndex, fileName));
+                    fileInfoList.add(new FileInfo(path,fileName,fileIndex,feedId));
                     originFiles.remove(fileName);
                 } else {
                     uploadFiles.add(FileAdd.create(fileIndex, file));
@@ -176,16 +174,14 @@ public class FileServiceLocal implements FileService {
             return;
         }
 
-        if(!fileUpdateList.isEmpty()) {
-            fileMapper.updateFiles(fileUpdateList);
-        }
-
         if(!uploadFiles.isEmpty()){
-            fileServiceLocal.addFiles(feedId, uploadFiles);
+            fileInfoList.addAll(fileServiceLocal.addFiles(feedId, path, uploadFiles));
         }
 
         if(!originFiles.isEmpty()){
-            fileServiceLocal.deleteFiles(feedId, originFiles);
+            fileServiceLocal.deleteFiles(feedId, path, originFiles);
         }
+
+        fileMapper.insertAndUpdateFiles(fileInfoList);
     }
 }

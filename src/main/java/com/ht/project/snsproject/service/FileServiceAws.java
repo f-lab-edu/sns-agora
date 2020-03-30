@@ -121,8 +121,9 @@ public class FileServiceAws implements FileService {
     public void updateFiles(List<MultipartFile> files, String userId, int feedId) {
 
         List<String> originFiles = fileMapper.getFileNames(feedId);
+        String path = fileMapper.getFilePath(feedId);
         List<FileAdd> uploadFiles = new ArrayList<>();
-        List<FileUpdate> fileUpdateList = new ArrayList<>();
+        List<FileInfo> fileInfoList = new ArrayList<>();
 
         int fileIndex = 0;
 
@@ -136,7 +137,7 @@ public class FileServiceAws implements FileService {
                 String fileName = file.getOriginalFilename();
                 ++fileIndex;
                 if (originFiles.contains(fileName)) {
-                    fileUpdateList.add(FileUpdate.create(feedId, fileIndex, fileName));
+                    fileInfoList.add(new FileInfo(path,fileName,fileIndex,feedId));
                     originFiles.remove(fileName);
                 } else {
                     uploadFiles.add(FileAdd.create(fileIndex, file));
@@ -147,24 +148,20 @@ public class FileServiceAws implements FileService {
             return;
         }
 
-        if(!fileUpdateList.isEmpty()) {
-            fileMapper.updateFiles(fileUpdateList);
-        }
-
         if(!uploadFiles.isEmpty()){
-            fileServiceAws.addFiles(feedId, uploadFiles);
+            fileInfoList.addAll(fileServiceAws.addFiles(feedId, path, uploadFiles));
         }
 
         if(!originFiles.isEmpty()){
-            fileServiceAws.deleteFiles(feedId, originFiles);
+            fileServiceAws.deleteFiles(feedId, path, originFiles);
         }
+
+        fileMapper.insertAndUpdateFiles(fileInfoList);
     }
 
     @Transactional
     @Override
-    public void deleteFiles(int feedId, List<String> fileNames) {
-
-        String path = fileMapper.getFilePath(feedId);
+    public void deleteFiles(int feedId, String path, List<String> fileNames) {
 
         List<FileDelete> fileDeleteList = new ArrayList<>();
         List<DeleteObjectsRequest.KeyVersion> keyVersionList = new ArrayList<>();
@@ -182,11 +179,7 @@ public class FileServiceAws implements FileService {
 
     @Transactional
     @Override
-    public void addFiles(int feedId, List<FileAdd> fileAddList) {
-
-
-        String path = fileMapper.getFilePath(feedId);
-        logger.info(path);
+    public List<FileInfo> addFiles(int feedId, String path, List<FileAdd> fileAddList) {
 
         List<FileInfo> fileInfoList = new ArrayList<>();
         ObjectMetadata objectMetadata =new ObjectMetadata();
@@ -204,7 +197,7 @@ public class FileServiceAws implements FileService {
                 fileInfoList.add(new FileInfo(path, originalFileName, fileIndex, feedId));
                 s3Client.putObject(bucketName, keyName, file.getInputStream(), objectMetadata);
             }
-            fileMapper.fileListUpload(fileInfoList);
+            return fileInfoList;
         }catch (IOException ioe){
             throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
         }finally {

@@ -1,5 +1,7 @@
 package com.ht.project.snsproject.service;
 
+import com.google.api.Http;
+import com.ht.project.snsproject.Exception.DuplicateRequestException;
 import com.ht.project.snsproject.mapper.UserMapper;
 import com.ht.project.snsproject.model.user.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,11 @@ public class UserServiceImpl implements UserService{
         if(userInfo==null){
             return false;
         }
+
+        if(httpSession.getAttribute("userInfo")!=null){
+            throw new DuplicateRequestException("이미 로그인된 상태입니다.");
+        }
+
         httpSession.setAttribute("userInfo", userInfo);
 
         return true;

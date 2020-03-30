@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 
 @Value
 @AllArgsConstructor
-public class FeedList {
+public class FeedInfo {
 
     int id;
 
@@ -21,8 +21,6 @@ public class FeedList {
     Timestamp date;
 
     PublicScope publicScope;
-
-    int recommend;
 
     String path;
 

@@ -10,11 +10,11 @@ public interface FeedMapper {
 
     void feedUpload(FeedInsert feedInsert);
 
-    List<Feed> getFeed(FeedParam feedParam);
+    FeedInfo getFeed(FeedParam feedParam);
 
-    List<FeedList> getFeedList(FeedListParam feedListParam);
+    List<FeedInfo> getFeedList(FeedListParam feedListParam);
 
-    List<FeedList> getFriendsFeedList(FriendsFeedList friendsFeedList);
+    List<FeedInfo> getFriendsFeedList(FriendsFeedList friendsFeedList);
 
     boolean deleteFeed(FeedDeleteParam feedDeleteParam);
 

@@ -34,7 +34,7 @@ public class FeedController {
 
     @LoginCheck
     @GetMapping("/users/{targetId}/{id}")
-    public ResponseEntity<List<Feed>> getFeed(@PathVariable String targetId,
+    public ResponseEntity<Feed> getFeed(@PathVariable String targetId,
                                               @PathVariable int id, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");
         String userId = userInfo.getUserId();

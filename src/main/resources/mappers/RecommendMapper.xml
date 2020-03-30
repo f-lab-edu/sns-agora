@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ht.project.snsproject.mapper.RecommendMapper">
+
+    <select id="getRecommned" parameterType="int" resultType="int">
+        SELECT recommend FROM feeds
+        WHERE id = #{feedId}
+    </select>
+
+    <select id="getRecommendList" parameterType="int" resultType="java.util.List">
+        SELECT userId FROM recommends
+        WHERE feedId = #{feedId}
+    </select>
+
+    <insert id="initRecommendList" parameterType="int">
+        INSERT INTO recommends(feedId)
+        VALUES (#{feedId})
+    </insert>
+
+</mapper>

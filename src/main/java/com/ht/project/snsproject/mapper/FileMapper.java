@@ -23,5 +23,5 @@ public interface FileMapper {
 
     List<String> getFileNames(int feedId);
 
-    void updateFiles(List<FileUpdate> fileUpdateList);
+    void insertAndUpdateFiles(List<FileInfo> fileInfoList);
 }
