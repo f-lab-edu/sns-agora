@@ -1,12 +1,22 @@
 package com.ht.project.snsproject.service;
 
+import com.ht.project.snsproject.Exception.DuplicateRequestException;
+import com.ht.project.snsproject.Exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.RecommendMapper;
+import com.ht.project.snsproject.model.recommend.RecommendUserDelete;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class RecommendServiceImpl implements RecommendService {
@@ -15,77 +25,90 @@ public class RecommendServiceImpl implements RecommendService {
     RecommendMapper recommendMapper;
 
     @Autowired
+    FeedService feedService;
+
+    @Autowired
     RedisTemplate<String,Object> redisTemplate;
 
     @Override
-    @Cacheable(value="feeds", key="recommend:"+"#feedId")
+    @Cacheable(value="feeds", key="'recommend:'+#feedId")
     public int getRecommend(int feedId) {
 
         return recommendMapper.getRecommend(feedId);
     }
+
     @Override
-    @Cacheable(value="feeds", key="recommendList:"+"#feedId")
     public List<String> getRecommendList(int feedId){
+
+        String key = "recommendList:"+feedId;
+
+        if(redisTemplate.hasKey(key)){
+
+            List<Object> cache = redisTemplate.opsForList().range(key,0,-1);
+
+            return cache.stream()
+                    .map(object -> Objects.toString(object, null))
+                    .collect(Collectors.toList());
+        }
+
         return recommendMapper.getRecommendList(feedId);
     }
 
+    @Transactional
+    @Override
+    public void increaseRecommend(int feedId, String userId){
 
-/*    @Scheduled(fixedRate = 1000 * 60 * 60)//1시간마다 수행(1 sec/1000)
-    public void updateFeedCacheDb(){
+        feedService.getFeedInfoCache(feedId);
+        getRecommend(feedId);
+        List<String> recommendList = getRecommendList(feedId);
 
-        Set<String> keys = new HashSet<>();
-        List<FeedCacheUpdateParam> feedCacheUpdateParamList = new ArrayList<>();
-        RedisConnection redisConnection = null;
+        if(recommendList.contains(userId)){
+            throw new DuplicateRequestException("중복된 요청입니다.");
+        }
 
-        try {
-            redisConnection = redisTemplate.getConnectionFactory().getConnection();
-            ScanOptions options = ScanOptions.scanOptions().match("feeds:*").count(10).build();
-            Cursor<byte[]> cursor = redisConnection.scan(options);
-            while (cursor.hasNext()) {
-                keys.add(new String(cursor.next()));
+        String recommendListKey = "recommendList:"+feedId;
+        String recommendKey = "recommend:"+feedId;
+
+        redisTemplate.expire("feedInfo:"+feedId,5L, TimeUnit.HOURS);
+        redisTemplate.opsForList().rightPush(recommendListKey, userId);
+        redisTemplate.expire(recommendListKey,5L, TimeUnit.HOURS);
+        redisTemplate.opsForValue().increment(recommendKey);
+        redisTemplate.expire(recommendKey,5L,TimeUnit.HOURS);
+    }
+
+    @Transactional
+    @Override
+    public void cancelRecommend(int feedId, String userId) {
+
+        String key = "recommend:"+feedId;
+        Integer recommend = (Integer) redisTemplate.opsForValue().get(key);
+
+        if(recommend!=null){
+            if(recommend==0){
+                throw new InvalidApproachException("비정상적인 요청입니다.");
             }
-        } finally {
-            redisConnection.close();
-        }
-        if(!keys.isEmpty()) {
-            for (String key : keys) {
-                BoundValueOperations<String, Object> boundValueOperations = redisTemplate.boundValueOps(key);
-                String[] keyName = key.split(":");
-                int feedId = Integer.parseInt(keyName[1]);
+            redisTemplate.opsForValue().decrement(key);
+            redisTemplate.opsForList().remove("recommendList:"+feedId,1, userId);
+        }else {
 
+            boolean deleteUserResult = recommendMapper.deleteRecommendUser(new RecommendUserDelete(feedId, userId));
 
-                Map<?, ?> cache = (Map<?, ?>) boundValueOperations.get();
-                List<?> date = (List<?>) cache.get("date");
-                Timestamp timestamp = new Timestamp((Long) date.get(1));
-
-                feedCacheUpdateParamList.add(FeedCacheUpdateParam.builder()
-                        .feedId(feedId)
-                        .userId((String) cache.get("userId"))
-                        .title((String) cache.get("title"))
-                        .content((String) cache.get("content"))
-                        .date(timestamp)
-                        .publicScope(PublicScope.valueOf((String) cache.get("publicScope")))
-                        .recommend((Integer) cache.get("recommend"))
-                        .build());
+            if(!deleteUserResult){
+                throw new InvalidApproachException("비정상적인 요청입니다.");
             }
 
-            recommendMapper.updateFeedCacheDb(feedCacheUpdateParamList);
-        }
-    }
-*/
+            boolean decrementRecommendResult = recommendMapper.decrementRecommend(feedId);
 
-    public void initRecommendList(int feedId){
-        recommendMapper.initRecommendList(feedId);
+            if(!decrementRecommendResult){
+                throw new InvalidApproachException("비정상적인 요청입니다.");
+            }
+
+        }
+
     }
 
-/*    public List<String> getRecommendList(int feedId){
-        BoundListOperations<String, Object> boundListOperations = redisTemplate.boundListOps("recommends:"+feedId);
-        Long size = boundListOperations.size();
-        if(size!=null){
-            List<String> userIds = (List<String>) boundListOperations;
-            recommendMapper.updateRecommendUsers(new RecommendUserUpdateParam(feedId, userIds));
-        }
-        return recommendMapper.getRecommendList(feedId);
-    }
-*/
+    /*
+     * 스케줄러 수정 후 추가 예정.
+     */
+
 }

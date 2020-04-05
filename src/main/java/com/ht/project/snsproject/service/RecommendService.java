@@ -6,7 +6,9 @@ public interface RecommendService {
 
     int getRecommend(int feedId);
 
-    void initRecommendList(int feedId);
-
     List<String> getRecommendList(int feedId);
+
+    void increaseRecommend(int feedId, String userId);
+
+    void cancelRecommend(int feedId, String userId);
 }

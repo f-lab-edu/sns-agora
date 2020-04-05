@@ -1,5 +1,6 @@
 package com.ht.project.snsproject.service;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.ht.project.snsproject.Exception.InvalidApproachException;
 import com.ht.project.snsproject.enumeration.FriendStatus;
 import com.ht.project.snsproject.enumeration.PublicScope;
@@ -9,12 +10,7 @@ import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.core.BoundValueOperations;
-import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,13 +36,10 @@ public class FeedServiceImpl implements FeedService{
     FileService fileService;
 
     @Autowired
-    RedisTemplate<String, Object> redisTemplate;
-
-    @Autowired
-    FeedService feedService;
-
-    @Autowired
     RecommendService recommendService;
+
+    @Autowired
+    RedisTemplate<String, Object> redisTemplate;
 
     @Transactional
     @Override
@@ -62,7 +55,6 @@ public class FeedServiceImpl implements FeedService{
                 .recommend(0)
                 .build();
         feedMapper.feedUpload(feedInsert);
-        recommendService.initRecommendList(feedInsert.getId());
         if(!files.isEmpty()) {
             fileService.fileUpload(files, userId, feedInsert.getId());
         }
@@ -101,14 +93,55 @@ public class FeedServiceImpl implements FeedService{
         return feedBuilder.build();
     }
 
+    public FeedInfo getFeedInfoCache(int feedId){
 
-    @Cacheable(value = "feeds", key = "feedInfo:"+"#feedId")
-    public FeedInfo getFeedInfo(int id, String userId, String targetId){
+        String key = "feedInfo:"+feedId;
+        Map<?,?> cache = (Map<?, ?>) redisTemplate.opsForValue().get(key);
+
+        if(cache!=null){
+
+            return FeedInfo.builder().id((Integer) cache.get("id"))
+                    .userId((String) cache.get("userId"))
+                    .title((String) cache.get("title"))
+                    .content((String) cache.get("content"))
+                    .date(new Timestamp((Long) cache.get("date")))
+                    .publicScope(PublicScope.valueOf((String) cache.get("publicScope")))
+                    .path((String) cache.get("path"))
+                    .fileNames((String) cache.get("fileNames"))
+                    .build();
+
+        }
+
+
+        FeedInfo feedInfo = feedMapper.getFeedInfoCache(feedId);
+        redisTemplate.opsForValue().set(key, feedInfo);
+
+        return feedInfo;
+    }
+
+    public FeedInfo getFeedInfo(int feedId, String userId, String targetId){
+
+        String key = "feedInfo:"+feedId;
+        Map<?,?> cache = (Map<?, ?>) redisTemplate.opsForValue().get(key);
+
+        if(cache!=null){
+
+            return FeedInfo.builder().id((Integer) cache.get("id"))
+                    .userId((String) cache.get("userId"))
+                    .title((String) cache.get("title"))
+                    .content((String) cache.get("content"))
+                    .date(new Timestamp((Long) cache.get("date")))
+                    .publicScope(PublicScope.valueOf((String) cache.get("publicScope")))
+                    .path((String) cache.get("path"))
+                    .fileNames((String) cache.get("fileNames"))
+                    .build();
+
+        }
 
         FeedInfo feedInfo;
 
         if(userId.equals(targetId)){
-            feedInfo = feedMapper.getFeed(FeedParam.create(id, targetId, FriendStatus.ME));
+            feedInfo = feedMapper.getFeed(FeedParam.create(feedId, targetId, FriendStatus.ME));
         }else {
 
             FriendStatus friendStatus = friendMapper.getFriendRelationStatus(userId, targetId).getFriendStatus();
@@ -117,19 +150,22 @@ public class FeedServiceImpl implements FeedService{
                 throw new InvalidApproachException("유효하지 않은 접근입니다.");
             }
 
-            feedInfo = feedMapper.getFeed(FeedParam.create(id, targetId, friendStatus));
+            feedInfo = feedMapper.getFeed(FeedParam.create(feedId, targetId, friendStatus));
 
             if (feedInfo == null) {
                 throw new InvalidApproachException("일치하는 데이터가 없습니다.");
             }
         }
 
+        redisTemplate.opsForValue().set(key, feedInfo);
+
         return feedInfo;
     }
 
     /*  getFeedList() 메소드의 경우,
         targetId 에 해당하는 user 의 피드 목록을 조회해야하므로 순서와 데이터 정확도가 중요하기 때문에
-        피드 전체를 캐시에서 확인하지 않고, 캐시에서는 recommend 수만 체크하여 가져온다.
+        피드 전체를 캐시에서 확인하지 않고,
+        recommend 수 증감은 redis 에서 저장하므로 캐시에서는 recommend 수만 체크하여 가져온다.
      */
     @Transactional
     @Override
@@ -224,37 +260,6 @@ public class FeedServiceImpl implements FeedService{
         return feeds;
     }
 
-    /*
-    * [WIP]
-    * 문제점
-    * 현재 레디스에서 전체 키 스캔 중인 상태 / 주어진 커서를 활용하여 페이징 구현 필요.
-    * 전체 스캔 시, 친구관계 조회를 해야하므로 DB에 전체 캐시 수 만큼의 접속 필요.
-    * */
-    public List<FeedInfo> getFeedInfoList(String userId, Pagination pagination){
-
-        List<String> keys = new ArrayList<>();
-        List<FeedInfo> feedInfoList = new ArrayList<>();
-        RedisConnection redisConnection = null;
-        try {
-            redisConnection = redisTemplate.getConnectionFactory().getConnection();
-            ScanOptions options = ScanOptions.scanOptions().match("feeds:feedInfo:*").count(10).build();
-            Cursor<byte[]> cursor = redisConnection.scan(options);
-            while (cursor.hasNext()) {
-                keys.add(new String(cursor.next()));
-            }
-        } finally {
-            redisConnection.close();
-        }
-
-        List<Object> values = redisTemplate.opsForValue().multiGet(keys);
-
-        for(Object value : values){
-            FeedInfo feedInfo = (FeedInfo) value;
-            feedInfo.getUserId();
-        }
-
-        return null;
-    }
 
     @Transactional
     @Override

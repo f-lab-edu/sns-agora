@@ -1,7 +1,6 @@
-package com.ht.project.snsproject.model.feed;
+package com.ht.project.snsproject.model.recommend;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 
@@ -9,10 +8,9 @@ import java.sql.Timestamp;
 
 @Builder
 @Value
-@AllArgsConstructor
-public class FeedInfo {
+public class FeedCacheUpdateParam {
 
-    int id;
+    int feedId;
 
     String userId;
 
@@ -24,7 +22,5 @@ public class FeedInfo {
 
     PublicScope publicScope;
 
-    String path;
-
-    String fileNames;
+    int recommend;
 }
