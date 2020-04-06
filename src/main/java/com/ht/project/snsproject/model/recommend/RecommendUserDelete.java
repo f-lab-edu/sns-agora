@@ -5,8 +5,7 @@ import lombok.Value;
 @Value
 public class RecommendUserDelete {
 
-    int feedId;
+  int feedId;
 
-    String userId;
-
+  String userId;
 }

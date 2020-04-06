@@ -1,13 +1,12 @@
 package com.ht.project.snsproject.model.recommend;
 
-import lombok.Value;
-
 import java.util.List;
+import lombok.Value;
 
 @Value
 public class RecommendUsersParam {
 
-    int feedId;
+  int feedId;
 
-    List<Object> recommendUsers;
+  List<Object> recommendUsers;
 }

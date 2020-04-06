@@ -6,14 +6,14 @@ import lombok.Value;
 @Value
 public class FeedParam {
 
-    int id;
+  int id;
 
-    String userId;
+  String userId;
 
-    FriendStatus friendStatus;
+  FriendStatus friendStatus;
 
-    public static FeedParam create(int id, String userId, FriendStatus friendStatus){
+  public static FeedParam create(int id, String userId, FriendStatus friendStatus){
 
-        return new FeedParam(id, userId, friendStatus);
-    }
+    return new FeedParam(id, userId, friendStatus);
+  }
 }

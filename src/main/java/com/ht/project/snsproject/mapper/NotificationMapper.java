@@ -5,5 +5,5 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface NotificationMapper {
 
-    String getDeviceId(String targetId);
+  String getDeviceId(String targetId);
 }

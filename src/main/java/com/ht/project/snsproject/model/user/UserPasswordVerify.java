@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class UserPasswordVerify {
-    private String password;
+  private String password;
 }

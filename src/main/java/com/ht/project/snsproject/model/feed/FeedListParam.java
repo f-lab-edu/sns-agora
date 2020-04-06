@@ -7,14 +7,15 @@ import lombok.Value;
 @Value
 public class FeedListParam {
 
-    String userId;
+  String userId;
 
-    Pagination pagination;
+  Pagination pagination;
 
-    PublicScope publicScope;
+  PublicScope publicScope;
 
-    public static FeedListParam create(String userId, Pagination pagination, PublicScope publicScope){
+  public static FeedListParam create(String userId,
+                                     Pagination pagination, PublicScope publicScope) {
 
-        return new FeedListParam(userId, pagination, publicScope);
-    }
+    return new FeedListParam(userId, pagination, publicScope);
+  }
 }

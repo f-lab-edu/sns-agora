@@ -6,9 +6,9 @@ import lombok.Value;
 @Value
 public class FeedVO {
 
-    String title;
+  String title;
 
-    String content;
+  String content;
 
-    PublicScope publicScope;
+  PublicScope publicScope;
 }

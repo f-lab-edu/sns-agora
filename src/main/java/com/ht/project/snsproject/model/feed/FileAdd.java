@@ -6,11 +6,11 @@ import org.springframework.web.multipart.MultipartFile;
 @Value
 public class FileAdd {
 
-    int fileIndex;
+  int fileIndex;
 
-    MultipartFile file;
+  MultipartFile file;
 
-    public static FileAdd create(int fileIndex, MultipartFile file){
-        return new FileAdd(fileIndex, file);
-    }
+  public static FileAdd create(int fileIndex, MultipartFile file) {
+    return new FileAdd(fileIndex, file);
+  }
 }

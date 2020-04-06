@@ -1,30 +1,31 @@
 package com.ht.project.snsproject.model.feed;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
+import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 
-import java.sql.Timestamp;
+
 
 @Builder
 @Value
 @AllArgsConstructor
 public class FeedInfo {
 
-    int id;
+  int id;
 
-    String userId;
+  String userId;
 
-    String title;
+  String title;
 
-    String content;
+  String content;
 
-    Timestamp date;
+  Timestamp date;
 
-    PublicScope publicScope;
+  PublicScope publicScope;
 
-    String path;
+  String path;
 
-    String fileNames;
+  String fileNames;
 }
