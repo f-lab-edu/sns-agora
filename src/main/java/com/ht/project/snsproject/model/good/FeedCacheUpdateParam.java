@@ -1,4 +1,4 @@
-package com.ht.project.snsproject.model.recommend;
+package com.ht.project.snsproject.model.good;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
 import java.sql.Timestamp;
@@ -21,5 +21,5 @@ public class FeedCacheUpdateParam {
 
   PublicScope publicScope;
 
-  int recommend;
+  int good;
 }
