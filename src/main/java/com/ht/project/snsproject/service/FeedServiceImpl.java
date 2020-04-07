@@ -1,22 +1,16 @@
 package com.ht.project.snsproject.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.FriendStatus;
 import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.InvalidApproachException;
+import com.ht.project.snsproject.exception.ObjectToJsonException;
 import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.mapper.FriendMapper;
 import com.ht.project.snsproject.model.Pagination;
-import com.ht.project.snsproject.model.feed.Feed;
-import com.ht.project.snsproject.model.feed.FeedDeleteParam;
-import com.ht.project.snsproject.model.feed.FeedInfo;
-import com.ht.project.snsproject.model.feed.FeedInsert;
-import com.ht.project.snsproject.model.feed.FeedListParam;
-import com.ht.project.snsproject.model.feed.FeedParam;
-import com.ht.project.snsproject.model.feed.FeedUpdate;
-import com.ht.project.snsproject.model.feed.FeedUpdateParam;
-import com.ht.project.snsproject.model.feed.FeedVO;
-import com.ht.project.snsproject.model.feed.FileVo;
-import com.ht.project.snsproject.model.feed.FriendsFeedList;
+import com.ht.project.snsproject.model.feed.*;
+
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -107,21 +101,28 @@ public class FeedServiceImpl implements FeedService {
   public FeedInfo getFeedInfoCache(int feedId) {
 
     String key = "feedInfo:" + feedId;
-    Map<?,?> cache = (Map<?, ?>) redisTemplate.opsForValue().get(key);
+    ObjectMapper mapper = new ObjectMapper();
 
-    if (cache != null) {
+    String cache;
+    try {
+      cache = mapper.writeValueAsString(redisTemplate.boundValueOps(key).get());//json string 객체로 직렬화
+      if(cache != null){
+        FeedInfoCache feedInfoCache = mapper.readValue(cache,FeedInfoCache.class);//역직렬화
 
-      return FeedInfo.builder().id((Integer) cache.get("id"))
-              .userId((String) cache.get("userId"))
-              .title((String) cache.get("title"))
-              .content((String) cache.get("content"))
-              .date(new Timestamp((Long) cache.get("date")))
-              .publicScope(PublicScope.valueOf((String) cache.get("publicScope")))
-              .path((String) cache.get("path"))
-              .fileNames((String) cache.get("fileNames"))
-              .build();
+        /*팩토리 메소드로 변환 예정*/
+        return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
+                .userId(feedInfoCache.getUserId())
+                .title(feedInfoCache.getTitle())
+                .content(feedInfoCache.getContent())
+                .date(new Timestamp(Long.parseLong(feedInfoCache.getDate())))
+                .publicScope(PublicScope.valueOf(feedInfoCache.getPublicScope()))
+                .path(feedInfoCache.getPath())
+                .fileNames(feedInfoCache.getFileNames())
+                .build();//FeedInfo 로 변경
+      }
+    } catch (JsonProcessingException e) {
+      throw new ObjectToJsonException("변환에 실패하였습니다.", e);
     }
-
 
     FeedInfo feedInfo = feedMapper.getFeedInfoCache(feedId);
     redisTemplate.opsForValue().set(key, feedInfo);
@@ -132,19 +133,27 @@ public class FeedServiceImpl implements FeedService {
   public FeedInfo getFeedInfo(int feedId, String userId, String targetId) {
 
     String key = "feedInfo:" + feedId;
-    Map<?,?> cache = (Map<?, ?>) redisTemplate.opsForValue().get(key);
+    ObjectMapper mapper = new ObjectMapper();
 
-    if (cache != null) {
+    String cache;
+    try {
+      cache = mapper.writeValueAsString(redisTemplate.boundValueOps(key).get());//json string 객체로 직렬화
+      if(cache != null){
+        FeedInfoCache feedInfoCache = mapper.readValue(cache,FeedInfoCache.class);//FeedInfoCache 로 역직렬화
 
-      return FeedInfo.builder().id((Integer) cache.get("id"))
-              .userId((String) cache.get("userId"))
-              .title((String) cache.get("title"))
-              .content((String) cache.get("content"))
-              .date(new Timestamp((Long) cache.get("date")))
-              .publicScope(PublicScope.valueOf((String) cache.get("publicScope")))
-              .path((String) cache.get("path"))
-              .fileNames((String) cache.get("fileNames"))
-              .build();
+        /*팩토리 메소드로 변환 예정*/
+        return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
+                .userId(feedInfoCache.getUserId())
+                .title(feedInfoCache.getTitle())
+                .content(feedInfoCache.getContent())
+                .date(new Timestamp(Long.parseLong(feedInfoCache.getDate())))
+                .publicScope(PublicScope.valueOf(feedInfoCache.getPublicScope()))
+                .path(feedInfoCache.getPath())
+                .fileNames(feedInfoCache.getFileNames())
+                .build();//FeedInfo 로 변경
+      }
+    } catch (JsonProcessingException e) {
+      throw new ObjectToJsonException("변환에 실패하였습니다.", e);
     }
 
     FeedInfo feedInfo;

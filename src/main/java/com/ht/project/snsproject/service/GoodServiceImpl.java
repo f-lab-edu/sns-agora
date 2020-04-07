@@ -52,7 +52,7 @@ public class GoodServiceImpl implements GoodService {
 
   @Transactional
   @Override
-  public void increaseGood(int feedId, String userId) {
+  public void addGood(int feedId, String userId) {
 
     feedService.getFeedInfoCache(feedId);
     getGood(feedId);
@@ -103,9 +103,4 @@ public class GoodServiceImpl implements GoodService {
       }
     }
   }
-
-  /*
-   * 스케줄러 수정 후 추가 예정.
-   */
-
 }

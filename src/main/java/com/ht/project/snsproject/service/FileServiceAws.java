@@ -48,6 +48,7 @@ public class FileServiceAws implements FileService {
 
   @Autowired
   FileMapper fileMapper;
+
   /** ThreadLocal 객체를 사용하면 SimpleDateFormat 의 Thread Safety 를 보장할 수 있다.
    * ThreadLocal 은 한 쓰레드에서 실행되는 코드가 동일한 객체를 사용할 수 있도록 해 주기 때문에
    * 쓰레드와 관련된 코드에서 파라미터를 사용하지 않고 객체를 전파하기 위한 용도로 주로 사용된다.
@@ -161,7 +162,7 @@ public class FileServiceAws implements FileService {
       fileServiceAws.deleteFiles(feedId, path, originFiles);
     }
 
-    fileMapper.insertAndUpdateFiles(fileInfoList);
+    fileMapper.upsertFiles(fileInfoList);
   }
 
   @Transactional

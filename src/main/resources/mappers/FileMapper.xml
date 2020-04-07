@@ -46,7 +46,7 @@
     - ON DUPLICATE UPDATE 방식을 사용한 이유는 REPLACE INTO 사용시
       삭제 후 삽입 연산으로 인한 자동 인덱스 증가를 막을 수 있기 때문에 인덱스가 무분별하게 증가하는 것을 방지할 수 있습니다.
 -->
-    <insert id="insertAndUpdateFiles" parameterType="java.util.List">
+    <insert id="upsertFiles" parameterType="java.util.List">
         INSERT INTO images(filePath, fileName, fileIndex, feedId)
         VALUES
         <foreach item="item" index="index" collection="list" separator=",">

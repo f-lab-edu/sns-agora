@@ -2,12 +2,18 @@ package com.ht.project.snsproject.config;
 
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -34,6 +40,33 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class DatabaseConfig {
 
+
+  @Value("${spring.datasource.url}")
+  String url;
+
+  @Value("${spring.datasource.username}")
+  String userName;
+
+  @Value("${spring.datasource.password}")
+  String password;
+
+  @Value("${spring.datasource.driver-class-name}")
+  String driverClassName;
+
+  @Bean(name = "db1DataSource")
+  @Primary
+  @ConfigurationProperties(prefix = "spring.datasource")
+  public DataSource dataSource() {
+
+    return DataSourceBuilder.create()
+            .url(url)
+            .username(userName)
+            .password(password)
+            .type(HikariDataSource.class)
+            .driverClassName(driverClassName)
+            .build();
+  }
+
   /**
    * SqlSessionFactory 는 SqlSession 객체를 생성하기 위한 객체이다.
    * SqlSession 객체를 한번 생성하면 매핑구문을 실행하거나 커밋 또는 롤백을 하기 위해 세션을 사용할수 있다.
@@ -44,7 +77,8 @@ public class DatabaseConfig {
    * @throws Exception if fail to create SqlSessionFactory Object
    */
   @Bean
-  public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+  @Primary
+  public SqlSessionFactory sqlSessionFactory(@Qualifier("db1DataSource") DataSource dataSource) throws Exception {
 
     final SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
     sessionFactory.setDataSource(dataSource);
@@ -62,6 +96,7 @@ public class DatabaseConfig {
    * @throws Exception if fail to create SqlSessionTemplate Object
    */
   @Bean
+  @Primary
   public SqlSessionTemplate sqlSessionTemplate(SqlSessionFactory sqlSessionFactory)
           throws Exception {
 

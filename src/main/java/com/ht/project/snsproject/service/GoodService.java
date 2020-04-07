@@ -8,7 +8,7 @@ public interface GoodService {
 
   List<String> getGoodList(int feedId);
 
-  void increaseGood(int feedId, String userId);
+  void addGood(int feedId, String userId);
 
   void cancelGood(int feedId, String userId);
 }

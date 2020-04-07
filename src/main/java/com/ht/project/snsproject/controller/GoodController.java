@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,12 +30,12 @@ public class GoodController {
   }
 
   @LoginCheck
-  @PutMapping("/{id}")
+  @PostMapping("/{id}")
   public HttpStatus increaseGood(@PathVariable int id, HttpSession httpSession) {
 
     User userInfo = (User) httpSession.getAttribute("userInfo");
     String userId = userInfo.getUserId();
-    goodService.increaseGood(id, userId);
+    goodService.addGood(id, userId);
 
     return HttpStatus.OK;
   }

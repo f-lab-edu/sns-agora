@@ -37,3 +37,4 @@ mvnw.cmd
 application-aws.properties
 application-fcm.properties
 agora-f2188-firebase-adminsdk-i798i-a30c3aabac.json
+application-quartz.properties
