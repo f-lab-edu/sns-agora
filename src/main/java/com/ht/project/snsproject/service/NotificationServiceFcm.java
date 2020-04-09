@@ -3,11 +3,18 @@ package com.ht.project.snsproject.service;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.messaging.*;
-import com.ht.project.snsproject.Exception.FcmInitializingException;
-import com.ht.project.snsproject.Exception.NoSuchUserIdException;
+import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.AndroidNotification;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Message;
+import com.ht.project.snsproject.exception.FcmInitializingException;
+import com.ht.project.snsproject.exception.NoSuchUserIdException;
 import com.ht.project.snsproject.mapper.NotificationMapper;
-import com.ht.project.snsproject.model.Notification.NotificationRequest;
+import com.ht.project.snsproject.model.notification.NotificationRequest;
+import java.io.FileInputStream;
+import java.io.IOException;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,15 +23,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.io.FileInputStream;
-import java.io.IOException;
-
 /**
  * Android Device ID test data 가 필요하므로,
  * 현재 메소드 호출 코드를 삽입하지 않음.
- * 이후 단위 테스트 구현시, 코드 삽입 예정.
- *
+ * 이후 단위 테스트 구현시, 코드 삽입 예정.*
  * Message 객체: Firebase Cloud Messaging Service 에서 보낼 메시지 객체 입니다.
  * 메세지 객체에는 기본 알림, 안드로이드, 웹, Apple Device 등 기기 종류에 따른 전송 설정 필드가 존재합니다.
  * - AndroidConfig -
@@ -41,20 +43,20 @@ import java.io.IOException;
 @Slf4j
 @PropertySource("application-fcm.properties")
 @Service
-public class NotificationServiceFcm implements NotificationService{
+public class NotificationServiceFcm implements NotificationService {
 
-    @Value("${fcm.database.name}")
-    String databaseName;
+  @Value("${fcm.database.name}")
+  String databaseName;
 
-    @Value("${fcm.service.account}")
-    String serviceAccountPath;
+  @Value("${fcm.service.account}")
+  String serviceAccountPath;
 
-    @Autowired
-    NotificationMapper notificationMapper;
+  @Autowired
+  NotificationMapper notificationMapper;
 
-    private static final Logger logger = LoggerFactory.getLogger(NotificationServiceFcm.class);
+  private static final Logger logger = LoggerFactory.getLogger(NotificationServiceFcm.class);
 
-    /*
+  /*
     - Initialize 메소드
       오브젝트가 생성 되고, DI 작업을 마친 다음 실행 되는 메소드입니다.
       생성자에서 초기화 작업을 해도 되지만
@@ -67,51 +69,52 @@ public class NotificationServiceFcm implements NotificationService{
          해당 인터페이스를 구현하고, afterPropertiesSet() 메소드를 Override 하면 초기화가 가능합니다.
       3. @Bean(initMethod = "init") : @Bean 애노테이션 속성에 initMethod 를 이용해서 초기화할 수 있습니다.
       4. XML 으로 하는 init-method : @Bean 애노테이션 설정과 동일합니다.
-      이외의 생성자 주입, ApplicationListener, CommandLineRunner 구현(Spring Boot) 등이 있습니다.
-     */
-    @PostConstruct
-    public void initialize() {
-        try {
-            FileInputStream serviceAccount = new FileInputStream(serviceAccountPath);
+         이외의 생성자 주입, ApplicationListener, CommandLineRunner 구현(Spring Boot) 등이 있습니다.
+  */
 
-            FirebaseOptions options = new FirebaseOptions.Builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .setDatabaseUrl(databaseName)
-                    .build();
-            if (FirebaseApp.getApps().isEmpty()) {
-                FirebaseApp.initializeApp(options);
-                logger.info("Firebase application has been initialized");
-            }
-        } catch (IOException ioe) {
-            throw new FcmInitializingException("FCM 초기화에 실패하였습니다.", ioe);
-        }
+  @PostConstruct
+  public void initialize() {
+
+    try {
+      FileInputStream serviceAccount = new FileInputStream(serviceAccountPath);
+      FirebaseOptions options = new FirebaseOptions.Builder()
+              .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+              .setDatabaseUrl(databaseName)
+              .build();
+      if (FirebaseApp.getApps().isEmpty()) {
+        FirebaseApp.initializeApp(options);
+        logger.info("Firebase application has been initialized");
+      }
+    } catch (IOException ioe) {
+      throw new FcmInitializingException("FCM 초기화에 실패하였습니다.", ioe);
+    }
+  }
+
+  public void sendPush(NotificationRequest notificationRequest) {
+
+    String deviceId = notificationMapper.getDeviceId(notificationRequest.getTargetId());
+
+    if (deviceId.isEmpty()) {
+      throw new NoSuchUserIdException("해당 서비스에 등록된 사용자가 아닙니다.");
     }
 
-    public void sendPush(NotificationRequest notificationRequest){
+    try {
+      Message message = Message.builder()
+              .setAndroidConfig(AndroidConfig.builder()
+                      .setTtl(3600 * 1000)
+                      .setPriority(AndroidConfig.Priority.NORMAL)
+                      .setNotification(AndroidNotification.builder()
+                              .setTitle(notificationRequest.getTitle())
+                              .setBody(notificationRequest.getMessage())
+                              .build())
+                      .build())
+              .setToken(deviceId)
+              .build();
 
-        String deviceId = notificationMapper.getDeviceId(notificationRequest.getTargetId());
-
-        if(deviceId.isEmpty()){
-            throw new NoSuchUserIdException("해당 서비스에 등록된 사용자가 아닙니다.");
-        }
-
-        try {
-            Message message = Message.builder()
-                    .setAndroidConfig(AndroidConfig.builder()
-                            .setTtl(3600 * 1000)
-                            .setPriority(AndroidConfig.Priority.NORMAL)
-                            .setNotification(AndroidNotification.builder()
-                                    .setTitle(notificationRequest.getTitle())
-                                    .setBody(notificationRequest.getMessage())
-                                    .build())
-                            .build())
-                    .setToken(deviceId)
-                    .build();
-
-            String response = FirebaseMessaging.getInstance().send(message);
-            logger.info("Successfully sent message: " + response);
-        }catch (FirebaseMessagingException fme){
-            logger.error(fme.getErrorCode());
-        }
+      String response = FirebaseMessaging.getInstance().send(message);
+      logger.info("Successfully sent message: " + response);
+    } catch (FirebaseMessagingException fme) {
+      logger.error(fme.getErrorCode());
     }
+  }
 }

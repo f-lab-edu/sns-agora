@@ -1,10 +1,13 @@
 package com.ht.project.snsproject.model.feed;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
-import lombok.*;
-
 import java.sql.Timestamp;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 
 @Builder
 @Data
@@ -12,19 +15,19 @@ import java.util.List;
 @NoArgsConstructor
 public class Feed {
 
-    int id;
+  int id;
 
-    String userId;
+  String userId;
 
-    String title;
+  String title;
 
-    String content;
+  String content;
 
-    Timestamp date;
+  Timestamp date;
 
-    PublicScope publicScope;
+  PublicScope publicScope;
 
-    int recommend;
+  int recommend;
 
-    List<FileVo> files;
+  List<FileVo> files;
 }

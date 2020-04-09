@@ -1,23 +1,21 @@
 package com.ht.project.snsproject.model.user;
 
-
-import lombok.Value;
-
 import java.io.Serializable;
 import java.sql.Date;
+import lombok.Value;
 
 @Value
 public class User implements Serializable {
 
-    int id;
+  int id;
 
-    String userId;
+  String userId;
 
-    String email;
+  String email;
 
-    String name;
+  String name;
 
-    String nickname;
+  String nickname;
 
-    Date birth;
+  Date birth;
 }

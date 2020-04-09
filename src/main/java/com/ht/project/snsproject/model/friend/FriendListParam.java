@@ -7,13 +7,14 @@ import lombok.Value;
 @Value
 public class FriendListParam {
 
-    String userId;
+  String userId;
 
-    Pagination pagination;
+  Pagination pagination;
 
-    FriendStatus friendStatus;
+  FriendStatus friendStatus;
 
-    public static FriendListParam create(String userId, Pagination pagination, FriendStatus friendStatus){
-        return new FriendListParam(userId, pagination, friendStatus);
-    }
+  public static FriendListParam create(String userId,
+                                       Pagination pagination, FriendStatus friendStatus) {
+    return new FriendListParam(userId, pagination, friendStatus);
+  }
 }

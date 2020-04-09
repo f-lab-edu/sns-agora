@@ -4,11 +4,11 @@ import java.util.List;
 
 public interface RecommendService {
 
-    int getRecommend(int feedId);
+  int getRecommend(int feedId);
 
-    List<String> getRecommendList(int feedId);
+  List<String> getRecommendList(int feedId);
 
-    void increaseRecommend(int feedId, String userId);
+  void increaseRecommend(int feedId, String userId);
 
-    void cancelRecommend(int feedId, String userId);
+  void cancelRecommend(int feedId, String userId);
 }

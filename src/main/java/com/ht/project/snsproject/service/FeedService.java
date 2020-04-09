@@ -1,26 +1,30 @@
 package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.model.Pagination;
-import com.ht.project.snsproject.model.feed.*;
+import com.ht.project.snsproject.model.feed.Feed;
+import com.ht.project.snsproject.model.feed.FeedInfo;
+import com.ht.project.snsproject.model.feed.FeedListParam;
+import com.ht.project.snsproject.model.feed.FeedUpdateParam;
+import com.ht.project.snsproject.model.feed.FeedVO;
+import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 public interface FeedService {
-    void feedUpload(List<MultipartFile> files, FeedVO feedVo, String userId);
 
-    FeedInfo getFeedInfoCache(int feedId);
+  void feedUpload(List<MultipartFile> files, FeedVO feedVo, String userId);
 
-    Feed getFeed(String userId, String targetId, int id);
+  FeedInfo getFeedInfoCache(int feedId);
 
-    List<Feed> getFeedList(String userId, String targetId, Pagination pagination);
+  Feed getFeed(String userId, String targetId, int id);
 
-    List<Feed> getFeeds(FeedListParam feedListParam);
+  List<Feed> getFeedList(String userId, String targetId, Pagination pagination);
 
-    List<Feed> getFriendsFeedList(String userId, Pagination pagination);
+  List<Feed> getFeeds(FeedListParam feedListParam);
 
-    void deleteFeed(int id, String userId);
+  List<Feed> getFriendsFeedList(String userId, Pagination pagination);
 
-    void updateFeed(List<MultipartFile> files, FeedUpdateParam feedUpdateParam, int feedId, String userId);
+  void deleteFeed(int id, String userId);
 
+  void updateFeed(List<MultipartFile> files,
+                  FeedUpdateParam feedUpdateParam, int feedId, String userId);
 }
