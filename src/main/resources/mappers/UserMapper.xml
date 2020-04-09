@@ -2,21 +2,51 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.ht.project.snsproject.mapper.UserMapper">
-    <insert id="joinUser" parameterType="com.ht.project.snsproject.model.UserJoin">
+    <insert id="insertUser" parameterType="com.ht.project.snsproject.model.user.UserJoinRequest">
         INSERT INTO users(userId, password, email, name, nickname, birth)
         VALUES(#{userId}, #{password}, #{email}, #{name}, #{nickname}, #{birth})
     </insert>
 
-    <select id="checkDuplicateUserId" parameterType="String" resultType="boolean">
+    <select id="isDuplicateUserId" parameterType="String" resultType="boolean">
         SELECT EXISTS
         (SELECT userId FROM users WHERE userId = #{userId})
     </select>
 
-    <update id="updateUserProfile" parameterType="com.ht.project.snsproject.model.UserProfile">
+    <update id="updateUserProfile" parameterType="com.ht.project.snsproject.model.user.UserProfile">
         UPDATE users
         SET nickname = #{nickname},
         email = #{email},
         birth = #{birth}
-        where id = #{id}
+        WHERE id = #{id}
     </update>
+
+    <select id="getUser" parameterType="com.ht.project.snsproject.model.user.UserLogin"
+            resultType="com.ht.project.snsproject.model.user.User">
+        SELECT id, userId, name, nickname, email, birth
+        FROM users
+        WHERE userId = #{userId} AND password = #{password}
+    </select>
+
+    <select id="getPassword" parameterType="String" resultType="String">
+        SELECT password
+        FROM users
+        WHERE userId = #{userId}
+    </select>
+
+    <delete id="deleteUser" parameterType="String">
+        DELETE FROM users
+        WHERE userId = #{userId}
+    </delete>
+
+    <update id="updateUserPassword" parameterType="String">
+        UPDATE users
+        SET password = #{newPw}
+        WHERE userId = #{userId} AND password= #{currentPw}
+    </update>
+
+    <select id="getUserProfile" parameterType="String" resultType="com.ht.project.snsproject.model.user.UserProfile">
+        SELECT id, nickname, email, birth
+        FROM users
+        WHERE userId = #{targetId}
+    </select>
 </mapper>

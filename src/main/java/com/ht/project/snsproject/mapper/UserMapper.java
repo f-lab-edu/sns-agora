@@ -1,16 +1,28 @@
 package com.ht.project.snsproject.mapper;
 
-import com.ht.project.snsproject.model.UserJoin;
-import com.ht.project.snsproject.model.UserProfile;
+import com.ht.project.snsproject.model.user.User;
+import com.ht.project.snsproject.model.user.UserJoinRequest;
+import com.ht.project.snsproject.model.user.UserLogin;
+import com.ht.project.snsproject.model.user.UserProfile;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface UserMapper {
 
-    void joinUser(UserJoin userJoin);
+    void insertUser(UserJoinRequest userJoinRequest);
 
-    boolean checkDuplicateUserId(String userId);
+    boolean isDuplicateUserId(String userId);
 
     void updateUserProfile(UserProfile userProfile);
+
+    User getUser(UserLogin userLogin);
+
+    String getPassword(String userId);
+
+    void deleteUser(String userId);
+
+    void updateUserPassword(String userId, String currentPw, String newPw);
+
+    UserProfile getUserProfile(String targetId);
 
 }

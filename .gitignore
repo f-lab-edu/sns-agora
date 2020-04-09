@@ -34,3 +34,4 @@ build/
 mvnw
 mvnw.cmd
 .mvn
+application-aws.properties

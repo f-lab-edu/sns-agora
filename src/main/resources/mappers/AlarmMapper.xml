@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ht.project.snsproject.mapper.AlarmMapper">
+    <insert id="insertAlarm" parameterType="com.ht.project.snsproject.model.alarm.AlarmInsert">
+        INSERT INTO alarms(userId, targetId, alarmType, date, feedId, readCheck)
+        VALUES (#{userId}, #{targetId}, #{alarmType}, #{date}, #{feedId}, #{readCheck})
+    </insert>
+
+    <delete id="deleteRequestAlarm" parameterType="com.ht.project.snsproject.model.alarm.AlarmDelete">
+        DELETE FROM alarms
+        WHERE userId = #{userId} AND targetId = #{targetId} AND alarmType = #{alarmType}
+    </delete>
+
+    <select id="getAlarmList" parameterType="java.util.Map" resultType="com.ht.project.snsproject.model.alarm.Alarm">
+        SELECT id, userId, targetId, alarmType, date, feedId, readCheck
+        FROM alarms
+        WHERE
+        <if test="pagination.cursor != null">
+            id<![CDATA[<]]>#{pagination.cursor} AND
+        </if>
+        userId = #{userId}
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize}
+    </select>
+
+    <update id="readAlarm" parameterType="com.ht.project.snsproject.model.alarm.AlarmRead">
+        UPDATE alarms
+        SET readCheck = 'READ'
+        WHERE id = #{id} AND userId = #{userId}
+    </update>
+
+    <select id="getAlarm" parameterType="com.ht.project.snsproject.model.alarm.AlarmRead" resultType="com.ht.project.snsproject.model.alarm.Alarm">
+        SELECT id, userId, targetId, alarmType, date, feedId, readCheck
+        FROM alarms
+        WHERE id = #{id} AND userId = #{userId}
+    </select>
+
+    <delete id="deleteAlarm" parameterType="com.ht.project.snsproject.model.alarm.AlarmRead">
+        DELETE FROM alarms
+        WHERE id = #{id} AND userId = #{userId}
+    </delete>
+</mapper>

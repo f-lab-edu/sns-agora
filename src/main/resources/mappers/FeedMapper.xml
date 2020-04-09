@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ht.project.snsproject.mapper.FeedMapper">
+
+    <resultMap id="feedList" type="com.ht.project.snsproject.model.feed.Feed">
+        <id property="id" column="id"/>
+        <result property="userId" column="userId"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="date" column="date"/>
+        <result property="publicScope" column="publicScope"/>
+        <result property="recommend" column="recommend"/>
+        <collection property="files" ofType="com.ht.project.snsproject.model.feed.FileVo" resultMap="getFileVo"/>
+    </resultMap>
+
+    <resultMap id="getFileVo" type="com.ht.project.snsproject.model.feed.FileVo">
+        <result property="path" column="path"/>
+        <result property="fileIndex" column="fileIndex"/>
+        <result property="fileName" column="fileName"/>
+    </resultMap>
+
+    <insert id="feedUpload" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
+        INSERT INTO feeds(userId, title, content, date, publicScope, recommend)
+        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope}, #{recommend})
+    </insert>
+
+    <select id="getFeed" parameterType="com.ht.project.snsproject.model.feed.FeedParam" resultMap="feedList">
+        SELECT a.id, a.userId,
+        a.title, a.content,
+        a.date, a.publicScope, a.recommend,
+        b.path, b.fileName, b.fileIndex
+        FROM feeds a INNER JOIN images b
+        ON (a.id = b.feedId)
+        AND a.id = #{id}
+        AND a.userId = #{userId}
+        WHERE a.publicScope = 'ALL'
+        <if test="friendStatus.name() == 'ME'">
+            OR a.publicScope = 'FRIENDS'
+            OR a.publicScope = 'ME'
+        </if>
+        <if test="friendStatus.name() == 'FRIEND'">
+            OR a.publicScope = 'FRIENDS'
+        </if>
+    </select>
+
+    <select id="getFeedList" parameterType="com.ht.project.snsproject.model.feed.FeedListParam"
+            resultType="com.ht.project.snsproject.model.feed.FeedList">
+        SELECT a.id, a.userId,
+        a.title, a.content,
+        a.date, a.publicScope, a.recommend,
+        b.path,
+        GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
+        FROM feeds a INNER JOIN images b
+        ON (a.id = b.feedId)
+        AND (a.userId = #{userId})
+        WHERE a.publicScope = 'ALL'
+        <if test="publicScope.name() == 'FRIENDS' or publicScope.name() == 'ME'">
+            OR a.publicScope = 'FRIENDS'
+        </if>
+        <if test="publicScope.name() == 'ME'">
+            OR a.publicScope = 'ME'
+        </if>
+        <if test="pagination.cursor != null">
+            AND a.id<![CDATA[<]]>#{pagination.cursor}
+        </if>
+        GROUP BY a.id
+        ORDER BY a.id DESC
+        LIMIT #{pagination.listSize}
+    </select>
+
+    <select id="getFriendsFeedList"
+            parameterType="com.ht.project.snsproject.model.feed.FriendsFeedList"
+            resultType="com.ht.project.snsproject.model.feed.FeedList">
+        SELECT a.id, a.userId,
+        a.title, a.content,
+        a.date, a.publicScope, a.recommend,
+        b.path,
+        GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
+        FROM feeds a INNER JOIN images b
+        ON (a.id = b.feedId)
+        INNER JOIN friends c
+        ON(a.userId = c.userId)
+        AND (c.targetId = #{userId})
+        WHERE a.publicScope = 'ALL'
+        OR a.publicScope = 'FRIENDS'
+        <if test="pagination.cursor != null">
+            AND a.id<![CDATA[<]]>#{pagination.cursor}
+        </if>
+        GROUP BY a.id
+        ORDER BY a.id DESC
+        LIMIT #{pagination.listSize}
+    </select>
+</mapper>
