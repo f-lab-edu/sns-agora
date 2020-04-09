@@ -7,6 +7,8 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
@@ -96,5 +98,14 @@ public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
     redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
 
     return redisTemplate;
+  }
+
+  @Bean
+  public StringRedisTemplate strRedisTemplate(){
+
+    StringRedisTemplate strRedisTemplate = new StringRedisTemplate();
+    strRedisTemplate.setConnectionFactory(redisConnectionFactory());
+
+    return strRedisTemplate;
   }
 }

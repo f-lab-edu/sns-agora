@@ -24,9 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-
-
-
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -85,7 +82,6 @@ public class UserController {
   @PostMapping("/logout")
   public HttpStatus logout(HttpSession httpSession) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
     httpSession.invalidate();
 
     return HttpStatus.NO_CONTENT;
@@ -97,11 +93,12 @@ public class UserController {
                                HttpSession httpSession) {
 
     User userInfo = (User) httpSession.getAttribute("userInfo");
-    if (!userService.verifyPassword(userInfo.getUserId(), userPasswordVerify.getPassword())) {
+    String userId = userInfo.getUserId();
+    if (!userService.verifyPassword(userId, userPasswordVerify.getPassword())) {
 
       return HttpStatus.BAD_REQUEST;
     }
-    userService.deleteUser(userInfo.getUserId());
+    userService.deleteUser(userId);
     httpSession.invalidate();
 
     return HttpStatus.NO_CONTENT;
@@ -110,10 +107,9 @@ public class UserController {
   @LoginCheck
   @PutMapping("/account/password")
   public HttpStatus updateUserPassword(@RequestBody @Valid UserPassword userPassword,
-                                       HttpSession httpSession) {
+                                       String userId) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    userService.updateUserPassword(userInfo.getUserId(),userPassword);
+    userService.updateUserPassword(userId, userPassword);
 
     return HttpStatus.OK;
   }

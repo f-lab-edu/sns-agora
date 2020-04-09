@@ -2,10 +2,8 @@ package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.model.alarm.Alarm;
-import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.AlarmService;
 import java.util.List;
-import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,46 +24,41 @@ public class AlarmController {
   /**
    * 알람 목록을 가져오는 메소드.
    * @param cursor 알람 리스트의 페이징의 커서
-   * @param httpSession user 의 세션 정보를 가져오기 위한 객체
+   * @Param userId 세션에 저장된 userId;
    * @return List
    */
   @LoginCheck
   @GetMapping
   public ResponseEntity<List<Alarm>> getAlarmList(@RequestParam(required = false) Integer cursor,
-                                                  HttpSession httpSession) {
+                                                  String userId) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-
-    return ResponseEntity.ok(alarmService.getAlarmList(cursor, userInfo.getUserId()));
+    return ResponseEntity.ok(alarmService.getAlarmList(cursor, userId));
   }
 
   /**
    * 특정 인데스에 해당하는 알람을 가져오는 메소드.
    * @param id alarm 의 인덱스
-   * @param httpSession session 객체
+   * @param userId session userId
    * @return Alarm
    */
   @LoginCheck
   @GetMapping("/{id}")
-  public ResponseEntity<Alarm> getAlarm(@PathVariable int id, HttpSession httpSession) {
+  public ResponseEntity<Alarm> getAlarm(@PathVariable int id, String userId) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-
-    return ResponseEntity.ok(alarmService.getAlarm(id,userInfo.getUserId()));
+    return ResponseEntity.ok(alarmService.getAlarm(id, userId));
   }
 
   /**
    * 특정 인덱스의 알람을 지우는 메소드.
    * @param id alarm 의 인덱스
-   * @param httpSession session 객체
+   * @param userId session userId
    * @return HttpStatus
    */
   @LoginCheck
   @DeleteMapping("/{id}")
-  public HttpStatus deleteAlarm(@PathVariable int id, HttpSession httpSession) {
+  public HttpStatus deleteAlarm(@PathVariable int id, String userId) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    alarmService.deleteAlarm(id, userInfo.getUserId());
+    alarmService.deleteAlarm(id, userId);
 
     return HttpStatus.NO_CONTENT;
   }

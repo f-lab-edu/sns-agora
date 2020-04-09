@@ -5,21 +5,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.FriendStatus;
 import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.InvalidApproachException;
-import com.ht.project.snsproject.exception.ObjectToJsonException;
 import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.mapper.FriendMapper;
 import com.ht.project.snsproject.model.Pagination;
-import com.ht.project.snsproject.model.feed.*;
-
+import com.ht.project.snsproject.model.feed.Feed;
+import com.ht.project.snsproject.model.feed.FeedDeleteParam;
+import com.ht.project.snsproject.model.feed.FeedInfo;
+import com.ht.project.snsproject.model.feed.FeedInfoCache;
+import com.ht.project.snsproject.model.feed.FeedInsert;
+import com.ht.project.snsproject.model.feed.FeedListParam;
+import com.ht.project.snsproject.model.feed.FeedParam;
+import com.ht.project.snsproject.model.feed.FeedUpdate;
+import com.ht.project.snsproject.model.feed.FeedUpdateParam;
+import com.ht.project.snsproject.model.feed.FeedVO;
+import com.ht.project.snsproject.model.feed.FileVo;
+import com.ht.project.snsproject.model.feed.FriendsFeedList;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,6 +53,9 @@ public class FeedServiceImpl implements FeedService {
 
   @Autowired
   RedisTemplate<String, Object> redisTemplate;
+
+  @Autowired
+  StringRedisTemplate strRedisTemplate;
 
   @Transactional
   @Override
@@ -103,11 +116,11 @@ public class FeedServiceImpl implements FeedService {
     String key = "feedInfo:" + feedId;
     ObjectMapper mapper = new ObjectMapper();
 
-    String cache;
+    String cache = strRedisTemplate.boundValueOps(key).get();
     try {
-      cache = mapper.writeValueAsString(redisTemplate.boundValueOps(key).get());//json string 객체로 직렬화
-      if(cache != null){
-        FeedInfoCache feedInfoCache = mapper.readValue(cache,FeedInfoCache.class);//역직렬화
+      //json string 객체로 직렬화
+      if (cache != null) {
+        FeedInfoCache feedInfoCache = mapper.readValue(cache ,FeedInfoCache.class);//역직렬화
 
         /*팩토리 메소드로 변환 예정*/
         return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
@@ -121,7 +134,7 @@ public class FeedServiceImpl implements FeedService {
                 .build();//FeedInfo 로 변경
       }
     } catch (JsonProcessingException e) {
-      throw new ObjectToJsonException("변환에 실패하였습니다.", e);
+      throw new SerializationException("변환에 실패하였습니다.", e);
     }
 
     FeedInfo feedInfo = feedMapper.getFeedInfoCache(feedId);
@@ -135,11 +148,10 @@ public class FeedServiceImpl implements FeedService {
     String key = "feedInfo:" + feedId;
     ObjectMapper mapper = new ObjectMapper();
 
-    String cache;
+    String cache = strRedisTemplate.boundValueOps(key).get();;
     try {
-      cache = mapper.writeValueAsString(redisTemplate.boundValueOps(key).get());//json string 객체로 직렬화
-      if(cache != null){
-        FeedInfoCache feedInfoCache = mapper.readValue(cache,FeedInfoCache.class);//FeedInfoCache 로 역직렬화
+      if (cache != null) {
+        FeedInfoCache feedInfoCache = mapper.readValue(cache,FeedInfoCache.class);
 
         /*팩토리 메소드로 변환 예정*/
         return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
@@ -153,7 +165,7 @@ public class FeedServiceImpl implements FeedService {
                 .build();//FeedInfo 로 변경
       }
     } catch (JsonProcessingException e) {
-      throw new ObjectToJsonException("변환에 실패하였습니다.", e);
+      throw new SerializationException("변환에 실패하였습니다.", e);
     }
 
     FeedInfo feedInfo;
