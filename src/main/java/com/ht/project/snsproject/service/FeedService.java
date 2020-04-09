@@ -16,4 +16,7 @@ public interface FeedService {
     List<Feed> getFeeds(FeedListParam feedListParam);
 
     List<Feed> getFriendsFeedList(String userId, Pagination pagination);
+
+    void deleteFeed(int id, String userId);
+
 }

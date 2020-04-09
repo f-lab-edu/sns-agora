@@ -64,4 +64,12 @@ public class FeedController {
         return ResponseEntity.ok(feedService.getFriendsFeedList(userId,Pagination.pageInfo(cursor)));
     }
 
+    @LoginCheck
+    @DeleteMapping("/{id}")
+    public HttpStatus deleteFeed(@PathVariable int id, HttpSession httpSession){
+        User userInfo = (User) httpSession.getAttribute("userInfo");
+        String userId = userInfo.getUserId();
+        feedService.deleteFeed(id, userId);
+        return HttpStatus.NO_CONTENT;
+    }
 }

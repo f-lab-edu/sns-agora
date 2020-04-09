@@ -91,4 +91,9 @@
         ORDER BY a.id DESC
         LIMIT #{pagination.listSize}
     </select>
+
+    <delete id="deleteFeed" parameterType="com.ht.project.snsproject.model.feed.FeedDeleteParam">
+        DELETE FROM feeds
+        WHERE id = #{id} AND userId = #{userId}
+    </delete>
 </mapper>
