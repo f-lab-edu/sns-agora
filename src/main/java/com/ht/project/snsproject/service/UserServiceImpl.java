@@ -2,15 +2,15 @@ package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.mapper.UserMapper;
 import com.ht.project.snsproject.model.user.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
 @Service
 public class UserServiceImpl implements UserService{
 
-    @Resource
+    @Autowired
     UserMapper userMapper;
 
     @Override
@@ -36,6 +36,7 @@ public class UserServiceImpl implements UserService{
             return false;
         }
         httpSession.setAttribute("userInfo", userInfo);
+
         return true;
     }
 

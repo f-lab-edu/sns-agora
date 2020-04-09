@@ -14,7 +14,7 @@
     </resultMap>
 
     <resultMap id="getFileVo" type="com.ht.project.snsproject.model.feed.FileVo">
-        <result property="path" column="path"/>
+        <result property="filePath" column="filePath"/>
         <result property="fileIndex" column="fileIndex"/>
         <result property="fileName" column="fileName"/>
     </resultMap>
@@ -29,7 +29,7 @@
         SELECT a.id, a.userId,
         a.title, a.content,
         a.date, a.publicScope, a.recommend,
-        b.path, b.fileName, b.fileIndex
+        b.filePath, b.fileName, b.fileIndex
         FROM feeds a INNER JOIN images b
         ON (a.id = b.feedId)
         AND a.id = #{id}
@@ -49,18 +49,19 @@
         SELECT a.id, a.userId,
         a.title, a.content,
         a.date, a.publicScope, a.recommend,
-        b.path,
+        b.filePath,
         GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
-        FROM feeds a INNER JOIN images b
+        FROM feeds a LEFT JOIN images b
         ON (a.id = b.feedId)
-        AND (a.userId = #{userId})
-        WHERE a.publicScope = 'ALL'
+        WHERE a.userId = #{userId}
+        AND (a.publicScope = 'ALL'
         <if test="publicScope.name() == 'FRIENDS' or publicScope.name() == 'ME'">
             OR a.publicScope = 'FRIENDS'
         </if>
         <if test="publicScope.name() == 'ME'">
             OR a.publicScope = 'ME'
         </if>
+        )
         <if test="pagination.cursor != null">
             AND a.id<![CDATA[<]]>#{pagination.cursor}
         </if>
@@ -75,15 +76,15 @@
         SELECT a.id, a.userId,
         a.title, a.content,
         a.date, a.publicScope, a.recommend,
-        b.path,
+        b.filePath,
         GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
         FROM feeds a INNER JOIN images b
         ON (a.id = b.feedId)
-        INNER JOIN friends c
+        LEFT JOIN friends c
         ON(a.userId = c.userId)
+        WHERE (a.publicScope = 'ALL'
+        OR a.publicScope = 'FRIENDS')
         AND (c.targetId = #{userId})
-        WHERE a.publicScope = 'ALL'
-        OR a.publicScope = 'FRIENDS'
         <if test="pagination.cursor != null">
             AND a.id<![CDATA[<]]>#{pagination.cursor}
         </if>
@@ -97,13 +98,12 @@
         WHERE id = #{id} AND userId = #{userId}
     </delete>
 
-    <update id="updateFeed" parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
+    <update id="updateFeed" parameterType="com.ht.project.snsproject.model.feed.FeedUpdate">
         UPDATE feeds
         SET title = #{title},
         content = #{content},
         date = #{date},
-        publicScope = #{publicScope},
-        recommend = #{recommend}
-        WHERE id = #{id} AND userId = #{userId}
+        publicScope = #{publicScope}
+        WHERE id = #{id} AND userId=#{userId}
     </update>
 </mapper>

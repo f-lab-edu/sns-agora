@@ -58,7 +58,9 @@ public class UserController {
     @LoginCheck
     @PostMapping("/logout")
     public HttpStatus logout(HttpSession httpSession) {
+        User userInfo = (User) httpSession.getAttribute("userInfo");
         httpSession.invalidate();
+
         return HttpStatus.NO_CONTENT;
     }
 

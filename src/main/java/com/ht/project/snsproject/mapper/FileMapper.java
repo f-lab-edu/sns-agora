@@ -1,6 +1,8 @@
 package com.ht.project.snsproject.mapper;
 
+import com.ht.project.snsproject.model.feed.FileDelete;
 import com.ht.project.snsproject.model.feed.FileInfo;
+import com.ht.project.snsproject.model.feed.FileUpdate;
 import com.ht.project.snsproject.model.feed.FileVo;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -16,4 +18,10 @@ public interface FileMapper {
     List<FileVo> getFiles(int feedId);
 
     void deleteFile(int feedId);
+
+    void deleteFiles(List<FileDelete> fileDeleteList);
+
+    List<String> getFileNames(int feedId);
+
+    void updateFiles(List<FileUpdate> fileUpdateList);
 }

@@ -7,17 +7,17 @@ import java.io.Serializable;
 import java.sql.Date;
 
 @Value
-public final class User implements Serializable {
+public class User implements Serializable {
 
-    private int id;
+    int id;
 
-    private String userId;
+    String userId;
 
-    private String email;
+    String email;
 
-    private String name;
+    String name;
 
-    private String nickname;
+    String nickname;
 
-    private Date birth;
+    Date birth;
 }

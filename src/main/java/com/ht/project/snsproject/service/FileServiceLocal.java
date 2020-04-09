@@ -3,7 +3,13 @@ package com.ht.project.snsproject.service;
 import com.ht.project.snsproject.Exception.FileUploadException;
 import com.ht.project.snsproject.enumeration.ErrorCode;
 import com.ht.project.snsproject.mapper.FileMapper;
+import com.ht.project.snsproject.model.feed.FileAdd;
+import com.ht.project.snsproject.model.feed.FileDelete;
 import com.ht.project.snsproject.model.feed.FileInfo;
+import com.ht.project.snsproject.model.feed.FileUpdate;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @Qualifier("localFileService")
 public class FileServiceLocal implements FileService {
@@ -25,8 +32,13 @@ public class FileServiceLocal implements FileService {
     @Autowired
     FileMapper fileMapper;
 
+    @Autowired
+    FileServiceLocal fileServiceLocal;
+
     @Value("${file.windows.path}")
     private String localPath;
+
+    private static final Logger logger = LoggerFactory.getLogger(FileServiceLocal.class);
 
     /** SimpleDateFormat 타입은 쓰레드에 안전하지 않은 객체이다.
      * Java 8 버전 부터는 쓰레드에 안전한 LocalDateTime 객체와 DateTimeFormatter 객체를 지원한다.
@@ -69,8 +81,48 @@ public class FileServiceLocal implements FileService {
 
     @Transactional
     @Override
-    public void deleteFile(int feedId){
+    public void deleteFiles(int feedId, List<String> fileNames) {
 
+        String path = fileMapper.getFilePath(feedId);
+        List<FileDelete> fileDeleteList = new ArrayList<>();
+
+        if (path != null) {
+            for(String fileName : fileNames){
+                fileDeleteList.add(FileDelete.create(feedId,fileName));
+                File file = new File(path+File.separator+fileName);
+                file.delete();
+            }
+        }
+        fileMapper.deleteFiles(fileDeleteList);
+    }
+
+    @Transactional
+    @Override
+    public void addFiles(int feedId, List<FileAdd> fileAddList) {
+
+        String path = fileMapper.getFilePath(feedId);
+
+        List<FileInfo> fileInfoList = new ArrayList<>();
+
+        try {
+            for (FileAdd fileAdd : fileAddList) {
+                MultipartFile file = fileAdd.getFile();
+                String originalFileName = file.getOriginalFilename();
+                String filePath = path + File.separator + originalFileName;
+                File destFile = new File(filePath);
+                int fileIndex = fileAdd.getFileIndex();
+                fileInfoList.add(new FileInfo(path, originalFileName, fileIndex, feedId));
+                file.transferTo(destFile);
+            }
+            fileMapper.fileListUpload(fileInfoList);
+        }catch (IOException ioe){
+            throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void deleteAllFiles(int feedId){
 
         String path = fileMapper.getFilePath(feedId);
 
@@ -91,5 +143,49 @@ public class FileServiceLocal implements FileService {
         }
 
         fileMapper.deleteFile(feedId);
+    }
+
+    @Transactional
+    @Override
+    public void updateFiles(List<MultipartFile> files, String userId, int feedId) {
+
+        List<String> originFiles = fileMapper.getFileNames(feedId);
+        List<FileAdd> uploadFiles = new ArrayList<>();
+        List<FileUpdate> fileUpdateList = new ArrayList<>();
+
+        int fileIndex = 0;
+
+        if(originFiles.isEmpty()){
+            fileServiceLocal.fileUpload(files,userId,feedId);
+            return;
+        }
+
+        if(!files.isEmpty()) {
+            for (MultipartFile file : files) {
+                String fileName = file.getOriginalFilename();
+                ++fileIndex;
+                if (originFiles.contains(fileName)) {
+                    fileUpdateList.add(FileUpdate.create(feedId, fileIndex, fileName));
+                    originFiles.remove(fileName);
+                } else {
+                    uploadFiles.add(FileAdd.create(fileIndex, file));
+                }
+            }
+        } else{
+            deleteAllFiles(feedId);
+            return;
+        }
+
+        if(!fileUpdateList.isEmpty()) {
+            fileMapper.updateFiles(fileUpdateList);
+        }
+
+        if(!uploadFiles.isEmpty()){
+            fileServiceLocal.addFiles(feedId, uploadFiles);
+        }
+
+        if(!originFiles.isEmpty()){
+            fileServiceLocal.deleteFiles(feedId, originFiles);
+        }
     }
 }

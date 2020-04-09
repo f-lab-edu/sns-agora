@@ -29,7 +29,6 @@ public class FeedController {
                                  FeedVO feedVO, HttpSession httpSession){
         User userInfo = (User) httpSession.getAttribute("userInfo");
         feedService.feedUpload(files, feedVO,userInfo.getUserId());
-
         return HttpStatus.OK;
     }
 
