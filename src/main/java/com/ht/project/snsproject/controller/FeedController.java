@@ -4,7 +4,7 @@ import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.Feed;
 import com.ht.project.snsproject.model.feed.FeedUpdateParam;
-import com.ht.project.snsproject.model.feed.FeedVO;
+import com.ht.project.snsproject.model.feed.FeedVo;
 import com.ht.project.snsproject.service.FeedService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +30,9 @@ public class FeedController {
   @LoginCheck
   @PostMapping
   public HttpStatus feedUpload(@RequestParam("file") List<MultipartFile> files,
-                                 FeedVO feedVO, String userId) {
+                               FeedVo feedVo, String userId) {
 
-    feedService.feedUpload(files, feedVO, userId);
+    feedService.feedUpload(files, feedVo, userId);
 
     return HttpStatus.OK;
   }

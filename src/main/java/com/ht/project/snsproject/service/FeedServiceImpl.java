@@ -17,7 +17,7 @@ import com.ht.project.snsproject.model.feed.FeedListParam;
 import com.ht.project.snsproject.model.feed.FeedParam;
 import com.ht.project.snsproject.model.feed.FeedUpdate;
 import com.ht.project.snsproject.model.feed.FeedUpdateParam;
-import com.ht.project.snsproject.model.feed.FeedVO;
+import com.ht.project.snsproject.model.feed.FeedVo;
 import com.ht.project.snsproject.model.feed.FileVo;
 import com.ht.project.snsproject.model.feed.FriendsFeedList;
 import java.sql.Timestamp;
@@ -59,7 +59,7 @@ public class FeedServiceImpl implements FeedService {
 
   @Transactional
   @Override
-  public void feedUpload(List<MultipartFile> files, FeedVO feedVo, String userId) {
+  public void feedUpload(List<MultipartFile> files, FeedVo feedVo, String userId) {
 
     Timestamp date = Timestamp.valueOf(LocalDateTime.now());
     FeedInsert feedInsert = FeedInsert.builder()
@@ -122,16 +122,7 @@ public class FeedServiceImpl implements FeedService {
       if (cache != null) {
         FeedInfoCache feedInfoCache = mapper.readValue(cache ,FeedInfoCache.class);//역직렬화
 
-        /*팩토리 메소드로 변환 예정*/
-        return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
-                .userId(feedInfoCache.getUserId())
-                .title(feedInfoCache.getTitle())
-                .content(feedInfoCache.getContent())
-                .date(new Timestamp(Long.parseLong(feedInfoCache.getDate())))
-                .publicScope(PublicScope.valueOf(feedInfoCache.getPublicScope()))
-                .path(feedInfoCache.getPath())
-                .fileNames(feedInfoCache.getFileNames())
-                .build();//FeedInfo 로 변경
+        return FeedInfo.cacheToObject(feedInfoCache);//FeedInfo 로 변경
       }
     } catch (JsonProcessingException e) {
       throw new SerializationException("변환에 실패하였습니다.", e);
@@ -153,16 +144,7 @@ public class FeedServiceImpl implements FeedService {
       if (cache != null) {
         FeedInfoCache feedInfoCache = mapper.readValue(cache,FeedInfoCache.class);
 
-        /*팩토리 메소드로 변환 예정*/
-        return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
-                .userId(feedInfoCache.getUserId())
-                .title(feedInfoCache.getTitle())
-                .content(feedInfoCache.getContent())
-                .date(new Timestamp(Long.parseLong(feedInfoCache.getDate())))
-                .publicScope(PublicScope.valueOf(feedInfoCache.getPublicScope()))
-                .path(feedInfoCache.getPath())
-                .fileNames(feedInfoCache.getFileNames())
-                .build();//FeedInfo 로 변경
+        return FeedInfo.cacheToObject(feedInfoCache);//FeedInfo 로 변경
       }
     } catch (JsonProcessingException e) {
       throw new SerializationException("변환에 실패하였습니다.", e);

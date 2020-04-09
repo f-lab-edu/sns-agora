@@ -26,4 +26,17 @@ public class FeedInfo {
   String path;
 
   String fileNames;
+
+  public static FeedInfo cacheToObject(FeedInfoCache feedInfoCache){
+
+    return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
+            .userId(feedInfoCache.getUserId())
+            .title(feedInfoCache.getTitle())
+            .content(feedInfoCache.getContent())
+            .date(new Timestamp(Long.parseLong(feedInfoCache.getDate())))
+            .publicScope(PublicScope.valueOf(feedInfoCache.getPublicScope()))
+            .path(feedInfoCache.getPath())
+            .fileNames(feedInfoCache.getFileNames())
+            .build();
+  }
 }
