@@ -25,6 +25,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -118,18 +120,17 @@ public class FeedServiceImpl implements FeedService {
 
     String cache = strRedisTemplate.boundValueOps(key).get();
     try {
-      //json string 객체로 직렬화
       if (cache != null) {
-        FeedInfoCache feedInfoCache = mapper.readValue(cache ,FeedInfoCache.class);//역직렬화
+        FeedInfoCache feedInfoCache = mapper.readValue(cache ,FeedInfoCache.class);
 
-        return FeedInfo.cacheToObject(feedInfoCache);//FeedInfo 로 변경
+        return FeedInfo.cacheToObject(feedInfoCache);
       }
     } catch (JsonProcessingException e) {
       throw new SerializationException("변환에 실패하였습니다.", e);
     }
 
     FeedInfo feedInfo = feedMapper.getFeedInfoCache(feedId);
-    redisTemplate.opsForValue().set(key, feedInfo);
+    redisTemplate.boundValueOps(key).set(feedInfo,2L, TimeUnit.HOURS);
 
     return feedInfo;
   }
@@ -144,7 +145,7 @@ public class FeedServiceImpl implements FeedService {
       if (cache != null) {
         FeedInfoCache feedInfoCache = mapper.readValue(cache,FeedInfoCache.class);
 
-        return FeedInfo.cacheToObject(feedInfoCache);//FeedInfo 로 변경
+        return FeedInfo.cacheToObject(feedInfoCache);
       }
     } catch (JsonProcessingException e) {
       throw new SerializationException("변환에 실패하였습니다.", e);
@@ -170,7 +171,7 @@ public class FeedServiceImpl implements FeedService {
       }
     }
 
-    redisTemplate.opsForValue().set(key, feedInfo);
+    redisTemplate.boundValueOps(key).set(feedInfo,2L, TimeUnit.HOURS);
 
     return feedInfo;
   }

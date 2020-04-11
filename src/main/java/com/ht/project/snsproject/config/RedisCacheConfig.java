@@ -48,13 +48,24 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
   @Override
   public CacheManager cacheManager() {
 
+    /*RedisCacheConfiguration javadoc 내용 기반
+      disableKeyPrefix 적용시,
+      캐시 관련 설정에 있어서 전용 redis 인스턴스를 사용해야한다고 명시되어 있는 것을 보아
+      redisTemplate 으로 직접 설정해야한다고 이해하여 서비스에서도
+      redisTemplate 으로 설정하였습니다.
+
+      ttl 설정: 2시간으로 선정한 이유는 트래픽을 고려할 때 07:00~09:00(출근시간)
+      11:00~13:00(점심시간), 18:00~20:00(퇴근 시간) 22:00~00:00(취침시간)에 가장 많이 접속할 것으로 판단하여
+      캐시를 2시간으로 만료하기로 결정하였습니다.
+      메모리 와 비용은 조금 더 생각해보겠습니다.
+     */
     RedisCacheManager.RedisCacheManagerBuilder builder = RedisCacheManager.RedisCacheManagerBuilder
             .fromConnectionFactory(redisConfig.redisConnectionFactory());
     RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
             .serializeValuesWith(RedisSerializationContext.SerializationPair
                     .fromSerializer(new GenericJackson2JsonRedisSerializer()))
             .disableKeyPrefix()
-            .entryTtl(Duration.ofHours(5L));//5시간 경과시 만료
+            .entryTtl(Duration.ofHours(2L));//2시간 경과시 만료
     builder.cacheDefaults(configuration);
 
     return builder.build();

@@ -1,13 +1,14 @@
 package com.ht.project.snsproject.mapper;
 
-import com.ht.project.snsproject.model.good.FeedCacheUpdateParam;
 import com.ht.project.snsproject.model.good.GoodUserDelete;
-import com.ht.project.snsproject.model.good.GoodUsersParam;
-import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 @Mapper
 public interface GoodMapper {
+
+  int hasFeedId(int feedId);
 
   List<String> getGoodList(int feedId);
 
@@ -15,9 +16,6 @@ public interface GoodMapper {
 
   boolean decrementGood(int feedId);
 
-  boolean deleteGoodUser(GoodUserDelete recommendUserDelete);
+  boolean deleteGoodUser(GoodUserDelete goodUserDelete);
 
-  void updateFeedCacheDb(List<FeedCacheUpdateParam> feedCacheUpdateParamList);
-
-  void updateGoodUsers(List<GoodUsersParam> recommendUsersParams);
 }

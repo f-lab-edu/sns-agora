@@ -24,7 +24,7 @@ public class AlarmController {
   /**
    * 알람 목록을 가져오는 메소드.
    * @param cursor 알람 리스트의 페이징의 커서
-   * @Param userId 세션에 저장된 userId;
+   * @param userId 세션에 저장된 userId;
    * @return List
    */
   @LoginCheck

@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -27,10 +28,18 @@ public class GoodServiceImpl implements GoodService {
   RedisTemplate<String,Object> redisTemplate;
 
   @Override
-  @Cacheable(value = "feeds", key = "'Good:'+#feedId")
   public int getGood(int feedId) {
 
-    return goodMapper.getGood(feedId);
+    String key = "good:"+feedId;
+
+    Integer good = (Integer) redisTemplate.boundValueOps(key).get();
+
+    if(good==null){
+      good = goodMapper.getGood(feedId);
+      redisTemplate.boundValueOps(key).set(good,2L,TimeUnit.HOURS);
+    }
+
+    return good;
   }
 
   @Override
@@ -47,7 +56,12 @@ public class GoodServiceImpl implements GoodService {
               .collect(Collectors.toList());
     }
 
-    return goodMapper.getGoodList(feedId);
+    List<String> goodList = null;
+    if(goodMapper.hasFeedId(feedId)!=0){
+      goodList = goodMapper.getGoodList(feedId);
+    }
+
+    return goodList;
   }
 
   @Transactional
@@ -56,22 +70,33 @@ public class GoodServiceImpl implements GoodService {
 
     feedService.getFeedInfoCache(feedId);
     getGood(feedId);
+
     List<String> goodList = getGoodList(feedId);
 
-    if (goodList.contains(userId)) {
-      throw new DuplicateRequestException("중복된 요청입니다.");
+    if(goodList != null) {
+      if (goodList.contains(userId)) {
+        throw new DuplicateRequestException("중복된 요청입니다.");
+      }
     }
 
     String goodListKey = "goodList:" + feedId;
-
-
-    redisTemplate.expire("feedInfo:" + feedId,5L, TimeUnit.HOURS);
-    redisTemplate.opsForList().rightPush(goodListKey, userId);
-
     String goodKey = "good:" + feedId;
-    redisTemplate.expire(goodKey,5L, TimeUnit.HOURS);
+
+    redisTemplate.opsForList().rightPush(goodListKey, userId);
     redisTemplate.opsForValue().increment(goodKey);
-    redisTemplate.expire(goodKey,5L,TimeUnit.HOURS);
+
+    long ttl = redisTemplate.getExpire(goodKey);
+
+    /*
+      캐시 시간이 1시간 미만일 때,
+      좋아요 요청이 들어오면 캐시 시간을 1시간 증가시킴으로써
+      스케줄러의 공백이 없도록한다.
+     */
+    if(ttl < 60 * 60){
+      redisTemplate.expire("feedInfo:" + feedId,1L, TimeUnit.HOURS);
+      redisTemplate.expire(goodListKey,1L,TimeUnit.HOURS);
+      redisTemplate.expire(goodKey,1L, TimeUnit.HOURS);
+    }
   }
 
   @Transactional

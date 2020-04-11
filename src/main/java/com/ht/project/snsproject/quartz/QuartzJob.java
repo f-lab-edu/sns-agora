@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class GoodBatchJob implements Job {
+public class QuartzJob implements Job {
 
   @Autowired
   private GoodBatchJobService jobService;

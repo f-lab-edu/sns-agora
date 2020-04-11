@@ -8,7 +8,6 @@ import org.quartz.Trigger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.quartz.QuartzDataSource;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -111,7 +110,7 @@ public class QuartzConfiguration {
   public JobDetailFactoryBean jobDetail() {
 
     JobDetailFactoryBean jobDetailFactory = new JobDetailFactoryBean();
-    jobDetailFactory.setJobClass(GoodBatchJob.class);
+    jobDetailFactory.setJobClass(QuartzJob.class);
     jobDetailFactory.setName("Qrtz_Job_Detail");
     jobDetailFactory.setDescription("Invoke Good Batch Job service...");
     jobDetailFactory.setDurability(true);
@@ -136,7 +135,11 @@ public class QuartzConfiguration {
     SimpleTriggerFactoryBean trigger = new SimpleTriggerFactoryBean();
     trigger.setJobDetail(job);
 
-    int frequencyInSec = 1000;
+    /*
+      데이터를 캐싱하는 시간을 2시간으로 설정해놓았기 때문에
+      1시간마다 스케줄러를 돌게 하여 '좋아요 리스트'를 DB에 쓰도록 합니다.
+     */
+    int frequencyInSec = 60*60;
     log.info("Configuring trigger to fire every {} seconds", frequencyInSec);
 
     trigger.setRepeatInterval(frequencyInSec * 1000);
