@@ -1,13 +1,8 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
-import com.ht.project.snsproject.model.user.User;
-import com.ht.project.snsproject.model.user.UserJoinRequest;
-import com.ht.project.snsproject.model.user.UserLogin;
-import com.ht.project.snsproject.model.user.UserPassword;
-import com.ht.project.snsproject.model.user.UserPasswordVerify;
-import com.ht.project.snsproject.model.user.UserProfile;
-import com.ht.project.snsproject.model.user.UserProfileParam;
+import com.ht.project.snsproject.annotation.User;
+import com.ht.project.snsproject.model.user.*;
 import com.ht.project.snsproject.service.UserService;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
@@ -54,10 +49,10 @@ public class UserController {
   @LoginCheck
   @PutMapping("/account")
   public HttpStatus updateUserProfile(@RequestBody UserProfileParam userProfileParam,
-                                      HttpSession httpSession) {
+                                      @User UserVo user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    UserProfile userProfile = new UserProfile(userInfo.getId(),
+
+    UserProfile userProfile = new UserProfile(user.getId(),
             userProfileParam.getNickname(),
             userProfileParam.getEmail(),
             userProfileParam.getBirth());
@@ -90,10 +85,8 @@ public class UserController {
   @LoginCheck
   @DeleteMapping("/account")
   public HttpStatus deleteUser(@RequestBody UserPasswordVerify userPasswordVerify,
-                               HttpSession httpSession) {
-
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
+                               @User UserVo user, HttpSession httpSession) {
+    String userId = user.getUserId();
     if (!userService.verifyPassword(userId, userPasswordVerify.getPassword())) {
 
       return HttpStatus.BAD_REQUEST;
@@ -107,9 +100,9 @@ public class UserController {
   @LoginCheck
   @PutMapping("/account/password")
   public HttpStatus updateUserPassword(@RequestBody @Valid UserPassword userPassword,
-                                       String userId) {
+                                       @User UserVo user) {
 
-    userService.updateUserPassword(userId, userPassword);
+    userService.updateUserPassword(user.getUserId(), userPassword);
 
     return HttpStatus.OK;
   }

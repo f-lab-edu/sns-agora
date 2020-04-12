@@ -1,10 +1,12 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
+import com.ht.project.snsproject.annotation.User;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.Feed;
 import com.ht.project.snsproject.model.feed.FeedUpdateParam;
 import com.ht.project.snsproject.model.feed.FeedVo;
+import com.ht.project.snsproject.model.user.UserVo;
 import com.ht.project.snsproject.service.FeedService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +32,9 @@ public class FeedController {
   @LoginCheck
   @PostMapping
   public HttpStatus feedUpload(@RequestParam("file") List<MultipartFile> files,
-                               FeedVo feedVo, String userId) {
+                               FeedVo feedVo, @User UserVo user) {
 
-    feedService.feedUpload(files, feedVo, userId);
+    feedService.feedUpload(files, feedVo, user.getUserId());
 
     return HttpStatus.OK;
   }
@@ -40,34 +42,34 @@ public class FeedController {
   @LoginCheck
   @GetMapping("/users/{targetId}/{id}")
   public ResponseEntity<Feed> getFeed(@PathVariable String targetId,
-                                      @PathVariable int id, String userId) {
+                                      @PathVariable int id, @User UserVo user) {
 
-    return ResponseEntity.ok(feedService.getFeed(userId, targetId, id));
+    return ResponseEntity.ok(feedService.getFeed(user.getUserId(), targetId, id));
   }
 
   @LoginCheck
   @GetMapping("/{targetId}")
   public ResponseEntity<List<Feed>> getFeedList(@PathVariable String targetId,
                                                 @RequestParam(required = false) Integer cursor,
-                                                String userId) {
+                                                @User UserVo user) {
 
-    return ResponseEntity.ok(feedService.getFeedList(userId, targetId,
+    return ResponseEntity.ok(feedService.getFeedList(user.getUserId(), targetId,
             Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
   @GetMapping
   public ResponseEntity<List<Feed>> getFriendsFeedList(
-          @RequestParam(required = false) Integer cursor, String userId) {
+          @RequestParam(required = false) Integer cursor, @User UserVo user) {
 
-    return ResponseEntity.ok(feedService.getFriendsFeedList(userId,Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(feedService.getFriendsFeedList(user.getUserId(),Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
   @DeleteMapping("/{id}")
-  public HttpStatus deleteFeed(@PathVariable int id, String userId) {
+  public HttpStatus deleteFeed(@PathVariable int id, @User UserVo user) {
 
-    feedService.deleteFeed(id, userId);
+    feedService.deleteFeed(id, user.getUserId());
 
     return HttpStatus.NO_CONTENT;
   }
@@ -77,9 +79,9 @@ public class FeedController {
   public HttpStatus updateFeed(@PathVariable int id,
                                @RequestParam("file") List<MultipartFile> files,
                                FeedUpdateParam feedUpdateParam,
-                               String userId) {
+                               @User UserVo user) {
 
-    feedService.updateFeed(files, feedUpdateParam, id, userId);
+    feedService.updateFeed(files, feedUpdateParam, id, user.getUserId());
 
     return HttpStatus.OK;
   }

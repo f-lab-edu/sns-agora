@@ -1,9 +1,11 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
+import com.ht.project.snsproject.annotation.User;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.friend.Friend;
 import com.ht.project.snsproject.model.friend.FriendList;
+import com.ht.project.snsproject.model.user.UserVo;
 import com.ht.project.snsproject.service.FriendService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,36 +29,36 @@ public class FriendController {
 
   @LoginCheck
   @PostMapping("/{targetId}/requests")
-  public HttpStatus requestFriend(@PathVariable String targetId, String userId) {
+  public HttpStatus requestFriend(@PathVariable String targetId, @User UserVo user) {
 
-    friendService.requestFriend(userId, targetId);
+    friendService.requestFriend(user.getUserId(), targetId);
 
     return HttpStatus.CREATED;
   }
 
   @LoginCheck
   @DeleteMapping("/{targetId}/requests")
-  public HttpStatus deleteFriendRequest(@PathVariable String targetId, String userId) {
+  public HttpStatus deleteFriendRequest(@PathVariable String targetId, @User UserVo user) {
 
-    friendService.deleteFriendRequest(userId, targetId);
+    friendService.deleteFriendRequest(user.getUserId(), targetId);
 
     return HttpStatus.NO_CONTENT;
   }
 
   @LoginCheck
   @DeleteMapping("/{targetId}/requests/deny")
-  public HttpStatus denyFriendRequest(@PathVariable String targetId, String userId) {
+  public HttpStatus denyFriendRequest(@PathVariable String targetId, @User UserVo user) {
 
-    friendService.denyFriendRequest(userId, targetId);
+    friendService.denyFriendRequest(user.getUserId(), targetId);
 
     return HttpStatus.NO_CONTENT;
   }
 
   @LoginCheck
   @PutMapping("/{targetId}/requests")
-  public HttpStatus permitFriendRequest(@PathVariable String targetId, String userId) {
+  public HttpStatus permitFriendRequest(@PathVariable String targetId, @User UserVo user) {
 
-    friendService.permitFriendRequest(userId, targetId);
+    friendService.permitFriendRequest(user.getUserId(), targetId);
 
     return HttpStatus.OK;
   }
@@ -64,41 +66,42 @@ public class FriendController {
   @LoginCheck
   @GetMapping("/requests")
   public ResponseEntity<List<FriendList>> getFriendRequests(
-          @RequestParam(required = false) Integer cursor, String userId) {
+          @RequestParam(required = false) Integer cursor, @User UserVo user) {
 
-    return ResponseEntity.ok(friendService.getFriendRequests(userId,Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(friendService.getFriendRequests(user.getUserId(),Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
   @GetMapping
   public ResponseEntity<List<FriendList>> getFriendList(
-          @RequestParam(required = false) Integer cursor, String userId) {
+          @RequestParam(required = false) Integer cursor, @User UserVo user) {
 
-    return ResponseEntity.ok(friendService.getFriendList(userId, Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(friendService.getFriendList(user.getUserId(), Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
   @GetMapping("/{targetId}")
   public ResponseEntity<Friend> getFriendRelationStatus(@PathVariable String targetId,
-                                                        String userId) {
+                                                        @User UserVo user) {
 
-    return ResponseEntity.ok(friendService.getFriendRelationStatus(userId, targetId));
+    return ResponseEntity.ok(friendService.getFriendRelationStatus(user.getUserId(), targetId));
   }
 
   @LoginCheck
   @PostMapping("/{targetId}/blocks")
-  public HttpStatus blockUser(@PathVariable String targetId, String userId) {
+  public HttpStatus blockUser(@PathVariable String targetId, @User UserVo user) {
 
-    friendService.blockUser(userId, targetId);
+    friendService.blockUser(user.getUserId(), targetId);
 
     return HttpStatus.OK;
   }
 
   @LoginCheck
   @DeleteMapping("/{targetId}/blocks")
-  public HttpStatus unblockUser(@PathVariable String targetId, String userId) {
+  public HttpStatus unblockUser(@PathVariable String targetId,
+                                @User UserVo user) {
 
-    friendService.unblockUser(userId,targetId);
+    friendService.unblockUser(user.getUserId(),targetId);
 
     return HttpStatus.NO_CONTENT;
   }
@@ -106,16 +109,17 @@ public class FriendController {
   @LoginCheck
   @GetMapping("/blocks")
   public ResponseEntity<List<FriendList>> getBlockUserList(
-          @RequestParam(required = false) Integer cursor, String userId) {
+          @RequestParam(required = false) Integer cursor, @User UserVo user) {
 
-    return ResponseEntity.ok(friendService.getBlockUserList(userId, Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(friendService.getBlockUserList(user.getUserId(), Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
   @DeleteMapping("/{targetId}")
-  public HttpStatus cancelFriend(@PathVariable String targetId, String userId) {
+  public HttpStatus cancelFriend(@PathVariable String targetId,
+                                 @User UserVo user) {
 
-    friendService.cancelFriend(userId, targetId);
+    friendService.cancelFriend(user.getUserId(), targetId);
 
     return HttpStatus.NO_CONTENT;
   }

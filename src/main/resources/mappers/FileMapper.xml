@@ -32,7 +32,7 @@
             (feedId = #{item.feedId} AND fileName=#{item.fileName})
         </foreach>
     </delete>
-    
+
 <!--ON DUPLICATE KEY UPDATE 를 사용한 이유 및 주의사항
     - 중복 값에 대한 오류가 발생하였을 때 UPDATE 문을 실행하고,
       값이 없을 때에는 INSERT 하기 위해서 사용합니다.

@@ -123,7 +123,7 @@ public class FeedServiceImpl implements FeedService {
       if (cache != null) {
         FeedInfoCache feedInfoCache = mapper.readValue(cache ,FeedInfoCache.class);
 
-        return FeedInfo.cacheToObject(feedInfoCache);
+        return FeedInfo.cacheToFeedInfo(feedInfoCache);
       }
     } catch (JsonProcessingException e) {
       throw new SerializationException("변환에 실패하였습니다.", e);
@@ -140,12 +140,12 @@ public class FeedServiceImpl implements FeedService {
     String key = "feedInfo:" + feedId;
     ObjectMapper mapper = new ObjectMapper();
 
-    String cache = strRedisTemplate.boundValueOps(key).get();;
+    String cache = strRedisTemplate.boundValueOps(key).get();
     try {
       if (cache != null) {
         FeedInfoCache feedInfoCache = mapper.readValue(cache,FeedInfoCache.class);
 
-        return FeedInfo.cacheToObject(feedInfoCache);
+        return FeedInfo.cacheToFeedInfo(feedInfoCache);
       }
     } catch (JsonProcessingException e) {
       throw new SerializationException("변환에 실패하였습니다.", e);

@@ -18,15 +18,16 @@
         WHERE feedId = #{feedId}
     </select>
 
-    <select id="getGoodList" parameterType="int" resultType="java.util.List">
+    <select id="getGoodList" parameterType="int" resultType="String">
         SELECT userId
+        FROM goods
         WHERE feedId = #{feedId}
     </select>
 
     <update id="decrementGood" parameterType="int">
         UPDATE feeds
         SET good = good - 1
-        WHERE feedId = #{feedId} AND good>0
+        WHERE id = #{feedId} AND good>0
     </update>
 
     <delete id="deleteGoodUser" parameterType="com.ht.project.snsproject.model.good.GoodUserDelete">

@@ -4,13 +4,13 @@ import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.GoodMapper;
 import com.ht.project.snsproject.model.good.GoodUserDelete;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,7 +56,7 @@ public class GoodServiceImpl implements GoodService {
               .collect(Collectors.toList());
     }
 
-    List<String> goodList = null;
+    List<String> goodList = new ArrayList<>();
     if(goodMapper.hasFeedId(feedId)!=0){
       goodList = goodMapper.getGoodList(feedId);
     }
@@ -105,17 +105,27 @@ public class GoodServiceImpl implements GoodService {
 
     String key = "good:" + feedId;
     Integer good = (Integer) redisTemplate.opsForValue().get(key);
-
+    GoodUserDelete goodUserDelete = new GoodUserDelete(feedId, userId);
     if (good != null) {
       if (good == 0) {
         throw new InvalidApproachException("비정상적인 요청입니다.");
       }
-      redisTemplate.opsForValue().decrement(key);
-      redisTemplate.opsForList().remove("goodList:" + feedId,1, userId);
+      Long userDeleteResult = redisTemplate.opsForList().remove("goodList:" + feedId,1, userId);
+      if(userDeleteResult > 0) {
+        redisTemplate.opsForValue().decrement(key);
+      }
+
+      if (goodMapper.deleteGoodUser(goodUserDelete)) {
+        goodMapper.decrementGood(feedId);
+      } else if(userDeleteResult == 0){
+
+        throw new InvalidApproachException("비정상적인 요청입니다.");
+      }
+
+
     } else {
 
-      boolean deleteUserResult = goodMapper.deleteGoodUser(
-              new GoodUserDelete(feedId, userId));
+      boolean deleteUserResult = goodMapper.deleteGoodUser(goodUserDelete);
 
       if (!deleteUserResult) {
         throw new InvalidApproachException("비정상적인 요청입니다.");

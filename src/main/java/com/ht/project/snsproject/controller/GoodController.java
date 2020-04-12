@@ -1,6 +1,8 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
+import com.ht.project.snsproject.annotation.User;
+import com.ht.project.snsproject.model.user.UserVo;
 import com.ht.project.snsproject.service.GoodService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,18 +31,18 @@ public class GoodController {
 
   @LoginCheck
   @PostMapping("/{id}")
-  public HttpStatus increaseGood(@PathVariable int id, String userId) {
+  public HttpStatus increaseGood(@PathVariable int id, @User UserVo user) {
 
-    goodService.addGood(id, userId);
+    goodService.addGood(id, user.getUserId());
 
     return HttpStatus.OK;
   }
 
   @LoginCheck
   @DeleteMapping("/{id}")
-  public HttpStatus cancelGood(@PathVariable int id, String userId) {
+  public HttpStatus cancelGood(@PathVariable int id, @User UserVo user) {
 
-    goodService.cancelGood(id, userId);
+    goodService.cancelGood(id, user.getUserId());
 
     return HttpStatus.NO_CONTENT;
   }
