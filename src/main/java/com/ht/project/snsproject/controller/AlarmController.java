@@ -1,9 +1,9 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
-import com.ht.project.snsproject.annotation.User;
+import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.alarm.Alarm;
-import com.ht.project.snsproject.model.user.UserVo;
+import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.AlarmService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ public class AlarmController {
   @LoginCheck
   @GetMapping
   public ResponseEntity<List<Alarm>> getAlarmList(@RequestParam(required = false) Integer cursor,
-                                                  @User UserVo user) {
+                                                  @UserInfo User user) {
 
     return ResponseEntity.ok(alarmService.getAlarmList(cursor, user.getUserId()));
   }
@@ -45,7 +45,7 @@ public class AlarmController {
    */
   @LoginCheck
   @GetMapping("/{id}")
-  public ResponseEntity<Alarm> getAlarm(@PathVariable int id, @User UserVo user) {
+  public ResponseEntity<Alarm> getAlarm(@PathVariable int id, @UserInfo User user) {
 
     return ResponseEntity.ok(alarmService.getAlarm(id, user.getUserId()));
   }
@@ -58,7 +58,7 @@ public class AlarmController {
    */
   @LoginCheck
   @DeleteMapping("/{id}")
-  public HttpStatus deleteAlarm(@PathVariable int id, @User UserVo user) {
+  public HttpStatus deleteAlarm(@PathVariable int id, @UserInfo User user) {
 
     alarmService.deleteAlarm(id, user.getUserId());
 

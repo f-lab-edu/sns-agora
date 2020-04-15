@@ -1,13 +1,17 @@
 package com.ht.project.snsproject.model.user;
 
-import java.io.Serializable;
-import java.sql.Date;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Value;
 
-@Value
-public class User implements Serializable {
+import java.sql.Date;
 
-  int id;
+@Builder
+@AllArgsConstructor
+@Value
+public class User {
+
+  Integer id;
 
   String userId;
 
@@ -18,4 +22,16 @@ public class User implements Serializable {
   String nickname;
 
   Date birth;
+
+  public static User create(UserCache userCache){
+
+    return User.builder()
+            .id(Integer.parseInt(userCache.getId()))
+            .userId(userCache.getUserId())
+            .email(userCache.getEmail())
+            .name(userCache.getName())
+            .nickname(userCache.getNickname())
+            .birth(new Date(Long.parseLong(userCache.getBirth())))
+            .build();
+  }
 }

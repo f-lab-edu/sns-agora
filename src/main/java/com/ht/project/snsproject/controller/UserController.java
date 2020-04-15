@@ -1,7 +1,7 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
-import com.ht.project.snsproject.annotation.User;
+import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.user.*;
 import com.ht.project.snsproject.service.UserService;
 import javax.servlet.http.HttpSession;
@@ -49,7 +49,7 @@ public class UserController {
   @LoginCheck
   @PutMapping("/account")
   public HttpStatus updateUserProfile(@RequestBody UserProfileParam userProfileParam,
-                                      @User UserVo user) {
+                                      @UserInfo User user) {
 
 
     UserProfile userProfile = new UserProfile(user.getId(),
@@ -77,22 +77,20 @@ public class UserController {
   @PostMapping("/logout")
   public HttpStatus logout(HttpSession httpSession) {
 
-    httpSession.invalidate();
-
+    userService.logout(httpSession);
     return HttpStatus.NO_CONTENT;
   }
 
   @LoginCheck
   @DeleteMapping("/account")
   public HttpStatus deleteUser(@RequestBody UserPasswordVerify userPasswordVerify,
-                               @User UserVo user, HttpSession httpSession) {
+                               @UserInfo User user, HttpSession httpSession) {
     String userId = user.getUserId();
     if (!userService.verifyPassword(userId, userPasswordVerify.getPassword())) {
 
       return HttpStatus.BAD_REQUEST;
     }
-    userService.deleteUser(userId);
-    httpSession.invalidate();
+    userService.deleteUser(httpSession);
 
     return HttpStatus.NO_CONTENT;
   }
@@ -100,7 +98,7 @@ public class UserController {
   @LoginCheck
   @PutMapping("/account/password")
   public HttpStatus updateUserPassword(@RequestBody @Valid UserPassword userPassword,
-                                       @User UserVo user) {
+                                       @UserInfo User user) {
 
     userService.updateUserPassword(user.getUserId(), userPassword);
 

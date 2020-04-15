@@ -11,6 +11,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.session.data.redis.RedisIndexedSessionRepository;
+import org.springframework.session.data.redis.config.annotation.SpringSessionRedisOperations;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 import org.springframework.session.web.context.AbstractHttpSessionApplicationInitializer;
 
@@ -31,8 +33,7 @@ import org.springframework.session.web.context.AbstractHttpSessionApplicationIni
  */
 
 @Configuration
-@EnableRedisHttpSession(maxInactiveIntervalInSeconds = 1800)
-public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
+public class RedisConfig {
 
   @Value("${spring.redis.host}")
   private String host;
@@ -57,6 +58,7 @@ public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
     RedisStandaloneConfiguration redisStandaloneConfiguration =
             new RedisStandaloneConfiguration(host, port);
     redisStandaloneConfiguration.setPassword(password);
+
     LettuceConnectionFactory lettuceConnectionFactory =
             new LettuceConnectionFactory(redisStandaloneConfiguration);
 
@@ -94,12 +96,17 @@ public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
 
     RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
     redisTemplate.setConnectionFactory(redisConnectionFactory());
+    redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
     redisTemplate.setKeySerializer(new StringRedisSerializer());
     redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
 
     return redisTemplate;
   }
 
+/*
+  spring session document 확인해서 추가 설정.
+  java serialize 는 피해야한다. 호환성, 성능 면에서 떨어진다.
+ */
   @Bean
   public StringRedisTemplate strRedisTemplate(){
 
