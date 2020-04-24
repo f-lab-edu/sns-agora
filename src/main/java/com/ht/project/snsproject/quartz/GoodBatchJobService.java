@@ -78,7 +78,7 @@ public class GoodBatchJobService {
         throw new SerializationException("변환에 실패하였습니다.", e);
       }
 
-      goodBachJobMapper.batchUpdateGoodUserList(goodUsersParams);
+      goodBachJobMapper.batchInsertGoodUserList(goodUsersParams);
       goodBachJobMapper.batchUpdateFeedInfo(goods);
     }
     count.incrementAndGet();

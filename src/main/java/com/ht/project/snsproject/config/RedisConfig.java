@@ -44,6 +44,15 @@ public class RedisConfig {
   @Value("${spring.redis.port}")
   private int port;
 
+  @Value("${spring.redis2.host}")
+  private String host2;
+
+  @Value("${spring.redis2.password:@null}")
+  private String password2;
+
+  @Value("${spring.redis2.port}")
+  private int port2;
+
   /**
    * Redis 에 접속하기 위한 Connection 들을 생성하는 팩토리 Object.
    * Thread-safe 하다.
@@ -63,6 +72,21 @@ public class RedisConfig {
             new LettuceConnectionFactory(redisStandaloneConfiguration);
 
     return lettuceConnectionFactory;
+  }
+
+
+  @Bean
+  public RedisConnectionFactory redis2ConnectionFactory() {
+
+    RedisStandaloneConfiguration redis2StandaloneConfiguration =
+            new RedisStandaloneConfiguration(host2, port2);
+
+    redis2StandaloneConfiguration.setPassword(password2);
+
+    LettuceConnectionFactory lettuce2ConnectionFactory =
+            new LettuceConnectionFactory(redis2StandaloneConfiguration);
+
+    return lettuce2ConnectionFactory;
   }
 
   /**
@@ -101,6 +125,18 @@ public class RedisConfig {
     redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
 
     return redisTemplate;
+  }
+
+  @Bean
+  public RedisTemplate<String, Object> redisTemplate2() {
+
+    RedisTemplate<String, Object> redisTemplate2 = new RedisTemplate<>();
+    redisTemplate2.setConnectionFactory(redis2ConnectionFactory());
+    redisTemplate2.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+    redisTemplate2.setKeySerializer(new StringRedisSerializer());
+    redisTemplate2.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
+
+    return redisTemplate2;
   }
 
 /*

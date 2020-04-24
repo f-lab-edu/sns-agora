@@ -7,23 +7,6 @@
         WHERE id = #{feedId}
     </select>
 
-    <!--
-        빈 테이블에서 조회를 시도했을 때,
-        sql 에러가 발생하여 임시적으로, 쿼리를 분리하였습니다.
-        최대한 getGoodList() 하나의 쿼리에서 처리할 수 있는 방법있는지 찾아보겠습니다.
-    -->
-    <select id="hasFeedId" parameterType="int" resultType="int">
-        SELECT COUNT(*)
-        FROM goods
-        WHERE feedId = #{feedId}
-    </select>
-
-    <select id="getGoodList" parameterType="int" resultType="String">
-        SELECT userId
-        FROM goods
-        WHERE feedId = #{feedId}
-    </select>
-
     <update id="decrementGood" parameterType="int">
         UPDATE feeds
         SET good = good - 1

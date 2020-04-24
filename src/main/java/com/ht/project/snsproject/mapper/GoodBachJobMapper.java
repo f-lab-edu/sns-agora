@@ -11,5 +11,5 @@ public interface GoodBachJobMapper {
 
   void batchUpdateFeedInfo(List<FeedCacheUpdateParam> feedCacheUpdateParams);
 
-  void batchUpdateGoodUserList(List<GoodUsersParam> goodUsersParams);
+  void batchInsertGoodUserList(List<GoodUsersParam> goodUsersParams);
 }

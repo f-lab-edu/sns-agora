@@ -14,13 +14,11 @@
     </insert>
 
     <!--feedId, userId 복합 UNIQUE KEY 지정-->
-    <insert id="batchUpdateGoodUserList" parameterType="java.util.List">
+    <insert id="batchInsertGoodUserList" parameterType="java.util.List">
         INSERT INTO goods(feedId, userId)
         VALUES
         <foreach item="item" index="index" collection="list" separator=",">
             (#{item.feedId}, #{item.userId})
         </foreach>
-        ON DUPLICATE KEY UPDATE
-        userId = VALUES(userId)
     </insert>
 </mapper>

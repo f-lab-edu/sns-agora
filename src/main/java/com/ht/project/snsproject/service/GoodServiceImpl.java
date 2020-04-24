@@ -4,16 +4,17 @@ import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.GoodMapper;
 import com.ht.project.snsproject.model.good.GoodUserDelete;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class GoodServiceImpl implements GoodService {
@@ -22,120 +23,92 @@ public class GoodServiceImpl implements GoodService {
   GoodMapper goodMapper;
 
   @Autowired
-  FeedService feedService;
+  RedisTemplate<String, Object> redisTemplate2;
 
-  @Autowired
-  RedisTemplate<String,Object> redisTemplate;
-
+  /*
+  Redis2 에서 good:{feedId} 에 해당하는 값을 가져온다.
+   */
   @Override
   public int getGood(int feedId) {
 
-    String key = "good:"+feedId;
+    String goodKey = "good:"+feedId;
 
-    Integer good = (Integer) redisTemplate.boundValueOps(key).get();
+    Integer good = (Integer) redisTemplate2.boundValueOps(goodKey).get();
 
     if(good==null){
-      good = goodMapper.getGood(feedId);
-      redisTemplate.boundValueOps(key).set(good,2L,TimeUnit.HOURS);
+      throw new IllegalArgumentException("해당 피드가 존재하지 않습니다.");
     }
 
     return good;
   }
 
+  /*
+  zset 페이징 처리 고려.
+   */
   @Override
   public List<String> getGoodList(int feedId) {
 
-    String key = "goodList:" + feedId;
+    String goodListKey = "goodList:" + feedId;
+    Set<Object> goodListSet;
 
-    if (redisTemplate.hasKey(key)) {
-
-      List<Object> cache = redisTemplate.opsForList().range(key,0,-1);
-
-      return cache.stream()
-              .map(object -> Objects.toString(object, null))
-              .collect(Collectors.toList());
+    if (redisTemplate2.hasKey(goodListKey) == null) {
+      throw new NoSuchElementException("목록이 존재하지 않습니다.");
     }
 
-    List<String> goodList = new ArrayList<>();
-    if(goodMapper.hasFeedId(feedId)!=0){
-      goodList = goodMapper.getGoodList(feedId);
-    }
-
-    return goodList;
+    goodListSet = redisTemplate2.boundZSetOps(goodListKey).reverseRange(0, -1);
+    return goodListSet.stream().map(x -> (String) x).collect(Collectors.toList());
   }
 
-  @Transactional
+  /*
+  1. Redis2에서 good:{feedId} 가 '0' 여부 확인.
+  2. 0이면 goodList:{feedId} 를 키로 가지는 redis sorted set 으로 만든다.
+  3. 0이 아니면 goodList:{feedId} 에 contains userId 여부 확인.
+  4. userId 가 이미 존재하면 exception
+  5. good:{feedId} incr 명령어 수행.
+  6. goodList:{feedId} add(userId, 현재시간(스코어)) 명령어 수행.
+   */
   @Override
   public void addGood(int feedId, String userId) {
 
-    feedService.getFeedInfoCache(feedId);
-    getGood(feedId);
+    String goodKey = "good:"+feedId;
+    String goodListKey = "goodList:"+feedId;
+    long date = Timestamp.valueOf(LocalDateTime.now()).getTime();
+    int good = getGood(feedId);
 
-    List<String> goodList = getGoodList(feedId);
-
-    if(goodList != null) {
-      if (goodList.contains(userId)) {
-        throw new DuplicateRequestException("중복된 요청입니다.");
-      }
+    if ((good != 0) && (redisTemplate2.opsForZSet().rank(goodListKey, userId) != null)) {
+      throw new DuplicateRequestException("중복된 요청입니다.");
     }
 
-    String goodListKey = "goodList:" + feedId;
-    String goodKey = "good:" + feedId;
-
-    redisTemplate.opsForList().rightPush(goodListKey, userId);
-    redisTemplate.opsForValue().increment(goodKey);
-
-    long ttl = redisTemplate.getExpire(goodKey);
-
-    /*
-      캐시 시간이 1시간 미만일 때,
-      좋아요 요청이 들어오면 캐시 시간을 1시간 증가시킴으로써
-      스케줄러의 공백이 없도록한다.
-     */
-    if(ttl < 60 * 60){
-      redisTemplate.expire("feedInfo:" + feedId,1L, TimeUnit.HOURS);
-      redisTemplate.expire(goodListKey,1L,TimeUnit.HOURS);
-      redisTemplate.expire(goodKey,1L, TimeUnit.HOURS);
-    }
+    redisTemplate2.opsForValue().increment(goodKey);
+    redisTemplate2.opsForZSet().add(goodListKey, userId, date);
   }
 
+
+  /*
+  1. good:{feedId} 가 '0' 여부 확인.
+  2. '0' 이면 예외 발생.
+  3. '0' 이 아니면 goodList:{feedId}에서 userId 존재 유무 확인.
+  4. userId 가 존재하지 않으면 예외 발생.
+  5. userId 가 존재하면 redis2, mysql 에서 삭제 처리.
+  6. redis2 의 good:{feedId} 를 decr 수행.
+   */
   @Transactional
   @Override
   public void cancelGood(int feedId, String userId) {
 
-    String key = "good:" + feedId;
-    Integer good = (Integer) redisTemplate.opsForValue().get(key);
+    String goodKey = "good:" + feedId;
+    String goodListKey = "goodList:" +feedId;
+    int good = getGood(feedId);
     GoodUserDelete goodUserDelete = new GoodUserDelete(feedId, userId);
-    if (good != null) {
-      if (good == 0) {
-        throw new InvalidApproachException("비정상적인 요청입니다.");
-      }
-      Long userDeleteResult = redisTemplate.opsForList().remove("goodList:" + feedId,1, userId);
-      if(userDeleteResult > 0) {
-        redisTemplate.opsForValue().decrement(key);
-      }
 
-      if (goodMapper.deleteGoodUser(goodUserDelete)) {
-        goodMapper.decrementGood(feedId);
-      } else if(userDeleteResult == 0){
-
-        throw new InvalidApproachException("비정상적인 요청입니다.");
-      }
-
-
-    } else {
-
-      boolean deleteUserResult = goodMapper.deleteGoodUser(goodUserDelete);
-
-      if (!deleteUserResult) {
-        throw new InvalidApproachException("비정상적인 요청입니다.");
-      }
-
-      boolean decrementGoodResult = goodMapper.decrementGood(feedId);
-
-      if (!decrementGoodResult) {
-        throw new InvalidApproachException("비정상적인 요청입니다.");
-      }
+    if ((good == 0) || (redisTemplate2.opsForZSet().rank(goodListKey, userId) == null)) {
+      throw new InvalidApproachException("비정상적인 요청입니다.");
     }
+
+    redisTemplate2.opsForZSet().remove(goodListKey, userId);
+    goodMapper.deleteGoodUser(goodUserDelete);
+    redisTemplate2.opsForValue().decrement(goodKey);
+    goodMapper.decrementGood(feedId);
+
   }
 }

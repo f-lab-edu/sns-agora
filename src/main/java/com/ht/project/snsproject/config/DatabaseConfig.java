@@ -53,6 +53,14 @@ public class DatabaseConfig {
   @Value("${spring.datasource.driver-class-name}")
   String driverClassName;
 
+  /*
+  애플리케이션에서 Quartz 스케줄러를 사용함에 따라 스키마를 2개로 분리하여 사용하게 되었습니다.
+  Quartz 는 범용 스케줄러 프레임워크 이므로 다른 애플리케이션 프로젝트에서도 활용 범위가 넓다고 생각하였습니다.
+  그렇기 때문에 스키마를 별도로 분리하여 관리하고자 하였습니다.
+  스키마가 분리되었기 때문에 DataSource 도 2개가 필요하게 되었고,
+  이로 인해 datasource 빈의 이름을 분리하여 주입하게 되었습니다.
+  주로 사용하는 mybatis 에 필요한 datasource 의 빈을 primary로 선언하여 주입되게 하였습니다.
+   */
   @Bean(name = "db1DataSource")
   @Primary
   @ConfigurationProperties(prefix = "spring.datasource")

@@ -57,6 +57,9 @@ public class FeedServiceImpl implements FeedService {
   RedisTemplate<String, Object> redisTemplate;
 
   @Autowired
+  RedisTemplate<String, Object> redisTemplate2;
+
+  @Autowired
   StringRedisTemplate strRedisTemplate;
 
   @Transactional
@@ -72,7 +75,9 @@ public class FeedServiceImpl implements FeedService {
             .publicScope(feedVo.getPublicScope())
             .good(0)
             .build();
+
     feedMapper.feedUpload(feedInsert);
+    redisTemplate2.opsForValue().set("good:"+feedInsert.getId(),0);
     if (!files.isEmpty()) {
       fileService.fileUpload(files, userId, feedInsert.getId());
     }
@@ -113,28 +118,7 @@ public class FeedServiceImpl implements FeedService {
     return feedBuilder.build();
   }
 
-  public FeedInfo getFeedInfoCache(int feedId) {
-
-    String key = "feedInfo:" + feedId;
-    ObjectMapper mapper = new ObjectMapper();
-
-    String cache = strRedisTemplate.boundValueOps(key).get();
-    try {
-      if (cache != null) {
-        FeedInfoCache feedInfoCache = mapper.readValue(cache ,FeedInfoCache.class);
-
-        return FeedInfo.cacheToFeedInfo(feedInfoCache);
-      }
-    } catch (JsonProcessingException e) {
-      throw new SerializationException("변환에 실패하였습니다.", e);
-    }
-
-    FeedInfo feedInfo = feedMapper.getFeedInfoCache(feedId);
-    redisTemplate.boundValueOps(key).set(feedInfo,2L, TimeUnit.HOURS);
-
-    return feedInfo;
-  }
-
+  @Transactional
   public FeedInfo getFeedInfo(int feedId, String userId, String targetId) {
 
     String key = "feedInfo:" + feedId;
@@ -238,6 +222,7 @@ public class FeedServiceImpl implements FeedService {
       Feed tmp = builder.build();
       feeds.add(tmp);
     }
+
     return feeds;
   }
 

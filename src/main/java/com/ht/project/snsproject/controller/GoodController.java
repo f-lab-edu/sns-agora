@@ -21,7 +21,7 @@ public class GoodController {
 
   @Autowired
   GoodService goodService;
-
+  
   @LoginCheck
   @GetMapping("/{id}")
   public ResponseEntity<List<String>> getGoodList(@PathVariable int id) {

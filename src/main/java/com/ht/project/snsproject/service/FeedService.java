@@ -13,8 +13,6 @@ public interface FeedService {
 
   void feedUpload(List<MultipartFile> files, FeedVo feedVo, String userId);
 
-  FeedInfo getFeedInfoCache(int feedId);
-
   Feed getFeed(String userId, String targetId, int id);
 
   List<Feed> getFeedList(String userId, String targetId, Pagination pagination);

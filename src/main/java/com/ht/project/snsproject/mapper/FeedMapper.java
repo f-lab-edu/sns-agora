@@ -17,8 +17,6 @@ public interface FeedMapper {
 
   FeedInfo getFeed(FeedParam feedParam);
 
-  FeedInfo getFeedInfoCache(int feedId);
-
   List<FeedInfo> getFeedList(FeedListParam feedListParam);
 
   List<FeedInfo> getFriendsFeedList(FriendsFeedList friendsFeedList);
