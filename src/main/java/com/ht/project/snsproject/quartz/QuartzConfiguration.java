@@ -30,16 +30,16 @@ import javax.sql.DataSource;
 public class QuartzConfiguration {
 
 
-  @Value("${spring.db2.datasource.url}")
+  @Value("${spring.quartz.datasource.url}")
   String url;
 
-  @Value("${spring.db2.datasource.username}")
+  @Value("${spring.quartz.datasource.username}")
   String userName;
 
-  @Value("${spring.db2.datasource.password}")
+  @Value("${spring.quartz.datasource.password}")
   String password;
 
-  @Value("${spring.db2.datasource.driver-class-name}")
+  @Value("${spring.quartz.datasource.driver-class-name}")
   String driverClassName;
 
   @Autowired
@@ -78,7 +78,7 @@ public class QuartzConfiguration {
    */
   @Bean
   public SchedulerFactoryBean scheduler(Trigger trigger, JobDetail job,
-                                        @Qualifier("db2DataSource") DataSource quartzDataSource) {
+                                        @Qualifier("quartzDb") DataSource quartzDataSource) {
 
     SchedulerFactoryBean schedulerFactory = new SchedulerFactoryBean();
     schedulerFactory.setConfigLocation(new ClassPathResource("/application-quartz.properties"));
@@ -152,9 +152,9 @@ public class QuartzConfiguration {
    * 스케줄 정보를 저장할 DB 의 Connection 지정.
    * @return DataSource
    */
-  @Bean(name = "db2DataSource")
+  @Bean(name = "quartzDb")
   @QuartzDataSource
-  @ConfigurationProperties(prefix = "spring.db2.datasource")
+  @ConfigurationProperties(prefix = "spring.quartz.datasource")
   public DataSource quartzDataSource() {
 
     return DataSourceBuilder.create()

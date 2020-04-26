@@ -9,6 +9,7 @@ import com.ht.project.snsproject.model.user.UserPassword;
 import com.ht.project.snsproject.model.user.UserProfile;
 import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,8 @@ public class UserServiceImpl implements UserService {
 
 
   @Autowired
-  RedisTemplate<String, Object> redisTemplate;
+  @Qualifier("cacheRedisTemplate")
+  RedisTemplate<String, Object> cacheRedisTemplate;
 
   @Autowired
   UserMapper userMapper;
@@ -54,7 +56,7 @@ public class UserServiceImpl implements UserService {
     String userId = userInfo.getUserId();
 
     httpSession.setAttribute("userId", userId);
-    redisTemplate.opsForValue().set("userInfo:"+userId, userInfo, 30L, TimeUnit.MINUTES);
+    cacheRedisTemplate.opsForValue().set("userInfo:"+userId, userInfo, 30L, TimeUnit.MINUTES);
     return true;
   }
 
@@ -63,7 +65,7 @@ public class UserServiceImpl implements UserService {
 
     String userId = (String) httpSession.getAttribute("userId");
     httpSession.invalidate();
-    redisTemplate.delete("userInfo:"+userId);
+    cacheRedisTemplate.delete("userInfo:"+userId);
   }
 
   @Override
@@ -78,7 +80,7 @@ public class UserServiceImpl implements UserService {
 
     String userId = (String) httpSession.getAttribute("userId");
     userMapper.deleteUser(userId);
-    redisTemplate.delete("userInfo:"+userId);
+    cacheRedisTemplate.delete("userInfo:"+userId);
     httpSession.invalidate();
 
   }

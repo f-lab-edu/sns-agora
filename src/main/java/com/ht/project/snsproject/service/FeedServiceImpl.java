@@ -54,13 +54,17 @@ public class FeedServiceImpl implements FeedService {
   GoodService goodService;
 
   @Autowired
-  RedisTemplate<String, Object> redisTemplate;
+  @Qualifier("cacheRedisTemplate")
+  RedisTemplate<String, Object> cacheRedisTemplate;
+
 
   @Autowired
-  RedisTemplate<String, Object> redisTemplate2;
+  @Qualifier("goodRedisTemplate")
+  RedisTemplate<String, Object> goodRedisTemplate;
 
   @Autowired
-  StringRedisTemplate strRedisTemplate;
+  @Qualifier("cacheStrRedisTemplate")
+  StringRedisTemplate cacheStrRedisTemplate;
 
   @Transactional
   @Override
@@ -77,7 +81,7 @@ public class FeedServiceImpl implements FeedService {
             .build();
 
     feedMapper.feedUpload(feedInsert);
-    redisTemplate2.opsForValue().set("good:"+feedInsert.getId(),0);
+    goodRedisTemplate.opsForValue().set("good:"+feedInsert.getId(),0);
     if (!files.isEmpty()) {
       fileService.fileUpload(files, userId, feedInsert.getId());
     }
@@ -124,7 +128,7 @@ public class FeedServiceImpl implements FeedService {
     String key = "feedInfo:" + feedId;
     ObjectMapper mapper = new ObjectMapper();
 
-    String cache = strRedisTemplate.boundValueOps(key).get();
+    String cache = cacheStrRedisTemplate.boundValueOps(key).get();
     try {
       if (cache != null) {
         FeedInfoCache feedInfoCache = mapper.readValue(cache,FeedInfoCache.class);
@@ -155,7 +159,7 @@ public class FeedServiceImpl implements FeedService {
       }
     }
 
-    redisTemplate.boundValueOps(key).set(feedInfo,2L, TimeUnit.HOURS);
+    cacheRedisTemplate.boundValueOps(key).set(feedInfo,2L, TimeUnit.HOURS);
 
     return feedInfo;
   }

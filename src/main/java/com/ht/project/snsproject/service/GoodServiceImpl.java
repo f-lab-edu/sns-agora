@@ -5,6 +5,7 @@ import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.GoodMapper;
 import com.ht.project.snsproject.model.good.GoodUserDelete;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,8 +23,16 @@ public class GoodServiceImpl implements GoodService {
   @Autowired
   GoodMapper goodMapper;
 
+  /*
+  @Resource 를 통한 빈 주입이 아닌 @Qualifier 를 통한 부가정보를 사용한 이유
+  - @Resource 를 활용할 때, 빈 이름은 변경되기가 쉽고 그 자체로 의미 부여가 쉽지 않음.
+  - 빈 이름과는 별도로 추가적인 메타정보를 지정해서 의미를 부여해놓고 @Autowired에서 사용할 수 있도록 하는
+    @Autowired 가 훨씬 직관적이고 깔끔하다.
+  - 아래와 같이 선언시, goodRedisTemplate 이라는 한정자 값을 가진 빈으로 자동와이어링 대상을 제한할 수 있다.
+   */
   @Autowired
-  RedisTemplate<String, Object> redisTemplate2;
+  @Qualifier("goodRedisTemplate")
+  RedisTemplate<String, Object> goodRedisTemplate;
 
   /*
   Redis2 에서 good:{feedId} 에 해당하는 값을 가져온다.
@@ -33,7 +42,7 @@ public class GoodServiceImpl implements GoodService {
 
     String goodKey = "good:"+feedId;
 
-    Integer good = (Integer) redisTemplate2.boundValueOps(goodKey).get();
+    Integer good = (Integer) goodRedisTemplate.boundValueOps(goodKey).get();
 
     if(good==null){
       throw new IllegalArgumentException("해당 피드가 존재하지 않습니다.");
@@ -51,11 +60,11 @@ public class GoodServiceImpl implements GoodService {
     String goodListKey = "goodList:" + feedId;
     Set<Object> goodListSet;
 
-    if (redisTemplate2.hasKey(goodListKey) == null) {
+    if (goodRedisTemplate.hasKey(goodListKey) == null) {
       throw new NoSuchElementException("목록이 존재하지 않습니다.");
     }
 
-    goodListSet = redisTemplate2.boundZSetOps(goodListKey).reverseRange(0, -1);
+    goodListSet = goodRedisTemplate.boundZSetOps(goodListKey).reverseRange(0, -1);
     return goodListSet.stream().map(x -> (String) x).collect(Collectors.toList());
   }
 
@@ -75,12 +84,12 @@ public class GoodServiceImpl implements GoodService {
     long date = Timestamp.valueOf(LocalDateTime.now()).getTime();
     int good = getGood(feedId);
 
-    if ((good != 0) && (redisTemplate2.opsForZSet().rank(goodListKey, userId) != null)) {
+    if ((good != 0) && (goodRedisTemplate.opsForZSet().rank(goodListKey, userId) != null)) {
       throw new DuplicateRequestException("중복된 요청입니다.");
     }
 
-    redisTemplate2.opsForValue().increment(goodKey);
-    redisTemplate2.opsForZSet().add(goodListKey, userId, date);
+    goodRedisTemplate.opsForValue().increment(goodKey);
+    goodRedisTemplate.opsForZSet().add(goodListKey, userId, date);
   }
 
 
@@ -101,13 +110,13 @@ public class GoodServiceImpl implements GoodService {
     int good = getGood(feedId);
     GoodUserDelete goodUserDelete = new GoodUserDelete(feedId, userId);
 
-    if ((good == 0) || (redisTemplate2.opsForZSet().rank(goodListKey, userId) == null)) {
+    if ((good == 0) || (goodRedisTemplate.opsForZSet().rank(goodListKey, userId) == null)) {
       throw new InvalidApproachException("비정상적인 요청입니다.");
     }
 
-    redisTemplate2.opsForZSet().remove(goodListKey, userId);
+    goodRedisTemplate.opsForZSet().remove(goodListKey, userId);
     goodMapper.deleteGoodUser(goodUserDelete);
-    redisTemplate2.opsForValue().decrement(goodKey);
+    goodRedisTemplate.opsForValue().decrement(goodKey);
     goodMapper.decrementGood(feedId);
 
   }

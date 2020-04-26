@@ -61,7 +61,7 @@ public class DatabaseConfig {
   이로 인해 datasource 빈의 이름을 분리하여 주입하게 되었습니다.
   주로 사용하는 mybatis 에 필요한 datasource 의 빈을 primary로 선언하여 주입되게 하였습니다.
    */
-  @Bean(name = "db1DataSource")
+  @Bean(name = "mainDb")
   @Primary
   @ConfigurationProperties(prefix = "spring.datasource")
   public DataSource dataSource() {
@@ -86,7 +86,7 @@ public class DatabaseConfig {
    */
   @Bean
   @Primary
-  public SqlSessionFactory sqlSessionFactory(@Qualifier("db1DataSource") DataSource dataSource) throws Exception {
+  public SqlSessionFactory sqlSessionFactory(@Qualifier("mainDb") DataSource dataSource) throws Exception {
 
     final SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
     sessionFactory.setDataSource(dataSource);

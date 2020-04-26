@@ -12,6 +12,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -20,6 +21,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpSession;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 @Aspect
 @Component
@@ -27,7 +29,9 @@ public class UserAspect {
 
 
   @Autowired
-  StringRedisTemplate redisTemplate;
+  @Qualifier("cacheStrRedisTemplate")
+  StringRedisTemplate cacheRedisTemplate;
+
   /**
    * 로그인 정보를 확인하고,
    * 타깃 메소드에 userId 의 value 를 주입하는 Advice 이다.
@@ -77,22 +81,29 @@ public class UserAspect {
 
     User userInfo = User.create(
             mapper.readValue(
-                    redisTemplate.boundValueOps("userInfo:"+userId).get(), UserCache.class));
+                    cacheRedisTemplate.boundValueOps("userInfo:"+userId).get(), UserCache.class));
 
     Object[] args = joinPoint.getArgs();
     MethodSignature signature = (MethodSignature) joinPoint.getSignature();
     Method method = signature.getMethod();
 
     /*
-    Annotation[] 에는 입력된 argument 가 대입 되고,
-    Annotation[][] 에는 각 Argument 를 감싸고 있는 Annotation 을 가져올 수 있습니다.
-    Annotation 의 instance 를 비교해서 user 캐시를 aop 로 주입해 줄 수 있습니다.
+    annotation[argument][annotation] 형태로
+    1차 배열의 index 는 argument 의 갯수 입니다.
+    2차 배열의 index 는 annotation 의 갯수 입니다.
+    즉, public a (@Test1 @Test2 String hello, @Test3 int num) { }
+    이라는 method 가 존재할 때, annotation[0][0] 는 @Test1 를 의미 합니다.
+    annotation[0][1] 은 @Test2 를 의미하며 마지막으로 annotation[1][0] 는 @Test3 을 의미합니다.
+    그러므로 annotation 이차원 배열을 비교하면 parameter 에 적용된 annotation 을 가져올 수 있습니다.
+    joinPoint interface 로 가져온 args 배열의 index 와 annotation argument 의 1차 index 는 동일하기 때문에
+    적용된 annotation 에 따라 index 에 해당하는 argument 를 구하여 aop 로 값을 주입할 수 있습니다.
+    이에 따라 Annotation 의 instance 를 비교해서 args 객체의 user 캐시를 aop 로 주입해 줄 수 있습니다.
      */
     Annotation[][] annotations = method.getParameterAnnotations();
 
-    for (int i = 0; i < args.length; i++) {
-      for (Annotation annotation : annotations[i]) {
-        if (annotation instanceof UserInfo) {
+    for(int i=0; i<annotations.length; i++) {
+      for(Annotation annotation : annotations[i]) {
+        if(annotation instanceof UserInfo) {
           args[i] = userInfo;
           break;
         }
