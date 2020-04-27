@@ -61,7 +61,7 @@ public class RedisSessionConfig extends AbstractHttpSessionApplicationInitialize
    */
   @Primary
   @Bean("sessionRedis")
-  public RedisConnectionFactory redisSessionConnectionFactory() {
+  public RedisConnectionFactory sessionRedisConnectionFactory() {
 
     RedisStandaloneConfiguration redisStandaloneConfiguration =
             new RedisStandaloneConfiguration(host, port);
@@ -70,13 +70,30 @@ public class RedisSessionConfig extends AbstractHttpSessionApplicationInitialize
     LettuceConnectionFactory lettuceConnectionFactory =
             new LettuceConnectionFactory(redisStandaloneConfiguration);
 
+    /*개발의 편의성을 위해 레디스의 논리적으로 database 를 분할하였습니다.
+      실제 서비스 시에는 properties 에서 호스트를 변경해야만 합니다.
+    */
+    lettuceConnectionFactory.setDatabase(2);
+
     return lettuceConnectionFactory;
   }
+
   /*
   기존에 Spring Session DefaultRedisSerializer 가
   JdkSerializationRedisSerializer 로 설정 되어 있어서 Java Serialize 를 해야만 했으나,
   springSessionDefaultRedisSerializer 에 Jackson Serializer 를 주입 하면서
   추가로 Java Serialize 를 하지 않도록 설정했습니다.
+
+  * Java Serialize 를 피해야 하는 이유
+  - java Serialize 의 경우 가장 근본적인 문제는 공격 범위가 넓고 이는 지속적으로 더 넓어져서 방어가 어렵다는 접입니다.
+  - ObjectInputStream 의 readObject 를 호출하면 객체 그래프가 역직렬화되기 때문에
+    클래스패스 안의 거의 모든 타입의 객체를 만들어낼 수 있습니다.
+    바이트 스트림을 역직렬화 하는 과정에서 메소드는 내부의 모든 메소드를 수행할 수 있으므로 전체가 공격 대상이 됩니다.
+    신뢰할 수 없는 스트림을 역직렬화 하게 되면
+    원격 코드 실행(Remote Code Execution), 서비스 거부(Dos) 등의 공격 대상이 될 수 있습니다.
+    직렬화의 위험을 피하는 방법은 직렬화를 하지 않는 것입니다.
+    하지만 직렬화를 해야한다면 JSON 이나 프로토콜 버퍼와 같은 대안을 사용하는 것을 추천합니다.
+    이 또한 모든 공격을 막아줄 수는 없다는 것을 인식해야 합니다.
    */
   @Bean
   RedisSerializer<Object> springSessionDefaultRedisSerializer() {

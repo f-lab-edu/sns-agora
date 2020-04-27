@@ -23,7 +23,7 @@ public class RedisGoodConfig {
   private int port;
 
   @Bean("goodRedis")
-  public RedisConnectionFactory redisGoodConnectionFactory() {
+  public RedisConnectionFactory goodRedisConnectionFactory() {
 
     RedisStandaloneConfiguration redisStandaloneConfiguration =
             new RedisStandaloneConfiguration(host, port);
@@ -33,17 +33,22 @@ public class RedisGoodConfig {
     LettuceConnectionFactory lettuceConnectionFactory =
             new LettuceConnectionFactory(redisStandaloneConfiguration);
 
+    /*개발의 편의성을 위해 레디스의 논리적으로 database 를 분할하였습니다.
+      실제 서비스 시에는 properties 에서 호스트를 변경해야만 합니다.
+    */
+    lettuceConnectionFactory.setDatabase(1);
+
     return lettuceConnectionFactory;
   }
 
   @Bean(name = "goodRedisTemplate")
   public RedisTemplate<String, Object> goodRedisTemplate() {
 
-    RedisTemplate<String, Object> redisTemplate2 = new RedisTemplate<>();
-    redisTemplate2.setConnectionFactory(redisGoodConnectionFactory());
-    redisTemplate2.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
-    redisTemplate2.setKeySerializer(new StringRedisSerializer());
+    RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+    redisTemplate.setConnectionFactory(goodRedisConnectionFactory());
+    redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+    redisTemplate.setKeySerializer(new StringRedisSerializer());
 
-    return redisTemplate2;
+    return redisTemplate;
   }
 }

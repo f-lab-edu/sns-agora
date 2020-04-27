@@ -30,7 +30,7 @@ public class UserAspect {
 
   @Autowired
   @Qualifier("cacheStrRedisTemplate")
-  StringRedisTemplate cacheRedisTemplate;
+  StringRedisTemplate cacheStrRedisTemplate;
 
   /**
    * 로그인 정보를 확인하고,
@@ -81,7 +81,7 @@ public class UserAspect {
 
     User userInfo = User.create(
             mapper.readValue(
-                    cacheRedisTemplate.boundValueOps("userInfo:"+userId).get(), UserCache.class));
+                    cacheStrRedisTemplate.boundValueOps("userInfo:"+userId).get(), UserCache.class));
 
     Object[] args = joinPoint.getArgs();
     MethodSignature signature = (MethodSignature) joinPoint.getSignature();

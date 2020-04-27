@@ -60,7 +60,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
 
 
   @Bean("cacheRedis")
-  public RedisConnectionFactory redisCacheConnectionFactory() {
+  public RedisConnectionFactory cacheRedisConnectionFactory() {
 
     RedisStandaloneConfiguration redisStandaloneConfiguration =
             new RedisStandaloneConfiguration(host, port);
@@ -68,6 +68,11 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
 
     LettuceConnectionFactory lettuceConnectionFactory =
             new LettuceConnectionFactory(redisStandaloneConfiguration);
+
+    /*개발의 편의성을 위해 레디스의 논리적으로 database 를 분할하였습니다.
+      실제 서비스 시에는 properties 에서 호스트를 변경해야만 합니다.
+    */
+    lettuceConnectionFactory.setDatabase(0);
 
     return lettuceConnectionFactory;
   }
@@ -88,7 +93,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
       메모리 와 비용은 조금 더 생각해보겠습니다.
      */
     RedisCacheManager.RedisCacheManagerBuilder builder = RedisCacheManager.RedisCacheManagerBuilder
-            .fromConnectionFactory(redisCacheConnectionFactory());
+            .fromConnectionFactory(cacheRedisConnectionFactory());
     RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
             .serializeValuesWith(RedisSerializationContext.SerializationPair
                     .fromSerializer(new GenericJackson2JsonRedisSerializer()))
@@ -129,9 +134,18 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
   public RedisTemplate<String, Object> cacheRedisTemplate() {
 
     RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-    redisTemplate.setConnectionFactory(redisCacheConnectionFactory());
+    redisTemplate.setConnectionFactory(cacheRedisConnectionFactory());
     redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
     redisTemplate.setKeySerializer(new StringRedisSerializer());
+
+    /*
+    GenericJackson2JsonRedisSerializer 로 설정한 결과 Date type 을 직렬화 할 때,
+    type 까지 함께 직렬화 되는 현상이 발생하여 역직렬화 시 문제가 발생하였습니다.
+    이로 인해 현재는 Jackson2JsonRedisSerializer 로 지정하였습니다.
+    Birth 를 Date type 이 아닌 Long type 으로 변경하고
+    MySql 에 입력할 때 Date 형식에 맞게끔 바꿔 입력하면 해결될 것이라고 생각되므로
+    문제 해결 시 변경 후 해당 주석 삭제하겠습니다.
+     */
     redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
 
     return redisTemplate;
@@ -141,7 +155,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
   public StringRedisTemplate cacheStrRedisTemplate(){
 
     StringRedisTemplate strRedisTemplate = new StringRedisTemplate();
-    strRedisTemplate.setConnectionFactory(redisCacheConnectionFactory());
+    strRedisTemplate.setConnectionFactory(cacheRedisConnectionFactory());
 
     return strRedisTemplate;
   }

@@ -69,29 +69,36 @@ public class GoodServiceImpl implements GoodService {
   }
 
   /*
-  1. Redis2에서 good:{feedId} 가 '0' 여부 확인.
-  2. 0이면 goodList:{feedId} 를 키로 가지는 redis sorted set 으로 만든다.
-  3. 0이 아니면 goodList:{feedId} 에 contains userId 여부 확인.
-  4. userId 가 이미 존재하면 exception
-  5. good:{feedId} incr 명령어 수행.
-  6. goodList:{feedId} add(userId, 현재시간(스코어)) 명령어 수행.
+  1. goodList:{feedId} 에 contains userId 여부 확인.
+  2. userId 가 이미 존재하면 exception
+  3. good:{feedId} incr 명령어 수행.
+  4. goodList:{feedId} add(userId, 현재시간(스코어)) 명령어 수행.
+
+  redis atomicity 고려.
+  lua script 활용 및 redis transaction 사용 공부중입니다.
+  둘 다 비교 후 적용해보겠습니다.
    */
   @Override
   public void addGood(int feedId, String userId) {
 
     String goodKey = "good:"+feedId;
-    String goodListKey = "goodList:"+feedId;
-    long date = Timestamp.valueOf(LocalDateTime.now()).getTime();
-    int good = getGood(feedId);
 
-    if ((good != 0) && (goodRedisTemplate.opsForZSet().rank(goodListKey, userId) != null)) {
+    addGoodUser(feedId, userId);
+
+    goodRedisTemplate.opsForValue().increment(goodKey);
+  }
+
+  public void addGoodUser(int feedId, String userId) {
+
+    String goodListKey = "goodList:" + feedId;
+    long date = Timestamp.valueOf(LocalDateTime.now()).getTime();
+
+    if(goodRedisTemplate.opsForZSet().rank(goodListKey, userId) != null) {
       throw new DuplicateRequestException("중복된 요청입니다.");
     }
 
-    goodRedisTemplate.opsForValue().increment(goodKey);
     goodRedisTemplate.opsForZSet().add(goodListKey, userId, date);
   }
-
 
   /*
   1. good:{feedId} 가 '0' 여부 확인.
