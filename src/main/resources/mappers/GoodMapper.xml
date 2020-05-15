@@ -3,15 +3,9 @@
 <mapper namespace="com.ht.project.snsproject.mapper.GoodMapper">
 
     <select id="getGood" parameterType="int" resultType="int">
-        SELECT good FROM feeds
-        WHERE id = #{feedId}
+        SELECT COUNT(*) FROM goods
+        WHERE feedId = #{feedId}
     </select>
-
-    <update id="decrementGood" parameterType="int">
-        UPDATE feeds
-        SET good = good - 1
-        WHERE id = #{feedId} AND good>0
-    </update>
 
     <delete id="deleteGoodUser" parameterType="com.ht.project.snsproject.model.good.GoodUserDelete">
         DELETE FROM goods

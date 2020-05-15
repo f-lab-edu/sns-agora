@@ -11,7 +11,7 @@ import lombok.Value;
 @AllArgsConstructor
 public class FeedInfo {
 
-  int id;
+  Integer id;
 
   String userId;
 
@@ -27,7 +27,9 @@ public class FeedInfo {
 
   String fileNames;
 
-  public static FeedInfo cacheToFeedInfo(FeedInfoCache feedInfoCache){
+  boolean goodStatus;
+
+  public static FeedInfo cacheToFeedInfo(FeedInfoCache feedInfoCache, boolean goodStatus){
 
     return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
             .userId(feedInfoCache.getUserId())
@@ -37,6 +39,7 @@ public class FeedInfo {
             .publicScope(PublicScope.valueOf(feedInfoCache.getPublicScope()))
             .path(feedInfoCache.getPath())
             .fileNames(feedInfoCache.getFileNames())
+            .goodStatus(goodStatus)
             .build();
   }
 }

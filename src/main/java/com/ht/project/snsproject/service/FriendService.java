@@ -1,5 +1,7 @@
 package com.ht.project.snsproject.service;
 
+import com.ht.project.snsproject.enumeration.FriendStatus;
+import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.friend.Friend;
 import com.ht.project.snsproject.model.friend.FriendList;
@@ -8,6 +10,8 @@ import java.util.List;
 public interface FriendService {
 
   void requestFriend(String userId, String targetId);
+
+  FriendStatus getFriendStatus(String userId, String targetId);
 
   void deleteFriendRequest(String userId, String targetId);
 
@@ -28,4 +32,6 @@ public interface FriendService {
   List<FriendList> getBlockUserList(String userId, Pagination pagination);
 
   Friend getFriendRelationStatus(String userId, String targetId);
+
+  boolean checkPublicScopeByFriendStatus(PublicScope publicScope, FriendStatus friendStatus);
 }

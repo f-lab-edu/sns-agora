@@ -1,7 +1,5 @@
 package com.ht.project.snsproject.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,9 +7,10 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.session.data.redis.RedisSessionRepository;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 import org.springframework.session.web.context.AbstractHttpSessionApplicationInitializer;
 
@@ -59,8 +58,9 @@ public class RedisSessionConfig extends AbstractHttpSessionApplicationInitialize
   하지만 스프링 부트 내부에서 동작하는 빈을 설정하는 방법을 현재는 잘 모르는 상황이라
   조금 더 찾아 봐야 할 것 같습니다.
    */
+
   @Primary
-  @Bean("sessionRedis")
+  @Bean
   public RedisConnectionFactory sessionRedisConnectionFactory() {
 
     RedisStandaloneConfiguration redisStandaloneConfiguration =
@@ -76,6 +76,17 @@ public class RedisSessionConfig extends AbstractHttpSessionApplicationInitialize
     lettuceConnectionFactory.setDatabase(2);
 
     return lettuceConnectionFactory;
+  }
+
+  @Bean("sessionRedisTemplate")
+  public RedisTemplate<String, Object> sessionRedisTemplate() {
+
+    RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+    redisTemplate.setConnectionFactory(sessionRedisConnectionFactory());
+    redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+    redisTemplate.setKeySerializer(new StringRedisSerializer());
+
+    return redisTemplate;
   }
 
   /*
@@ -95,6 +106,7 @@ public class RedisSessionConfig extends AbstractHttpSessionApplicationInitialize
     하지만 직렬화를 해야한다면 JSON 이나 프로토콜 버퍼와 같은 대안을 사용하는 것을 추천합니다.
     이 또한 모든 공격을 막아줄 수는 없다는 것을 인식해야 합니다.
    */
+
   @Bean
   RedisSerializer<Object> springSessionDefaultRedisSerializer() {
 
