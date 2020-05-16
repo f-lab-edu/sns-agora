@@ -27,9 +27,9 @@ public class FeedInfo {
 
   String fileNames;
 
-  boolean goodStatus;
+  boolean goodPushed;
 
-  public static FeedInfo cacheToFeedInfo(FeedInfoCache feedInfoCache, boolean goodStatus){
+  public static FeedInfo cacheToFeedInfo(FeedInfoCache feedInfoCache, boolean goodPushed){
 
     return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
             .userId(feedInfoCache.getUserId())
@@ -39,7 +39,7 @@ public class FeedInfo {
             .publicScope(PublicScope.valueOf(feedInfoCache.getPublicScope()))
             .path(feedInfoCache.getPath())
             .fileNames(feedInfoCache.getFileNames())
-            .goodStatus(goodStatus)
+            .goodPushed(goodPushed)
             .build();
   }
 }

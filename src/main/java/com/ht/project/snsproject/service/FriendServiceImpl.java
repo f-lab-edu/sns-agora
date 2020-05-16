@@ -174,9 +174,9 @@ public class FriendServiceImpl implements FriendService {
   }
 
   @Override
-  public boolean checkPublicScopeByFriendStatus(PublicScope publicScope, FriendStatus friendStatus) {
+  public boolean isFeedReadableByFriendStatus(PublicScope publicScope, FriendStatus friendStatus) {
 
-    boolean checkStatus = false;
+    boolean isReadable = false;
 
     switch (friendStatus) {
 
@@ -184,14 +184,14 @@ public class FriendServiceImpl implements FriendService {
         if(publicScope == PublicScope.ALL ||
                 publicScope == PublicScope.FRIENDS ||
                 publicScope == PublicScope.ME) {
-          checkStatus = true;
+          isReadable = true;
         }
         break;
 
       case FRIEND:
         if(publicScope == PublicScope.ALL ||
                 publicScope == PublicScope.FRIENDS) {
-          checkStatus =true;
+          isReadable =true;
         }
         break;
 
@@ -200,10 +200,10 @@ public class FriendServiceImpl implements FriendService {
 
       default:
         if(publicScope == PublicScope.ALL) {
-          checkStatus = true;
+          isReadable = true;
         }
     }
 
-    return checkStatus;
+    return isReadable;
   }
 }

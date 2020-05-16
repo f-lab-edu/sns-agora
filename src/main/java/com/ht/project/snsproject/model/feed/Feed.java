@@ -29,7 +29,7 @@ public class Feed {
 
   int good;
 
-  boolean goodStatus;
+  boolean goodPushed;
 
   List<FileVo> files;
 }

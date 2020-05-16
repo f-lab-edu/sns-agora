@@ -1,5 +1,6 @@
 package com.ht.project.snsproject.service;
 
+import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.GoodMapper;
@@ -41,6 +42,8 @@ public class GoodServiceImpl implements GoodService {
   @Autowired
   GoodMapper goodMapper;
 
+  @Autowired
+  FeedCacheService feedCacheService;
 
   /*
   Spring cache 이용해도 괜찮을 것 같습니다.
@@ -51,7 +54,7 @@ public class GoodServiceImpl implements GoodService {
   @Override
   public Integer getGood(int feedId) {
 
-    String goodKey = "good:"+feedId;
+    String goodKey = feedCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
     Integer good = (Integer) valueOps.get(goodKey);
 
@@ -72,26 +75,28 @@ public class GoodServiceImpl implements GoodService {
   @Override
   public void addGood(int feedId, String userId) {
 
-    String goodStatusKey = "goodStatus:" + userId;
+    String goodPushedKey = feedCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, userId);
+    String goodKey = feedCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
     getGood(feedId);
 
-    Double isGoodPushed = zSetOps.score(goodStatusKey, feedId);
+    Double isGoodPushed = zSetOps.score(goodPushedKey, feedId);
 
     if ((isGoodPushed == null) || (isGoodPushed == DEPRECATED)) {
-      zSetOps.add("goodStatus:" + userId, feedId, Timestamp.valueOf(LocalDateTime.now()).getTime());
+      zSetOps.add(goodPushedKey, feedId, Timestamp.valueOf(LocalDateTime.now()).getTime());
 
     } else {
       throw new DuplicateRequestException("중복된 요청입니다.");
     }
 
-    valueOps.increment("good:"+feedId);
+    valueOps.increment(goodKey);
   }
 
   @Override
   public void cancelGood(int feedId, String userId) {
 
-    String goodStatusKey = "goodStatus:"+userId;
+    String goodStatusKey = feedCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, userId);
+    String goodKey = feedCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
     getGood(feedId);
 
@@ -103,6 +108,6 @@ public class GoodServiceImpl implements GoodService {
       zSetOps.add(goodStatusKey, feedId, DEPRECATED);
     }
 
-    valueOps.decrement("good:"+feedId);
+    valueOps.decrement(goodKey);
   }
 }
