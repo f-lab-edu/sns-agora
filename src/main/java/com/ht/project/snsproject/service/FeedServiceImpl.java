@@ -126,7 +126,7 @@ public class FeedServiceImpl implements FeedService {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
 
-    feedCacheService.addFeedInfoToCache(FeedInfoCache.feedInfoToCache(feedInfo), 5L, TimeUnit.MINUTES);
+    feedCacheService.addFeedInfoToCache(FeedInfoCache.from(feedInfo), 5L, TimeUnit.MINUTES);
 
     return feedInfo;
   }
@@ -195,7 +195,7 @@ public class FeedServiceImpl implements FeedService {
         goodPushed = false;
       }
 
-      feedCacheService.addFeedInfoToCache(FeedInfoCache.feedInfoToCache(feedInfo), 5L, TimeUnit.MINUTES);
+      feedCacheService.addFeedInfoToCache(FeedInfoCache.from(feedInfo), 5L, TimeUnit.MINUTES);
 
       Feed.FeedBuilder builder = Feed.builder()
               .id(feedId)
@@ -254,6 +254,8 @@ public class FeedServiceImpl implements FeedService {
 
         goodPushed = false;
       }
+
+      feedCacheService.addFeedInfoToCache(FeedInfoCache.from(feedInfo), 5L, TimeUnit.MINUTES);
 
       Feed.FeedBuilder builder = Feed.builder()
               .id(feedId)

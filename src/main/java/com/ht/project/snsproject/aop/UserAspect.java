@@ -32,6 +32,9 @@ public class UserAspect {
   @Qualifier("cacheStrRedisTemplate")
   StringRedisTemplate cacheStrRedisTemplate;
 
+  @Autowired
+  ObjectMapper objectMapper;
+
   /**
    * 로그인 정보를 확인하고,
    * 타깃 메소드에 userId 의 value 를 주입하는 Advice 이다.
@@ -67,7 +70,6 @@ public class UserAspect {
   @Around("execution(* *(.., @com.ht.project.snsproject.annotation.UserInfo (*), ..))")
   public Object injectUserSession(ProceedingJoinPoint joinPoint) throws Throwable{
 
-    ObjectMapper mapper = new ObjectMapper();
     HttpSession httpSession = ((ServletRequestAttributes)RequestContextHolder
             .getRequestAttributes())
             .getRequest()
@@ -79,8 +81,8 @@ public class UserAspect {
       throw new UnauthorizedException("로그인 정보가 존재하지 않습니다.");
     }
 
-    User userInfo = User.create(
-            mapper.readValue(
+    User userInfo = User.from(
+            objectMapper.readValue(
                     cacheStrRedisTemplate.boundValueOps("userInfo:"+userId).get(), UserCache.class));
 
     Object[] args = joinPoint.getArgs();

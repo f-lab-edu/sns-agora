@@ -2,6 +2,7 @@ package com.ht.project.snsproject.config;
 
 import java.time.Duration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
@@ -58,6 +59,8 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
   @Value("${redis.cache.port}")
   private int port;
 
+  @Autowired
+  ObjectMapper mapper;
 
   @Bean("cacheRedis")
   public RedisConnectionFactory cacheRedisConnectionFactory() {
@@ -87,10 +90,9 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
       redisTemplate 으로 직접 설정해야한다고 이해하여 서비스에서도
       redisTemplate 으로 설정하였습니다.
 
-      ttl 설정: 2시간으로 선정한 이유는 트래픽을 고려할 때 07:00~09:00(출근시간)
-      11:00~13:00(점심시간), 18:00~20:00(퇴근 시간) 22:00~00:00(취침시간)에 가장 많이 접속할 것으로 판단하여
-      캐시를 2시간으로 만료하기로 결정하였습니다.
-      메모리 와 비용은 조금 더 생각해보겠습니다.
+      스프링 캐시를 활용하는 방법으로 빈 이름을 다르게 하여 등록하고 사용한다면
+      prefix를 설정하고 @Cacheable 과 같은 어노테이션 기반의 스프링 캐시를 더 편하게 사용할 수 있을 것이라고 생각됩니다.
+      즉, redisTemplate을 직접 활용하지 않더라도 사용이 가능할 것이라고 판단됩니다.
      */
     RedisCacheManager.RedisCacheManagerBuilder builder = RedisCacheManager.RedisCacheManagerBuilder
             .fromConnectionFactory(cacheRedisConnectionFactory());
@@ -98,7 +100,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
             .serializeValuesWith(RedisSerializationContext.SerializationPair
                     .fromSerializer(new GenericJackson2JsonRedisSerializer()))
             .disableKeyPrefix()
-            .entryTtl(Duration.ofHours(2L));//2시간 경과시 만료
+            .entryTtl(Duration.ofSeconds(60L));
     builder.cacheDefaults(configuration);
 
     return builder.build();
@@ -146,7 +148,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
     MySql 에 입력할 때 Date 형식에 맞게끔 바꿔 입력하면 해결될 것이라고 생각되므로
     문제 해결 시 변경 후 해당 주석 삭제하겠습니다.
      */
-    redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
+    redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer(mapper));
 
     return redisTemplate;
   }

@@ -1,20 +1,26 @@
 package com.ht.project.snsproject.enumeration;
 
 public enum GoodStatus {
-  DEPRECATED(0), PUSHED(1), NOT_PUSHED(2);
+  DEPRECATED("deprecated"), PUSHED("pushed"), NOT_PUSHED("notPushed");
 
-  private final int value;
+  private final String value;
 
-  GoodStatus (int value) {
+  GoodStatus (String value) {
     this.value = value;
   }
 
-  public static GoodStatus valueOf(int value) {
+  public static GoodStatus fromString(String value) {
+
     switch (value) {
-      case 0: return DEPRECATED;
-      case 1: return PUSHED;
-      case 2: return NOT_PUSHED;
-      default: throw new AssertionError("Unknown value: " + value);
+      case "deprecated":
+        return DEPRECATED;
+      case "pushed":
+        return PUSHED;
+      case "notPushed":
+        return NOT_PUSHED;
+      default:
+        throw new IllegalArgumentException("Unknown value: " + value);
     }
+
   }
 }

@@ -27,7 +27,7 @@ public class FeedInfoCache {
 
   String fileNames;
 
-  public static FeedInfoCache feedInfoToCache(FeedInfo feedInfo) {
+  public static FeedInfoCache from(FeedInfo feedInfo) {
 
     return FeedInfoCache.builder()
             .id(String.valueOf(feedInfo.getId()))

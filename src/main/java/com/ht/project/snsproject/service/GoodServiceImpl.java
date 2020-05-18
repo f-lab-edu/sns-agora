@@ -5,6 +5,7 @@ import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.GoodMapper;
 import com.ht.project.snsproject.model.good.GoodList;
+import com.ht.project.snsproject.model.good.GoodListParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -68,8 +70,12 @@ public class GoodServiceImpl implements GoodService {
 
 
   @Override
-  public GoodList getGoodList(int feedId, long cursor) {
-    return null;
+  public List<GoodList> getGoodList(int feedId, Integer cursor) {
+
+    return goodMapper.getGoodList(GoodListParam.builder()
+            .feedId(feedId)
+            .cursor(cursor)
+            .build());
   }
 
   @Override

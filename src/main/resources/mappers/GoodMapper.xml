@@ -7,6 +7,17 @@
         WHERE feedId = #{feedId}
     </select>
 
+    <select id="getGoodList" parameterType="com.ht.project.snsproject.model.good.GoodListParam"
+            resultType="com.ht.project.snsproject.model.good.GoodList">
+        SELECT id, userId From goods
+        WHERE feedId = #{feedId}
+        <if test="cursor != null">
+            AND id <![CDATA[<]]> #{cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{limit};
+    </select>
+
     <delete id="deleteGoodUser" parameterType="com.ht.project.snsproject.model.good.GoodUserDelete">
         DELETE FROM goods
         WHERE feedId = #{feedId} AND userId = #{userId}

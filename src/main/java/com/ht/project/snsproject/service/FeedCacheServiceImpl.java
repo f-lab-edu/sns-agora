@@ -23,6 +23,15 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * FeedCacheService 를 인터페이스를 구현하여 전략 패턴으로 디자인한 이유
+ * 현재는 해당 프로젝트에서 레디스를 활용하여 캐시를 사용하고 있습니다.
+ * 하지만 이 후에 레디스 보다 더 나은 방법의 캐시 저장소를 발견한다면 교체를 해야할 수 있습니다.
+ * 만약 해당 서비스 강결합 되어 있다면, 서비스의 필요한 기능들을 하나하나 다시 정의하고 구현해야만 합니다.
+ * 이를 인터페이스로 구현하면 정의되어 있는 기능을 구현하기만 하면 됩니다.
+ * 즉, 이 후 기술변화에 대한 서비스 계층의 코드가 영향을 받지 않토록 결합도를 낮추기 위해서
+ * 해당 서비스를 인터페이스를 통하여 추상화하였습니다.
+ */
 @Service
 public class FeedCacheServiceImpl implements FeedCacheService{
 
@@ -45,11 +54,8 @@ public class FeedCacheServiceImpl implements FeedCacheService{
   @Resource(name = "cacheRedisTemplate")
   ValueOperations<String, Object> valueOps;
 
-  /**
-   * ObjectMapper 클래스
-   * 주석 추가 예정.
-   */
-  ObjectMapper mapper = new ObjectMapper();
+  @Autowired
+  ObjectMapper objectMapper;
 
   @Override
   public FeedInfo getFeedInfoFromCache(int feedId, String userId, FriendStatus friendStatus) {
@@ -66,7 +72,7 @@ public class FeedCacheServiceImpl implements FeedCacheService{
 
       try {
 
-        feedInfoCache = mapper.readValue(feedInfoStrCache, FeedInfoCache.class);
+        feedInfoCache = objectMapper.readValue(feedInfoStrCache, FeedInfoCache.class);
       } catch (JsonProcessingException e) {
         throw new SerializationException("변환에 실패하였습니다.", e);
       }
@@ -80,11 +86,21 @@ public class FeedCacheServiceImpl implements FeedCacheService{
       GoodStatus goodPushedStatus = getGoodPushedCache(feedId, userId);
       boolean goodPushed = goodPushedStatus == GoodStatus.PUSHED;
 
-      return FeedInfo.cacheToFeedInfo(feedInfoCache, goodPushed);
+      return FeedInfo.from(feedInfoCache, goodPushed);
 
     }
   }
 
+
+  /*
+  * zset에 feedId 와 가중치를 함께 저장하는 이유
+  현재 score 에는 feedId가 해당 set 에 입력된 시간이 timestamp 형태로 저장되어 있습니다.
+  이유는 Batch Insert 를 수행할 때, 이전에 insert 된 시간과 비교해서 이 후에 저장 되는 feedId만 조회하기 위함입니다.
+  일반 List에서 조회 시에는 O(N)의 시간이 걸리는 반면, Sorted Set에서 zrange by score 로 조회하게 되면
+  O(log(N)+M)의 시간이 걸리게 됩니다.
+  Batch Insert의 간격을 짧게 가져간다면 Sorted Set에서 score를 통해 비교 후 일부 데이터를 가져오는 것이
+  더 빠르다고 생각했기 때문에 Sorted Set 으로 관리하였습니다.
+   */
   @Override
   public void addGoodPushedToCache(String userId, int feedId) {
 
@@ -94,7 +110,7 @@ public class FeedCacheServiceImpl implements FeedCacheService{
 
     zSetOps.add(goodPushedKey, feedId, time);
     cacheRedisTemplate.expire(goodPushedKey,
-            cacheRedisTemplate.getExpire("userInfo:"+userId) + 60L,
+            cacheRedisTemplate.getExpire("userInfo:" + userId) + 60L,
             TimeUnit.SECONDS);//세션 만료 시간 + 60초로 설정 로그아웃 이후에도 한 번 더 batch insert를 해야하기 때문.
   }
 
@@ -136,7 +152,7 @@ public class FeedCacheServiceImpl implements FeedCacheService{
       throw new InvalidApproachException("유효하지 않은 키입니다.");
     }
 
-    return "goodPushed:"+userId;
+    return "goodPushed:" + userId;
   }
 
   @Override
@@ -146,11 +162,11 @@ public class FeedCacheServiceImpl implements FeedCacheService{
 
     switch (cacheKeyPrefix) {
       case FEED:
-        key = "feedInfo:"+feedId;
+        key = "feedInfo:" + feedId;
         break;
 
       case GOOD:
-        key = "good:"+feedId;
+        key = "good:" + feedId;
         break;
 
       default:

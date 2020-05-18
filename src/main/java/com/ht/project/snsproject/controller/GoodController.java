@@ -20,7 +20,8 @@ public class GoodController {
   
   @LoginCheck
   @GetMapping("/{id}")
-  public ResponseEntity<GoodList> getGoodList(@PathVariable int id, @RequestParam long cursor) {
+  public ResponseEntity<List<GoodList>> getGoodList(@PathVariable int id,
+                                                    @RequestParam(required = false) Integer cursor) {
 
     return ResponseEntity.ok(goodService.getGoodList(id, cursor));
   }

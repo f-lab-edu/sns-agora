@@ -1,20 +1,20 @@
 package com.ht.project.snsproject.enumeration;
 
 public enum CacheKeyPrefix {
-  FEED(1), GOOD(2), GOODPUSHED(3);
+  FEED("feedInfo"), GOOD("good"), GOODPUSHED("goodPushed");
 
-  private final int value;
+  private final String value;
 
-  CacheKeyPrefix(int value) {
+  CacheKeyPrefix(String value) {
     this.value = value;
   }
 
-  public static CacheKeyPrefix valueOf(int value) {
+  public static CacheKeyPrefix fromString(String value) {
     switch (value) {
-      case 1: return FEED;
-      case 2: return GOOD;
-      case 3: return GOODPUSHED;
-      default: throw new AssertionError("Unknown value: " + value);
+      case "feedInfo": return FEED;
+      case "good": return GOOD;
+      case "goodPusehd": return GOODPUSHED;
+      default: throw new IllegalArgumentException("Unknown value: " + value);
     }
   }
 }

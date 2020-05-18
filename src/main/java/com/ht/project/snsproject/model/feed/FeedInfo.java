@@ -29,7 +29,7 @@ public class FeedInfo {
 
   boolean goodPushed;
 
-  public static FeedInfo cacheToFeedInfo(FeedInfoCache feedInfoCache, boolean goodPushed){
+  public static FeedInfo from(FeedInfoCache feedInfoCache, boolean goodPushed){
 
     return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
             .userId(feedInfoCache.getUserId())
