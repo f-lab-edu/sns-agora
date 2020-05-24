@@ -12,6 +12,8 @@ public class ObjectMapperConfig {
   /*
   서비스 레이어 단에서 오브젝트 매퍼를 지속적으로 초기화해주어 사용하면 비용이 크다.
   그러므로 일반적으로 빈(싱글톤) 으로 등록하여 사용한다.
+
+  모듈별 설명 추가 필요.
   */
   @Bean
   public ObjectMapper objectMapper() {

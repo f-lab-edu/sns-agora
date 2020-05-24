@@ -136,10 +136,10 @@ public class QuartzConfiguration {
     trigger.setJobDetail(job);
 
     /*
-      데이터를 캐싱하는 시간을 2시간으로 설정해놓았기 때문에
-      1시간마다 스케줄러를 돌게 하여 '좋아요 리스트'를 DB에 쓰도록 합니다.
+      데이터를 캐싱하는 시간을 60sec으로 설정해놓았기 때문에
+      20sec마다 스케줄러를 돌게 하여 '좋아요 리스트'를 DB에 쓰도록 합니다.
      */
-    int frequencyInSec = 60*60;
+    int frequencyInSec = 20;
     log.info("Configuring trigger to fire every {} seconds", frequencyInSec);
 
     trigger.setRepeatInterval(frequencyInSec * 1000);

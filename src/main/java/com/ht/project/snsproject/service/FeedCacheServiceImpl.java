@@ -4,23 +4,27 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.enumeration.FriendStatus;
-import com.ht.project.snsproject.enumeration.GoodStatus;
 import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.model.feed.FeedInfo;
 import com.ht.project.snsproject.model.feed.FeedInfoCache;
+import com.ht.project.snsproject.model.good.Good;
+import com.ht.project.snsproject.model.good.GoodPushedStatus;
+import io.lettuce.core.LettuceFutures;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisFuture;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.async.RedisAsyncCommands;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,11 +39,16 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class FeedCacheServiceImpl implements FeedCacheService{
 
-  private static final long DEPRECATED = 0;
-
   @Autowired
   FriendService friendService;
 
+  /*
+  @Resource 를 통한 빈 주입이 아닌 @Qualifier 를 통한 부가정보를 사용한 이유
+  - @Resource 를 활용할 때, 빈 이름은 변경되기가 쉽고 그 자체로 의미 부여가 쉽지 않음.
+  - 빈 이름과는 별도로 추가적인 메타정보를 지정해서 의미를 부여해놓고 @Autowired에서 사용할 수 있도록 하는
+    @Autowired 가 훨씬 직관적이고 깔끔하다.
+  - 아래와 같이 선언시, cacheRedisTemplate 이라는 한정자 값을 가진 빈으로 자동와이어링 대상을 제한할 수 있다.
+   */
   @Autowired
   @Qualifier("cacheRedisTemplate")
   RedisTemplate<String, Object> cacheRedisTemplate;
@@ -49,13 +58,16 @@ public class FeedCacheServiceImpl implements FeedCacheService{
   StringRedisTemplate cacheStrRedisTemplate;
 
   @Resource(name = "cacheRedisTemplate")
-  ZSetOperations<String, Object> zSetOps;
-
-  @Resource(name = "cacheRedisTemplate")
   ValueOperations<String, Object> valueOps;
 
   @Autowired
-  ObjectMapper objectMapper;
+  GoodService goodService;
+
+  @Autowired
+  RedisClient redisClient;
+
+  @Autowired
+  public ObjectMapper objectMapper;
 
   @Override
   public FeedInfo getFeedInfoFromCache(int feedId, String userId, FriendStatus friendStatus) {
@@ -83,8 +95,7 @@ public class FeedCacheServiceImpl implements FeedCacheService{
         throw new InvalidApproachException("유효하지 않은 요청입니다.");
       }
 
-      GoodStatus goodPushedStatus = getGoodPushedCache(feedId, userId);
-      boolean goodPushed = goodPushedStatus == GoodStatus.PUSHED;
+      boolean goodPushed = goodService.isGoodPushed(feedId, userId);
 
       return FeedInfo.from(feedInfoCache, goodPushed);
 
@@ -101,18 +112,6 @@ public class FeedCacheServiceImpl implements FeedCacheService{
   Batch Insert의 간격을 짧게 가져간다면 Sorted Set에서 score를 통해 비교 후 일부 데이터를 가져오는 것이
   더 빠르다고 생각했기 때문에 Sorted Set 으로 관리하였습니다.
    */
-  @Override
-  public void addGoodPushedToCache(String userId, int feedId) {
-
-    String goodPushedKey = makeCacheKey(CacheKeyPrefix.GOODPUSHED, userId);
-
-    double time = Timestamp.valueOf(LocalDateTime.now()).getTime();
-
-    zSetOps.add(goodPushedKey, feedId, time);
-    cacheRedisTemplate.expire(goodPushedKey,
-            cacheRedisTemplate.getExpire("userInfo:" + userId) + 60L,
-            TimeUnit.SECONDS);//세션 만료 시간 + 60초로 설정 로그아웃 이후에도 한 번 더 batch insert를 해야하기 때문.
-  }
 
   @Override
   public void addFeedInfoToCache(FeedInfoCache feedInfoCache, long time, TimeUnit timeUnit) {
@@ -122,37 +121,25 @@ public class FeedCacheServiceImpl implements FeedCacheService{
     valueOps.set(feedInfoKey, feedInfoCache, time, timeUnit);
   }
 
-  @Override
-  public GoodStatus getGoodPushedCache(int feedId, String userId) {
-
-    String goodPushedKey = makeCacheKey(CacheKeyPrefix.GOODPUSHED, userId);
-
-    Double isGoodPushed = zSetOps.score(goodPushedKey, feedId);
-
-    GoodStatus goodPushed;
-
-    if (isGoodPushed == null) {
-
-      goodPushed = GoodStatus.NOT_PUSHED;
-    } else if (isGoodPushed == DEPRECATED) {
-
-      goodPushed = GoodStatus.DEPRECATED;
-    } else {
-
-      goodPushed = GoodStatus.PUSHED;
-    }
-
-    return goodPushed;
-  }
 
   @Override
-  public String makeCacheKey(CacheKeyPrefix cacheKeyPrefix, String userId) {
+  public String makeCacheKey(CacheKeyPrefix cacheKeyPrefix, String suffix) {
 
     if(cacheKeyPrefix != CacheKeyPrefix.GOODPUSHED) {
       throw new InvalidApproachException("유효하지 않은 키입니다.");
     }
 
-    return "goodPushed:" + userId;
+    return "goodPushed:" + suffix;
+  }
+
+
+  public String makeCacheKey(CacheKeyPrefix cacheKeyPrefix, int feedId, String userId) {
+
+    if(cacheKeyPrefix != CacheKeyPrefix.GOODPUSHED) {
+      throw new InvalidApproachException("유효하지 않은 키입니다.");
+    }
+
+    return "goodPushed:" + feedId + ":" + userId;
   }
 
   @Override
@@ -173,5 +160,154 @@ public class FeedCacheServiceImpl implements FeedCacheService{
         throw new InvalidApproachException("유효하지 않은 키입니다.");
     }
     return key;
+  }
+
+  @Override
+  public List<String> makeMultiKeyList(CacheKeyPrefix cacheKeyPrefix, List<Integer> feedIds, String userId) {
+
+    if (cacheKeyPrefix != CacheKeyPrefix.GOODPUSHED) {
+      throw new IllegalArgumentException("유효하지 않은 키입니다.");
+    }
+
+    List<String> keys = new ArrayList<>();
+
+    for(Integer feedId : feedIds) {
+
+      keys.add(makeCacheKey(cacheKeyPrefix, feedId, userId));
+    }
+
+    return keys;
+  }
+
+  @Override
+  public List<String> makeMultiKeyList(CacheKeyPrefix cacheKeyPrefix, List<Integer> feedIds) {
+
+    List<String> keys = new ArrayList<>();
+
+    for (Integer feedId : feedIds) {
+
+      keys.add(makeCacheKey(cacheKeyPrefix, feedId));
+    }
+
+    return  keys;
+  }
+
+  @Override
+  public List<String> getCacheKeys(String prefix) {
+
+    List<String> keys = new ArrayList<>();
+
+    RedisConnection redisConnection = cacheRedisTemplate.getConnectionFactory().getConnection();
+    ScanOptions options = ScanOptions.scanOptions().match(prefix).count(10).build();
+
+    Cursor<byte[]> c = redisConnection.scan(options);
+    while (c.hasNext()) {
+      keys.add(new String(c.next()));
+    }
+
+    return keys;
+  }
+
+  /*
+  lettuce document 참조.
+  각 객체 설명 추가 필요.
+   */
+  @Override
+  public void pipeliningGood(List<Good> goods, long expire) {
+
+    StatefulRedisConnection<String, String> connection = redisClient.connect();
+    RedisAsyncCommands<String, String> commands = connection.async();
+
+    // disable auto-flushing
+    commands.setAutoFlushCommands(false);
+
+    // perform a series of independent calls
+    List<RedisFuture<?>> futures = new ArrayList<>();
+
+    for (Good good : goods) {
+
+      int feedId = good.getFeedId();
+      String key = makeCacheKey(CacheKeyPrefix.GOOD, feedId);
+      futures.add(commands.set(key, String.valueOf(good.getGood())));
+      futures.add(commands.expire(key, expire));
+    }
+
+    // write all commands to the transport layer
+    commands.flushCommands();
+
+    // synchronization example: Wait until all futures complete
+    boolean result = LettuceFutures.awaitAll(5, TimeUnit.SECONDS,
+            futures.toArray(new RedisFuture[futures.size()]));
+
+    // later
+    connection.close();
+  }
+
+  @Override
+  public void pipelining(List<GoodPushedStatus> goodPushedStatuses, String userId, long expire) {
+
+    StatefulRedisConnection<String, String> connection = redisClient.connect();
+    RedisAsyncCommands<String, String> commands = connection.async();
+
+    // disable auto-flushing
+    commands.setAutoFlushCommands(false);
+
+    // perform a series of independent calls
+    List<RedisFuture<?>> futures = new ArrayList<>();
+    for (GoodPushedStatus goodPushedStatus :  goodPushedStatuses) {
+
+      int feedId = goodPushedStatus.getFeedId();
+      String key = makeCacheKey(CacheKeyPrefix.GOODPUSHED, feedId, userId);
+      futures.add(commands.set(key, String.valueOf(goodPushedStatus.isPushedStatus())));
+      futures.add(commands.expire(key, expire));
+    }
+
+    // write all commands to the transport layer
+    commands.flushCommands();
+
+    // synchronization example: Wait until all futures complete
+    boolean result = LettuceFutures.awaitAll(5, TimeUnit.SECONDS,
+            futures.toArray(new RedisFuture[futures.size()]));
+
+    // later
+    connection.close();
+  }
+
+  @Override
+  public void pipeliningFeedInfoCache(List<FeedInfoCache> feedInfoCacheList, long expire) {
+
+    StatefulRedisConnection<String, String> connection = redisClient.connect();
+    RedisAsyncCommands<String, String> commands = connection.async();
+
+    // disable auto-flushing
+    commands.setAutoFlushCommands(false);
+
+    // perform a series of independent calls
+    List<RedisFuture<?>> futures = new ArrayList<>();
+    for (FeedInfoCache feedInfoCache :  feedInfoCacheList) {
+
+      String feedInfoToJson;
+
+      try {
+        feedInfoToJson = objectMapper.writeValueAsString(feedInfoCache);
+      } catch (JsonProcessingException e) {
+        throw new SerializationException("변환에 실패하였습니다.", e);
+      }
+
+      int feedId = Integer.parseInt(feedInfoCache.getId());
+      String key = makeCacheKey(CacheKeyPrefix.FEED, feedId);
+      futures.add(commands.set(key, feedInfoToJson));
+      futures.add(commands.expire(key, expire));
+    }
+
+    // write all commands to the transport layer
+    commands.flushCommands();
+
+    // synchronization example: Wait until all futures complete
+    boolean result = LettuceFutures.awaitAll(5, TimeUnit.SECONDS,
+            futures.toArray(new RedisFuture[futures.size()]));
+
+    // later
+    connection.close();
   }
 }

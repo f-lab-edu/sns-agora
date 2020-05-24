@@ -1,8 +1,8 @@
 package com.ht.project.snsproject.config;
 
-import java.time.Duration;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
@@ -18,9 +18,10 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.time.Duration;
 
 
 /**
@@ -60,7 +61,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
   private int port;
 
   @Autowired
-  ObjectMapper mapper;
+  public ObjectMapper mapper;
 
   @Bean("cacheRedis")
   public RedisConnectionFactory cacheRedisConnectionFactory() {
@@ -78,6 +79,16 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
     lettuceConnectionFactory.setDatabase(0);
 
     return lettuceConnectionFactory;
+  }
+
+  @Bean
+  public RedisClient redisClient() {
+
+    return RedisClient.create(RedisURI.Builder
+                    .redis(host, port)
+                    .withPassword(password)
+                    .withDatabase(0)
+                    .build());
   }
 
   @Bean
@@ -99,7 +110,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
     RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
             .serializeValuesWith(RedisSerializationContext.SerializationPair
                     .fromSerializer(new GenericJackson2JsonRedisSerializer()))
-            .disableKeyPrefix()
+            .prefixKeysWith("")
             .entryTtl(Duration.ofSeconds(60L));
     builder.cacheDefaults(configuration);
 

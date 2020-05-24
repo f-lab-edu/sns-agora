@@ -7,8 +7,24 @@
         WHERE feedId = #{feedId}
     </select>
 
+    <select id="getGoodPushedStatus" parameterType="com.ht.project.snsproject.model.good.GoodStatusParam"
+            resultType="boolean">
+        SELECT EXISTS
+        (SELECT userId FROM goods WHERE feedId = #{feedId} AND userId = #{userId})
+    </select>
+
+    <select id="getGoods" parameterType="java.util.List" resultType="com.ht.project.snsproject.model.good.Good">
+
+        SELECT feedId, COUNT(*) AS good FROM goods
+        WHERE
+        <foreach item="item" collection="list" index="index" open="(" close=")" separator="OR">
+            feedId = #{item.feedId}
+        </foreach>
+        GROUP BY feedId;
+    </select>
+
     <select id="getGoodList" parameterType="com.ht.project.snsproject.model.good.GoodListParam"
-            resultType="com.ht.project.snsproject.model.good.GoodList">
+            resultType="com.ht.project.snsproject.model.good.GoodUser">
         SELECT id, userId From goods
         WHERE feedId = #{feedId}
         <if test="cursor != null">
@@ -18,8 +34,4 @@
         LIMIT #{limit};
     </select>
 
-    <delete id="deleteGoodUser" parameterType="com.ht.project.snsproject.model.good.GoodUserDelete">
-        DELETE FROM goods
-        WHERE feedId = #{feedId} AND userId = #{userId}
-    </delete>
 </mapper>

@@ -1,13 +1,13 @@
 package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.enumeration.FriendStatus;
-import com.ht.project.snsproject.enumeration.GoodStatus;
 import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.mapper.FriendMapper;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.*;
+import com.ht.project.snsproject.model.good.GoodPushedStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -18,6 +18,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 
@@ -50,14 +51,7 @@ public class FeedServiceImpl implements FeedService {
   public void feedUpload(List<MultipartFile> files, FeedVo feedVo, String userId) {
 
     Timestamp date = Timestamp.valueOf(LocalDateTime.now());
-    FeedInsert feedInsert = FeedInsert.builder()
-            .userId(userId)
-            .title(feedVo.getTitle())
-            .content(feedVo.getContent())
-            .date(date)
-            .publicScope(feedVo.getPublicScope())
-            .good(0)
-            .build();
+    FeedInsert feedInsert = FeedInsert.create(feedVo, userId, date);
 
     feedMapper.feedUpload(feedInsert);
 
@@ -70,42 +64,16 @@ public class FeedServiceImpl implements FeedService {
   @Override
   public Feed getFeed(String userId, String targetId, int id) {
 
-    Feed.FeedBuilder feedBuilder = Feed.builder();
     FeedInfo feedInfo = getFeedInfo(id, userId, targetId);
+    List<FileVo> files = getFileList(feedInfo.getFileNames(), feedInfo.getPath());
 
-    String fileNames = feedInfo.getFileNames();
     int feedId = feedInfo.getId();
     int good = goodService.getGood(feedId);
 
     boolean goodPushed = feedInfo.isGoodPushed();
 
-    if (goodPushed) {
-      feedCacheService.addGoodPushedToCache(userId, feedId);
-    }
+    return Feed.create(feedInfo, good, goodPushed, files);
 
-    feedBuilder.id(feedId)
-            .userId(feedInfo.getUserId())
-            .title(feedInfo.getTitle())
-            .content(feedInfo.getContent())
-            .date(feedInfo.getDate())
-            .publicScope(feedInfo.getPublicScope())
-            .goodPushed(goodPushed)
-            .good(good);
-
-    if (fileNames != null) {
-
-      String filePath = feedInfo.getPath();
-      String[] fileNameArray = fileNames.split(",");
-      List<FileVo> fileVoList = new ArrayList<>();
-      int fileIndex = 0;
-
-      for (String fileName:fileNameArray) {
-        fileVoList.add(FileVo.getInstance(++fileIndex, filePath, fileName));
-      }
-      feedBuilder.files(fileVoList);
-    }
-
-    return feedBuilder.build();
   }
 
   @Transactional
@@ -126,7 +94,7 @@ public class FeedServiceImpl implements FeedService {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
 
-    feedCacheService.addFeedInfoToCache(FeedInfoCache.from(feedInfo), 5L, TimeUnit.MINUTES);
+    feedCacheService.addFeedInfoToCache(FeedInfoCache.from(feedInfo), 60L, TimeUnit.SECONDS);
 
     return feedInfo;
   }
@@ -138,10 +106,10 @@ public class FeedServiceImpl implements FeedService {
   */
   @Transactional
   @Override
-  public List<Feed> getFeedList(String userId, String targetId, Pagination pagination) {
+  public List<Feed> getFeedListByUser(String userId, String targetId, Pagination pagination) {
 
     if (userId.equals(targetId)) {
-      return getFeeds(FeedListParam.create(userId, targetId, pagination, PublicScope.ME));
+      return getFeedsByUser(FeedListParam.create(userId, targetId, pagination, PublicScope.ME));
     }
 
     FriendStatus friendStatus = friendMapper.getFriendRelationStatus(userId, targetId)
@@ -149,137 +117,113 @@ public class FeedServiceImpl implements FeedService {
 
     switch (friendStatus) {
       case FRIEND:
-        return getFeeds(FeedListParam.create(userId, targetId, pagination, PublicScope.FRIENDS));
+        return getFeedsByUser(FeedListParam.create(userId, targetId, pagination, PublicScope.FRIENDS));
 
       case BLOCK:
         throw new InvalidApproachException("유효하지 않은 접근입니다.");
 
       default:
-        return getFeeds(FeedListParam.create(userId, targetId, pagination, PublicScope.ALL));
+        return getFeedsByUser(FeedListParam.create(userId, targetId, pagination, PublicScope.ALL));
     }
   }
 
   @Transactional
   @Override
-  public List<Feed> getFeeds(FeedListParam feedListParam) {
+  public List<Feed> getFeedsByUser(FeedListParam feedListParam) {
 
-    List<FeedInfo> feedInfoList = feedMapper.getFeedList(feedListParam);
-    List<Feed> feeds = new ArrayList<>();
-    String userId = feedListParam.getUserId();
+    return getFeeds(getFeedInfoListByUser(feedListParam), feedListParam.getUserId());
 
-    for (FeedInfo feedInfo:feedInfoList) {
-
-      List<FileVo> files = new ArrayList<>();
-      int feedId = feedInfo.getId();
-
-      int good = goodService.getGood(feedId);
-
-      GoodStatus goodPushedStatus = feedCacheService.getGoodPushedCache(feedId, userId);
-      boolean goodPushed;
-
-      /*
-      좋아요 푸시 여부 캐시 확인.
-       */
-      if(goodPushedStatus == GoodStatus.PUSHED) {
-
-        goodPushed =true;
-      } else if(goodPushedStatus == GoodStatus.NOT_PUSHED){
-
-        goodPushed = feedInfo.isGoodPushed();
-
-        if (goodPushed) {
-          feedCacheService.addGoodPushedToCache(userId, feedId);
-        }
-      } else {
-
-        goodPushed = false;
-      }
-
-      feedCacheService.addFeedInfoToCache(FeedInfoCache.from(feedInfo), 5L, TimeUnit.MINUTES);
-
-      Feed.FeedBuilder builder = Feed.builder()
-              .id(feedId)
-              .userId(feedInfo.getUserId())
-              .title(feedInfo.getTitle())
-              .content(feedInfo.getContent())
-              .date(feedInfo.getDate())
-              .publicScope(feedInfo.getPublicScope())
-              .good(good)
-              .goodPushed(goodPushed);
-
-      int fileIndex = 0;
-      if (feedInfo.getFileNames() != null) {
-        StringTokenizer st = new StringTokenizer(feedInfo.getFileNames(), ",");
-        while (st.hasMoreTokens()) {
-          FileVo tmpFile = FileVo.getInstance(++fileIndex, feedInfo.getPath(), st.nextToken());
-          files.add(tmpFile);
-        }
-        builder.files(files);
-      }
-      Feed tmp = builder.build();
-      feeds.add(tmp);
-    }
-
-    return feeds;
   }
 
+  public List<FeedInfo> getFeedInfoListByUser(FeedListParam feedListParam) {
+
+    return feedMapper.getFeedList(feedListParam);
+  }
+
+  @Transactional
   @Override
   public List<Feed> getFriendsFeedList(String userId, Pagination pagination) {
 
-    List<FeedInfo> feedInfoList = feedMapper.getFriendsFeedList(
-            FriendsFeedList.create(userId,pagination));
-    List<Feed> feeds = new ArrayList<>();
-    for (FeedInfo feedInfo:feedInfoList) {
+    return getFeeds(getFeedInfoListByFriends(FriendsFeedList.create(userId, pagination)), userId);
 
-      List<FileVo> files = new ArrayList<>();
-      StringTokenizer st = new StringTokenizer(feedInfo.getFileNames(),",");
-      int fileIndex = 0;
-      int feedId = feedInfo.getId();
-      int good = goodService.getGood(feedId);
+  }
 
-      GoodStatus goodPushedStatus = feedCacheService.getGoodPushedCache(feedId, userId);
-      boolean goodPushed;
+  public List<FeedInfo> getFeedInfoListByFriends (FriendsFeedList friendsFeedList) {
 
-      if(goodPushedStatus == GoodStatus.PUSHED) {
+    return feedMapper.getFriendsFeedList(friendsFeedList);
+  }
 
-        goodPushed =true;
-      } else if(goodPushedStatus == GoodStatus.NOT_PUSHED){
+  public List<FileVo> getFileList(String fileNames, String path) {
 
-        goodPushed = feedInfo.isGoodPushed();
+    List<FileVo> files = new ArrayList<>();
+    int fileIndex = 0;
 
-        if (goodPushed) {
-          feedCacheService.addGoodPushedToCache(userId, feedId);
-        }
-      } else {
+    if (fileNames != null) {
 
-        goodPushed = false;
-      }
-
-      feedCacheService.addFeedInfoToCache(FeedInfoCache.from(feedInfo), 5L, TimeUnit.MINUTES);
-
-      Feed.FeedBuilder builder = Feed.builder()
-              .id(feedId)
-              .userId(feedInfo.getUserId())
-              .title(feedInfo.getTitle())
-              .content(feedInfo.getContent())
-              .date(feedInfo.getDate())
-              .publicScope(feedInfo.getPublicScope())
-              .good(good)
-              .goodPushed(goodPushed);
+      StringTokenizer st = new StringTokenizer(fileNames, ",");
 
       while (st.hasMoreTokens()) {
-        FileVo tmpFile = FileVo.getInstance(++fileIndex,feedInfo.getPath(),st.nextToken());
-        files.add(tmpFile);
+
+        FileVo file = FileVo.getInstance(++fileIndex, path, st.nextToken());
+        files.add(file);
+      }
+    } else {
+      files = null;
+    }
+
+    return files;
+  }
+
+  public List<Integer> getFeedIds(List<FeedInfo> feedInfoList) {
+
+    List<Integer> feedIds = new ArrayList<>();
+
+    for(FeedInfo feedInfo: feedInfoList) {
+      int feedId = feedInfo.getId();
+
+      feedIds.add(feedId);
+    }
+
+    return feedIds;
+  }
+
+
+
+  public List<Feed> getFeeds(List<FeedInfo> feedInfoList, String userId) {
+
+    List<Integer> feedIds = getFeedIds(feedInfoList);
+    Map<Integer, Boolean> goodPushedMap = goodService.getGoodPushedStatusesFromCache(feedIds, userId);
+    Map<Integer, Integer> goodsMap = goodService.getGoods(feedIds);
+    List<Feed> feeds = new ArrayList<>();
+    List<GoodPushedStatus> goodPushedStatuses = new ArrayList<>();
+    List<FeedInfoCache> feedInfoCacheList = new ArrayList<>();
+
+    for(FeedInfo feedInfo: feedInfoList) {
+
+      int feedId = feedInfo.getId();
+      List<FileVo> files = getFileList(feedInfo.getFileNames(), feedInfo.getPath());
+      Boolean goodPushed = goodPushedMap.get(feedId);
+      feedInfoCacheList.add(FeedInfoCache.from(feedInfo));
+
+      if(goodPushed == null) {
+        goodPushed = feedInfo.isGoodPushed();
       }
 
-      builder.files(files);
-      Feed tmp = builder.build();
-      feeds.add(tmp);
+      goodPushedStatuses.add(GoodPushedStatus.builder()
+              .feedId(feedId)
+              .pushedStatus(goodPushed)
+              .build());
+
+      Integer good = goodsMap.get(feedId);
+
+      feeds.add(Feed.create(feedInfo, good, goodPushed, files));
     }
+
+    feedCacheService.pipelining(goodPushedStatuses, userId, 60L);
+    feedCacheService.pipeliningFeedInfoCache(feedInfoCacheList,60L);
 
     return feeds;
   }
-
 
   @Transactional
   @Override
@@ -298,16 +242,8 @@ public class FeedServiceImpl implements FeedService {
                          FeedUpdateParam feedUpdateParam, int feedId, String userId) {
 
     Timestamp date = Timestamp.valueOf(LocalDateTime.now());
-    FeedUpdate feedUpdate = FeedUpdate.builder()
-            .id(feedId)
-            .userId(userId)
-            .title(feedUpdateParam.getTitle())
-            .content(feedUpdateParam.getContent())
-            .date(date)
-            .publicScope(feedUpdateParam.getPublicScope())
-            .build();
 
-    boolean result = feedMapper.updateFeed(feedUpdate);
+    boolean result = feedMapper.updateFeed(FeedUpdate.create(feedId, userId, feedUpdateParam, date));
     if (!result) {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
