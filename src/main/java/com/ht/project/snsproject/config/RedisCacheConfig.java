@@ -1,8 +1,6 @@
 package com.ht.project.snsproject.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.RedisURI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
@@ -61,7 +59,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
   private int port;
 
   @Autowired
-  public ObjectMapper mapper;
+  private ObjectMapper mapper;
 
   @Bean("cacheRedis")
   public RedisConnectionFactory cacheRedisConnectionFactory() {
@@ -73,22 +71,13 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
     LettuceConnectionFactory lettuceConnectionFactory =
             new LettuceConnectionFactory(redisStandaloneConfiguration);
 
+
     /*개발의 편의성을 위해 레디스의 논리적으로 database 를 분할하였습니다.
       실제 서비스 시에는 properties 에서 호스트를 변경해야만 합니다.
     */
     lettuceConnectionFactory.setDatabase(0);
 
     return lettuceConnectionFactory;
-  }
-
-  @Bean
-  public RedisClient redisClient() {
-
-    return RedisClient.create(RedisURI.Builder
-                    .redis(host, port)
-                    .withPassword(password)
-                    .withDatabase(0)
-                    .build());
   }
 
   @Bean
@@ -104,13 +93,17 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
       스프링 캐시를 활용하는 방법으로 빈 이름을 다르게 하여 등록하고 사용한다면
       prefix를 설정하고 @Cacheable 과 같은 어노테이션 기반의 스프링 캐시를 더 편하게 사용할 수 있을 것이라고 생각됩니다.
       즉, redisTemplate을 직접 활용하지 않더라도 사용이 가능할 것이라고 판단됩니다.
+
+      스프링의 캐시기능을 이용하면 레디스를 이용하는 다른 기능들과 키가 우연으로라도 겹칠 가능성이 있습니다.
+      스프링 캐시만의 고유한 prefix를 달아주거나, prefix를 달지 않는 이유를 명확하게 문서화가 필요합니다.
+      spring 캐시임을 명시하기 위하여 "spring:"이라는 prefix를 달아주었습니다.
      */
     RedisCacheManager.RedisCacheManagerBuilder builder = RedisCacheManager.RedisCacheManagerBuilder
             .fromConnectionFactory(cacheRedisConnectionFactory());
     RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
             .serializeValuesWith(RedisSerializationContext.SerializationPair
                     .fromSerializer(new GenericJackson2JsonRedisSerializer()))
-            .prefixKeysWith("")
+            .prefixKeysWith("spring:")
             .entryTtl(Duration.ofSeconds(60L));
     builder.cacheDefaults(configuration);
 

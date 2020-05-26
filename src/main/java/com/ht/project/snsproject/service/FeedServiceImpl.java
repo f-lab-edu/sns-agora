@@ -27,23 +27,23 @@ import java.util.concurrent.TimeUnit;
 public class FeedServiceImpl implements FeedService {
 
   @Autowired
-  FeedMapper feedMapper;
+  private FeedMapper feedMapper;
 
   @Autowired
-  FriendMapper friendMapper;
+  private FriendMapper friendMapper;
 
   @Autowired
   @Qualifier("awsFileService")
-  FileService fileService;
+  private FileService fileService;
 
   @Autowired
-  GoodService goodService;
+  private GoodService goodService;
 
   @Autowired
-  FeedCacheService feedCacheService;
+  private FeedCacheService feedCacheService;
 
   @Autowired
-  FriendService friendService;
+  private FriendService friendService;
 
 
   @Transactional
@@ -219,8 +219,8 @@ public class FeedServiceImpl implements FeedService {
       feeds.add(Feed.create(feedInfo, good, goodPushed, files));
     }
 
-    feedCacheService.pipelining(goodPushedStatuses, userId, 60L);
-    feedCacheService.pipeliningFeedInfoCache(feedInfoCacheList,60L);
+    feedCacheService.multiSetGoodPushedStatus(goodPushedStatuses, userId, 60L);
+    feedCacheService.multiSetFeedInfoCache(feedInfoCacheList,60L);
 
     return feeds;
   }

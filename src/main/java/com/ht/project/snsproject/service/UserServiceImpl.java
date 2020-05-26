@@ -17,10 +17,10 @@ public class UserServiceImpl implements UserService {
 
   @Autowired
   @Qualifier("cacheRedisTemplate")
-  RedisTemplate<String, Object> cacheRedisTemplate;
+  private RedisTemplate<String, Object> cacheRedisTemplate;
 
   @Autowired
-  UserMapper userMapper;
+  private UserMapper userMapper;
 
   @Override
   public void joinUser(UserJoinRequest userJoinRequest) {

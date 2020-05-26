@@ -26,11 +26,11 @@ public interface FeedCacheService {
 
   List<String> makeMultiKeyList(CacheKeyPrefix cacheKeyPrefix, List<Integer> feedIds);
 
-  List<String> getCacheKeys(String prefix);
+  List<String> scanKeys(String prefix);
 
-  void pipeliningGood(List<Good> goods, long expire);
+  void multiSetFeedInfoCache(List<FeedInfoCache> feedInfoCacheList, long expire);
 
-  void pipelining(List<GoodPushedStatus> goodPushedStatuses, String userId, long expire);
+  void multiSetGood(List<Good> goods, long expire);
 
-  void pipeliningFeedInfoCache(List<FeedInfoCache> feedInfoCacheList, long expire);
+  void multiSetGoodPushedStatus(List<GoodPushedStatus> goodPushedStatusList, String userId, long expire);
 }

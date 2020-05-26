@@ -21,7 +21,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpSession;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 @Aspect
 @Component
@@ -30,10 +29,10 @@ public class UserAspect {
 
   @Autowired
   @Qualifier("cacheStrRedisTemplate")
-  StringRedisTemplate cacheStrRedisTemplate;
+  private StringRedisTemplate cacheStrRedisTemplate;
 
   @Autowired
-  ObjectMapper objectMapper;
+  private ObjectMapper objectMapper;
 
   /**
    * 로그인 정보를 확인하고,

@@ -3,18 +3,11 @@ package com.ht.project.snsproject.service;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.messaging.AndroidConfig;
-import com.google.firebase.messaging.AndroidNotification;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.*;
 import com.ht.project.snsproject.exception.FcmInitializingException;
 import com.ht.project.snsproject.exception.NoSuchUserIdException;
 import com.ht.project.snsproject.mapper.NotificationMapper;
 import com.ht.project.snsproject.model.notification.NotificationRequest;
-import java.io.FileInputStream;
-import java.io.IOException;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 /**
  * Android Device ID test data 가 필요하므로,
@@ -46,13 +43,13 @@ import org.springframework.stereotype.Service;
 public class NotificationServiceFcm implements NotificationService {
 
   @Value("${fcm.database.name}")
-  String databaseName;
+  private String databaseName;
 
   @Value("${fcm.service.account}")
-  String serviceAccountPath;
+  private String serviceAccountPath;
 
   @Autowired
-  NotificationMapper notificationMapper;
+  private NotificationMapper notificationMapper;
 
   private static final Logger logger = LoggerFactory.getLogger(NotificationServiceFcm.class);
 

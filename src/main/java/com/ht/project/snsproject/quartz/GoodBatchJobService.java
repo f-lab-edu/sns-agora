@@ -20,23 +20,29 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GoodBatchJobService {
 
   private AtomicInteger count = new AtomicInteger();
+  /*
+   배열의 인덱스값은 상수로 정의해놓고 사용하는게 유지보수성에 유리.
+   */
+  private final int FEED_ID = 2;
+  private final int USER_ID = 3;
+
 
   @Autowired
-  FeedCacheService feedCacheService;
+  private FeedCacheService feedCacheService;
 
   @Autowired
-  GoodBachJobMapper goodBachJobMapper;
+  private GoodBachJobMapper goodBachJobMapper;
 
   @Resource(name = "cacheRedisTemplate")
-  ValueOperations<String, Object> valueOps;
+  private ValueOperations<String, Object> valueOps;
 
   @Transactional
   public void executeJob() {
 
     log.info("The batch job has begun...");
 
-    List<String> goodPushedKeys = feedCacheService.getCacheKeys(
-            feedCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED,"*"));
+    List<String> goodPushedKeys = feedCacheService.scanKeys(
+            feedCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, "*"));
 
     List<Object> values = valueOps.multiGet(goodPushedKeys);
     List<String> goodAddKeys = new ArrayList<>();
@@ -65,14 +71,19 @@ public class GoodBatchJobService {
 
   }
 
-  public void batchInsertGoodPushedUser(List<String> goodAddKeys) {
+  /*
+  batch Insert는
+  내부에서만 사용하므로 접근제한자를 private으로 선언하여
+  혹시 모를 다른 클래스에서의 호출을 미연에 방지 필요!
+   */
+  private void batchInsertGoodPushedUser(List<String> goodAddKeys) {
 
     List<GoodUser> goodUserAddList = new ArrayList<>();
 
     for (String goodAddKey : goodAddKeys) {
       String[] keyArray = goodAddKey.split(":");
-      int feedId = Integer.parseInt(keyArray[1]);
-      String userId = keyArray[2];
+      int feedId = Integer.parseInt(keyArray[FEED_ID]);
+      String userId = keyArray[USER_ID];
 
       goodUserAddList.add(GoodUser.builder()
               .feedId(feedId)
@@ -86,13 +97,13 @@ public class GoodBatchJobService {
 
   }
 
-  public void batchDeleteGoodPushedUser(List<String> goodDeleteKeys) {
+  private void batchDeleteGoodPushedUser(List<String> goodDeleteKeys) {
     List<GoodUser> goodUserDeleteList = new ArrayList<>();
 
     for (String goodDeleteKey : goodDeleteKeys) {
       String[] keyArray = goodDeleteKey.split(":");
-      int feedId = Integer.parseInt(keyArray[1]);
-      String userId = keyArray[2];
+      int feedId = Integer.parseInt(keyArray[FEED_ID]);
+      String userId = keyArray[USER_ID];
 
       goodUserDeleteList.add(GoodUser.builder()
               .feedId(feedId)

@@ -11,19 +11,20 @@ import com.ht.project.snsproject.model.friend.Friend;
 import com.ht.project.snsproject.model.friend.FriendList;
 import com.ht.project.snsproject.model.friend.FriendListParam;
 import com.ht.project.snsproject.model.friend.FriendStatusInsert;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class FriendServiceImpl implements FriendService {
 
   @Autowired
-  FriendMapper friendMapper;
+  private FriendMapper friendMapper;
 
   @Autowired
-  AlarmService alarmService;
+  private AlarmService alarmService;
 
   @Transactional
   @Override

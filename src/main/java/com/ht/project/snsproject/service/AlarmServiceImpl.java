@@ -7,18 +7,19 @@ import com.ht.project.snsproject.model.alarm.Alarm;
 import com.ht.project.snsproject.model.alarm.AlarmDelete;
 import com.ht.project.snsproject.model.alarm.AlarmInsert;
 import com.ht.project.snsproject.model.alarm.AlarmRead;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AlarmServiceImpl implements AlarmService {
 
   @Autowired
-  AlarmMapper alarmMapper;
+  private AlarmMapper alarmMapper;
 
   @Override
   public void insertAlarm(String userId, String targetId, AlarmType alarmType) {

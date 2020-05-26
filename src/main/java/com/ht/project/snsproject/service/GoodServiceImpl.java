@@ -19,13 +19,13 @@ public class GoodServiceImpl implements GoodService {
 
 
   @Resource(name = "cacheRedisTemplate")
-  ValueOperations<String, Object> valueOps;
+  private ValueOperations<String, Object> valueOps;
 
   @Autowired
-  GoodMapper goodMapper;
+  private GoodMapper goodMapper;
 
   @Autowired
-  FeedCacheService feedCacheService;
+  private FeedCacheService feedCacheService;
 
 
   /*
@@ -65,7 +65,7 @@ public class GoodServiceImpl implements GoodService {
 
     List<Good> goods = goodMapper.getGoods(feedIdNotInCache);
 
-    feedCacheService.pipeliningGood(goods, 60L);
+    feedCacheService.multiSetGood(goods, 60L);
 
     for(Good good : goods) {
       int feedId = good.getFeedId();
