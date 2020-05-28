@@ -6,11 +6,11 @@ import lombok.Value;
 @Value
 public class FriendsFeedList {
 
-    String userId;
+  String userId;
 
-    Pagination pagination;
+  Pagination pagination;
 
-    public static FriendsFeedList create(String userId, Pagination pagination){
-        return new FriendsFeedList(userId, pagination);
-    }
+  public static FriendsFeedList create(String userId, Pagination pagination) {
+    return new FriendsFeedList(userId, pagination);
+  }
 }

@@ -5,7 +5,7 @@ import lombok.Value;
 @Value
 public class FriendList {
 
-    int id;
+  int id;
 
-    String targetId;
+  String targetId;
 }

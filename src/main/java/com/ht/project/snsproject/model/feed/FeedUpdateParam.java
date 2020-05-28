@@ -6,10 +6,10 @@ import lombok.Value;
 @Value
 public class FeedUpdateParam {
 
-    String title;
+  String title;
 
-    String content;
+  String content;
 
-    PublicScope publicScope;
+  PublicScope publicScope;
 
 }

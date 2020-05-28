@@ -5,8 +5,8 @@ import lombok.Value;
 @Value
 public class FeedDeleteParam {
 
-    int id;
+  int id;
 
-    String userId;
+  String userId;
 
 }

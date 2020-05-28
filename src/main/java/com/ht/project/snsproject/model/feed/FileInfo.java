@@ -5,11 +5,11 @@ import lombok.Value;
 @Value
 public class FileInfo {
 
-    String filePath;
+  String filePath;
 
-    String fileName;
+  String fileName;
 
-    int fileIndex;
+  int fileIndex;
 
-    int feedId;
+  int feedId;
 }

@@ -5,5 +5,5 @@ import lombok.Data;
 
 @Data
 public class Friend {
-    FriendStatus friendStatus;
+  FriendStatus friendStatus;
 }

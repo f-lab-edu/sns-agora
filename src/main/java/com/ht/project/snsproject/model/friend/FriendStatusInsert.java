@@ -6,13 +6,14 @@ import lombok.Value;
 @Value
 public class FriendStatusInsert {
 
-    String userId;
+  String userId;
 
-    String targetId;
+  String targetId;
 
-    FriendStatus friendStatus;
+  FriendStatus friendStatus;
 
-    public static FriendStatusInsert create(String userId, String targetId, FriendStatus friendStatus){
-        return new FriendStatusInsert(userId, targetId, friendStatus);
-    }
+  public static FriendStatusInsert create(String userId,
+                                          String targetId, FriendStatus friendStatus) {
+    return new FriendStatusInsert(userId, targetId, friendStatus);
+  }
 }

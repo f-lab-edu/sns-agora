@@ -7,13 +7,13 @@ import lombok.Getter;
 @AllArgsConstructor
 public class FileVo {
 
-    int fileIndex;
+  int fileIndex;
 
-    String filePath;
+  String filePath;
 
-    String fileName;
+  String fileName;
 
-    public static FileVo getInstance(int fileIndex, String filePath, String fileName){
-        return new FileVo(fileIndex,filePath,fileName);
-    }
+  public static FileVo getInstance(int fileIndex, String filePath, String fileName) {
+    return new FileVo(fileIndex,filePath,fileName);
+  }
 }

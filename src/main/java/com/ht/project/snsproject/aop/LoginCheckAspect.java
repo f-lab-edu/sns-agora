@@ -1,6 +1,6 @@
 package com.ht.project.snsproject.aop;
 
-import com.ht.project.snsproject.Exception.UnauthorizedException;
+import com.ht.project.snsproject.exception.UnauthorizedException;
 import com.ht.project.snsproject.model.user.User;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
