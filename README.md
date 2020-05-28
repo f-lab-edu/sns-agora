@@ -19,7 +19,7 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 3. 피드 작성, 조회, 수정, 삭제
 4. 친구 추가, 삭제, 차단
 5. 피드 목록 조회
-6. 피드 추천(WIP)
+6. 피드 좋아요 
 7. 댓글 작성, 수정, 삭제(예정)
 8. 피드 신고(예정)
 9. 댓글 신고(예정)
