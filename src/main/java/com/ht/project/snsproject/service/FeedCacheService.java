@@ -14,6 +14,8 @@ public interface FeedCacheService {
 
   FeedInfo getFeedInfoFromCache(int feedId, String userId, FriendStatus friendStatus);
 
+  FeedInfoCache convertJsonStrToFeedInfoCache(String jsonStr);
+
   void addFeedInfoToCache(FeedInfoCache feedInfoCache, long time, TimeUnit timeUnit);
 
   String makeCacheKey(CacheKeyPrefix cacheKeyPrefix, String suffix);

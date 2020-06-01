@@ -4,8 +4,8 @@
 
     <insert id="feedUpload" useGeneratedKeys="true" keyProperty="id"
             parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
-        INSERT INTO feeds(userId, title, content, date, publicScope, good)
-        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope}, #{good})
+        INSERT INTO feeds(userId, title, content, date, publicScope)
+        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope})
     </insert>
 
     <select id="getFeed" parameterType="com.ht.project.snsproject.model.feed.FeedParam"

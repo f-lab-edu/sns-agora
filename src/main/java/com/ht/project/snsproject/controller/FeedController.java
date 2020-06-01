@@ -6,7 +6,9 @@ import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.Feed;
 import com.ht.project.snsproject.model.feed.FeedUpdateParam;
 import com.ht.project.snsproject.model.feed.FeedVo;
+import com.ht.project.snsproject.model.feed.RecommendFeed;
 import com.ht.project.snsproject.model.user.User;
+import com.ht.project.snsproject.service.FeedRecommendService;
 import com.ht.project.snsproject.service.FeedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,9 @@ public class FeedController {
 
   @Autowired
   FeedService feedService;
+
+  @Autowired
+  FeedRecommendService feedRecommendService;
 
   @LoginCheck
   @PostMapping
@@ -78,5 +83,13 @@ public class FeedController {
     feedService.updateFeed(files, feedUpdateParam, id, user.getUserId());
 
     return HttpStatus.OK;
+  }
+
+  @LoginCheck
+  @GetMapping("/recommends")
+  public ResponseEntity<List<RecommendFeed>> getFeedRecommendList(
+          @RequestParam(required = false) Integer cursor) {
+
+    return ResponseEntity.ok(feedRecommendService.getFeedRecommendListByLatestOrder(cursor));
   }
 }

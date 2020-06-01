@@ -38,7 +38,7 @@ public class AlarmServiceImpl implements AlarmService {
   @Override
   public List<Alarm> getAlarmList(Integer cursor, String userId) {
 
-    Pagination pagination = new Pagination(cursor);
+    Pagination pagination = Pagination.pageInfo(cursor);
 
     return alarmMapper.getAlarmList(userId, pagination);
   }

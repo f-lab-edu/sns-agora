@@ -26,7 +26,7 @@ import javax.sql.DataSource;
 
 @Slf4j
 @Configuration
-@PropertySource("application-quartz.properties")
+@PropertySource("application-good-batch-scheduler.properties")
 public class QuartzConfiguration {
 
 
@@ -77,11 +77,14 @@ public class QuartzConfiguration {
    * @return
    */
   @Bean
-  public SchedulerFactoryBean scheduler(Trigger trigger, JobDetail job,
-                                        @Qualifier("quartzDb") DataSource quartzDataSource) {
+  public SchedulerFactoryBean goodBatchScheduler(
+          @Qualifier("goodBatchTrigger") Trigger trigger,
+          @Qualifier("goodBatchJobDetail") JobDetail job,
+          @Qualifier("quartzDb") DataSource quartzDataSource) {
 
     SchedulerFactoryBean schedulerFactory = new SchedulerFactoryBean();
-    schedulerFactory.setConfigLocation(new ClassPathResource("/application-quartz.properties"));
+    schedulerFactory.setConfigLocation(
+            new ClassPathResource("/application-good-batch-scheduler.properties"));
 
     log.debug("Setting the Scheduler up");
     schedulerFactory.setJobFactory(springBeanJobFactory());
@@ -91,6 +94,25 @@ public class QuartzConfiguration {
     // Comment the following line to use the default Quartz job store.
     schedulerFactory.setDataSource(quartzDataSource);
 
+    return schedulerFactory;
+  }
+
+  @Bean
+  public SchedulerFactoryBean feedRecommendCacheScheduler(
+          @Qualifier("feedRecommendCacheTrigger") Trigger trigger,
+          @Qualifier("feedRecommendCacheJobDetail") JobDetail job,
+          @Qualifier("quartzDb") DataSource quartzDataSource) {
+
+    SchedulerFactoryBean schedulerFactory = new SchedulerFactoryBean();
+    schedulerFactory.setConfigLocation(
+            new ClassPathResource("/application-feed-recommend-scheduler.properties"));
+
+    log.debug("Setting the Scheduler up");
+    schedulerFactory.setJobFactory(springBeanJobFactory());
+    schedulerFactory.setJobDetails(job);
+    schedulerFactory.setTriggers(trigger);
+
+    schedulerFactory.setDataSource(quartzDataSource);
     return schedulerFactory;
   }
 
@@ -106,13 +128,24 @@ public class QuartzConfiguration {
    * 실행이 완료되면 인스턴스에 대한 참조가 삭제된다.
    * @return jobDetailFactory
    */
-  @Bean
-  public JobDetailFactoryBean jobDetail() {
+  @Bean(name = "goodBatchJobDetail")
+  public JobDetailFactoryBean goodBatchJobDetail() {
 
     JobDetailFactoryBean jobDetailFactory = new JobDetailFactoryBean();
-    jobDetailFactory.setJobClass(QuartzJob.class);
-    jobDetailFactory.setName("Qrtz_Job_Detail");
+    jobDetailFactory.setJobClass(GoodBatchJob.class);
+    jobDetailFactory.setName("Qrtz_Good_Batch_Job_Detail");
     jobDetailFactory.setDescription("Invoke Good Batch Job service...");
+    jobDetailFactory.setDurability(true);
+    return jobDetailFactory;
+  }
+
+  @Bean(name = "feedRecommendCacheJobDetail")
+  public JobDetailFactoryBean feedRecommendCacheJobDetail() {
+
+    JobDetailFactoryBean jobDetailFactory = new JobDetailFactoryBean();
+    jobDetailFactory.setJobClass(FeedRecommendCacheJob.class);
+    jobDetailFactory.setName("Qrtz_Feed_Recommend_Cache_Job_Detail");
+    jobDetailFactory.setDescription("Invoke Feed Recommend Job service...");
     jobDetailFactory.setDurability(true);
     return jobDetailFactory;
   }
@@ -129,8 +162,8 @@ public class QuartzConfiguration {
    * @param job job 인스턴스의 정보를 담은 객체
    * @return trigger
    */
-  @Bean
-  public SimpleTriggerFactoryBean trigger(JobDetail job) {
+  @Bean(name = "goodBatchTrigger")
+  public SimpleTriggerFactoryBean goodBatchTrigger(@Qualifier("goodBatchJobDetail") JobDetail job) {
 
     SimpleTriggerFactoryBean trigger = new SimpleTriggerFactoryBean();
     trigger.setJobDetail(job);
@@ -144,7 +177,24 @@ public class QuartzConfiguration {
 
     trigger.setRepeatInterval(frequencyInSec * 1000);
     trigger.setRepeatCount(SimpleTrigger.REPEAT_INDEFINITELY);
-    trigger.setName("Qrtz_Trigger");
+    trigger.setName("Qrtz_Good_Batch_Trigger");
+    return trigger;
+  }
+
+  @Bean(name = "feedRecommendCacheTrigger")
+  public SimpleTriggerFactoryBean feedRecommendTrigger(
+          @Qualifier("feedRecommendCacheJobDetail") JobDetail job) {
+
+    SimpleTriggerFactoryBean trigger = new SimpleTriggerFactoryBean();
+    trigger.setJobDetail(job);
+
+    int frequencyInSec = 10;
+    log.info("Configuring trigger to fire every {} seconds", frequencyInSec);
+
+    trigger.setRepeatInterval(frequencyInSec * 1000);
+    trigger.setRepeatCount(SimpleTrigger.REPEAT_INDEFINITELY);
+    trigger.setName("Qrtz_Feed_Recommend_Trigger");
+
     return trigger;
   }
 

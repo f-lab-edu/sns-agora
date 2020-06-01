@@ -65,7 +65,7 @@ public class FeedServiceImpl implements FeedService {
   public Feed getFeed(String userId, String targetId, int id) {
 
     FeedInfo feedInfo = getFeedInfo(id, userId, targetId);
-    List<FileVo> files = getFileList(feedInfo.getFileNames(), feedInfo.getPath());
+    List<FileVo> files = getFileList(feedInfo.getFileNames(), feedInfo.getFilePath());
 
     int feedId = feedInfo.getId();
     int good = goodService.getGood(feedId);
@@ -153,6 +153,7 @@ public class FeedServiceImpl implements FeedService {
     return feedMapper.getFriendsFeedList(friendsFeedList);
   }
 
+  @Override
   public List<FileVo> getFileList(String fileNames, String path) {
 
     List<FileVo> files = new ArrayList<>();
@@ -201,7 +202,7 @@ public class FeedServiceImpl implements FeedService {
     for(FeedInfo feedInfo: feedInfoList) {
 
       int feedId = feedInfo.getId();
-      List<FileVo> files = getFileList(feedInfo.getFileNames(), feedInfo.getPath());
+      List<FileVo> files = getFileList(feedInfo.getFileNames(), feedInfo.getFilePath());
       Boolean goodPushed = goodPushedMap.get(feedId);
       feedInfoCacheList.add(FeedInfoCache.from(feedInfo));
 

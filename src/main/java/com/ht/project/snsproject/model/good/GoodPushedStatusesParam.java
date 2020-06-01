@@ -3,11 +3,13 @@ package com.ht.project.snsproject.model.good;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
+
 @Value
 @Builder
-public class GoodPushedStatus {
+public class GoodPushedStatusesParam {
 
-  Integer feedId;
+  List<Integer> feedIds;
 
-  Boolean pushedStatus;
+  String userId;
 }

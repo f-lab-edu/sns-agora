@@ -13,7 +13,6 @@ import com.ht.project.snsproject.model.good.Good;
 import com.ht.project.snsproject.model.good.GoodPushedStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.StringRedisConnection;
 import org.springframework.data.redis.core.*;
@@ -77,14 +76,7 @@ public class FeedCacheServiceImpl implements FeedCacheService{
       return null;
     } else {
 
-      FeedInfoCache feedInfoCache;
-
-      try {
-
-        feedInfoCache = objectMapper.readValue(feedInfoStrCache, FeedInfoCache.class);
-      } catch (JsonProcessingException e) {
-        throw new SerializationException("변환에 실패하였습니다.", e);
-      }
+      FeedInfoCache feedInfoCache = convertJsonStrToFeedInfoCache(feedInfoStrCache);
 
       PublicScope publicScope = PublicScope.valueOf(feedInfoCache.getPublicScope());
 
@@ -100,13 +92,26 @@ public class FeedCacheServiceImpl implements FeedCacheService{
   }
 
   @Override
+  public FeedInfoCache convertJsonStrToFeedInfoCache(String jsonStr) {
+
+    FeedInfoCache feedInfoCache;
+
+    try {
+      feedInfoCache = objectMapper.readValue(jsonStr, FeedInfoCache.class);
+    } catch (JsonProcessingException e) {
+      throw new SerializationException("변환에 실패하였습니다.", e);
+    }
+
+    return feedInfoCache;
+  }
+
+  @Override
   public void addFeedInfoToCache(FeedInfoCache feedInfoCache, long time, TimeUnit timeUnit) {
 
     String feedInfoKey = makeCacheKey(CacheKeyPrefix.FEED, Integer.parseInt(feedInfoCache.getId()));
 
     valueOps.set(feedInfoKey, feedInfoCache, time, timeUnit);
   }
-
 
   @Override
   public String makeCacheKey(CacheKeyPrefix cacheKeyPrefix, String suffix) {
@@ -219,21 +224,19 @@ public class FeedCacheServiceImpl implements FeedCacheService{
  private void multiSet(List<MultiSetTarget> multiSetTargetList) {
 
     cacheStrRedisTemplate.executePipelined(
-            new RedisCallback<Object>() {
-              public Object doInRedis(RedisConnection connection) throws DataAccessException {
+            (RedisCallback<Object>) connection -> {
 
-                StringRedisConnection stringRedisConn = (StringRedisConnection) connection;
+              StringRedisConnection stringRedisConn = (StringRedisConnection) connection;
 
-                for(MultiSetTarget multiSetTarget : multiSetTargetList) {
+              for(MultiSetTarget multiSetTarget : multiSetTargetList) {
 
-                  String key = multiSetTarget.getKey();
+                String key = multiSetTarget.getKey();
 
-                  stringRedisConn.set(key, multiSetTarget.getTarget());
-                  stringRedisConn.expire(key, multiSetTarget.getExpire());
+                stringRedisConn.set(key, multiSetTarget.getTarget());
+                stringRedisConn.expire(key, multiSetTarget.getExpire());
 
-                }
-                return null;
               }
+              return null;
             });
   }
 
@@ -297,13 +300,12 @@ public class FeedCacheServiceImpl implements FeedCacheService{
 
       multiSetTargetList.add(MultiSetTarget.builder()
               .key(key)
-              .target(String.valueOf(goodPushedStatus.isPushedStatus()))
+              .target(String.valueOf(goodPushedStatus.getPushedStatus()))
               .expire(expire)
               .build());
     }
 
     multiSet(multiSetTargetList);
   }
-
 
 }

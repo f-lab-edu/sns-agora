@@ -63,21 +63,30 @@ public class GoodServiceImpl implements GoodService {
       }
     }
 
-    List<Good> goods = goodMapper.getGoods(feedIdNotInCache);
+    if (!feedIdNotInCache.isEmpty()) {
 
-    feedCacheService.multiSetGood(goods, 60L);
+      List<Good> goods = goodMapper.getGoods(feedIdNotInCache);
 
-    for(Good good : goods) {
-      int feedId = good.getFeedId();
-      feedIdNotInCache.remove(GoodsParam.builder()
-              .feedId(feedId)
-              .build());
-      goodsMap.put(feedId, good.getGood());
+      for (Good good : goods) {
+        int feedId = good.getFeedId();
+        feedIdNotInCache.remove(GoodsParam.builder()
+                .feedId(feedId)
+                .build());
+        goodsMap.put(feedId, good.getGood());
+      }
+
+      for (GoodsParam goodsParam : feedIdNotInCache) {
+        int feedId = goodsParam.getFeedId();
+        goodsMap.put(feedId, 0);
+        goods.add(Good.builder()
+                .feedId(feedId)
+                .good(0)
+                .build());
+      }
+
+      feedCacheService.multiSetGood(goods, 60L);
     }
 
-    for (GoodsParam goodsParam : feedIdNotInCache) {
-      goodsMap.put(goodsParam.getFeedId(), 0);
-    }
 
   return goodsMap;
   }
@@ -89,7 +98,6 @@ public class GoodServiceImpl implements GoodService {
 
     return goodMapper.getGoodPushedStatus(new GoodStatusParam(feedId, userId));
   }
-
 
   /*
     list를 사용해보려했으나 key value 형태에서는 hashmap이 단순하게 접근하기 쉽고, 부가적으로
@@ -115,7 +123,6 @@ public class GoodServiceImpl implements GoodService {
 
     return goodPushedMap;
   }
-
 
   @Override
   public List<GoodUser> getGoodList(int feedId, Integer cursor) {
