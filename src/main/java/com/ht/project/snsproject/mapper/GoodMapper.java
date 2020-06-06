@@ -12,8 +12,6 @@ public interface GoodMapper {
 
   boolean getGoodPushedStatus(GoodStatusParam goodStatusParam);
 
-  List<Integer> getGoodPushedFeedIds(GoodPushedStatusesParam goodPushedStatusesParam);
-
   List<GoodUser> getGoodList(GoodListParam goodListParam);
 
   List<Good> getGoods(List<GoodsParam> goodsParam);

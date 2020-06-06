@@ -45,6 +45,8 @@ public class FeedServiceImpl implements FeedService {
   @Autowired
   private FriendService friendService;
 
+  @Autowired
+  private RedisCacheService redisCacheService;
 
   @Transactional
   @Override
@@ -220,8 +222,8 @@ public class FeedServiceImpl implements FeedService {
       feeds.add(Feed.create(feedInfo, good, goodPushed, files));
     }
 
-    feedCacheService.multiSetGoodPushedStatus(goodPushedStatuses, userId, 60L);
-    feedCacheService.multiSetFeedInfoCache(feedInfoCacheList,60L);
+    redisCacheService.multiSetGoodPushedStatus(goodPushedStatuses, userId, 60L);
+    redisCacheService.multiSetFeedInfoCache(feedInfoCacheList,60L);
 
     return feeds;
   }

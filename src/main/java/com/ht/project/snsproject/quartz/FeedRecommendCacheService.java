@@ -4,6 +4,8 @@ import com.ht.project.snsproject.mapper.FeedRecommendCacheMapper;
 import com.ht.project.snsproject.model.feed.FeedInfoCache;
 import com.ht.project.snsproject.service.FeedCacheService;
 import com.ht.project.snsproject.service.GoodService;
+import com.ht.project.snsproject.service.RedisCacheService;
+import io.lettuce.core.RedisCommandExecutionException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,6 +33,9 @@ public class FeedRecommendCacheService {
   private GoodService goodService;
 
   @Autowired
+  private RedisCacheService redisCacheService;
+
+  @Autowired
   @Qualifier("cacheRedisTemplate")
   private RedisTemplate<String, Object> cacheRedisTemplate;
 
@@ -54,7 +59,7 @@ public class FeedRecommendCacheService {
     }
 
     deleteAndSetList(feedIds);
-    feedCacheService.multiSetFeedInfoCache(feedInfoCacheList, RECOMMEND_EXPIRE);
+    redisCacheService.multiSetFeedInfoCache(feedInfoCacheList, RECOMMEND_EXPIRE);
     goodService.getGoods(feedIds);
   }
 
@@ -64,13 +69,19 @@ public class FeedRecommendCacheService {
 
       connection.multi();
 
-      connection.del(RECOMMEND_LIST.getBytes());
+      try {
+        connection.del(RECOMMEND_LIST.getBytes());
 
-      for(Integer feedId : feedIds) {
-        connection.lPush(RECOMMEND_LIST.getBytes(), String.valueOf(feedId).getBytes());
+        for (Integer feedId : feedIds) {
+          connection.lPush(RECOMMEND_LIST.getBytes(), String.valueOf(feedId).getBytes());
+        }
+
+      } catch (Exception e) {
+
+        throw new RedisCommandExecutionException("업데이트 오류");
+      } finally {
+        connection.exec();
       }
-
-      connection.exec();
 
       return null;
     });

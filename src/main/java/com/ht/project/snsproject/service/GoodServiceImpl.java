@@ -25,7 +25,7 @@ public class GoodServiceImpl implements GoodService {
   private GoodMapper goodMapper;
 
   @Autowired
-  private FeedCacheService feedCacheService;
+  private RedisCacheService redisCacheService;
 
 
   /*
@@ -44,7 +44,7 @@ public class GoodServiceImpl implements GoodService {
   @Override
   public Map<Integer, Integer> getGoods(List<Integer> feedIds) {
 
-    List<String> goodKeys = feedCacheService.makeMultiKeyList(CacheKeyPrefix.GOOD, feedIds);
+    List<String> goodKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.GOOD, feedIds);
 
     List<Object> values = valueOps.multiGet(goodKeys);
     List<GoodsParam> feedIdNotInCache = new ArrayList<>();
@@ -84,7 +84,7 @@ public class GoodServiceImpl implements GoodService {
                 .build());
       }
 
-      feedCacheService.multiSetGood(goods, 60L);
+      redisCacheService.multiSetGood(goods, 60L);
     }
 
 
@@ -106,7 +106,7 @@ public class GoodServiceImpl implements GoodService {
   @Override
   public Map<Integer, Boolean> getGoodPushedStatusesFromCache(List<Integer> feedIds, String userId) {
 
-    List<String> goodPushedKeys = feedCacheService.makeMultiKeyList(CacheKeyPrefix.GOODPUSHED, feedIds, userId);
+    List<String> goodPushedKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.GOODPUSHED, feedIds, userId);
     List<Object> goodPushedStatusesFromCache = valueOps.multiGet(goodPushedKeys);
 
     Map<Integer, Boolean> goodPushedMap = new HashMap<>();
@@ -136,8 +136,8 @@ public class GoodServiceImpl implements GoodService {
   @Override
   public void addGood(int feedId, String userId) {
 
-    String goodPushedKey = feedCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, feedId, userId);
-    String goodKey = feedCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
+    String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, feedId, userId);
+    String goodKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
     getGood(feedId);
 
@@ -156,8 +156,8 @@ public class GoodServiceImpl implements GoodService {
   @Override
   public void cancelGood(int feedId, String userId) {
 
-    String goodPushedKey = feedCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, feedId, userId);
-    String goodKey = feedCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
+    String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, feedId, userId);
+    String goodKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
     getGood(feedId);
 
