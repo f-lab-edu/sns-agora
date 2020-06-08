@@ -36,8 +36,6 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 
 2. 푸시 메시지 발송 기능
 
-   
-
 ## 성능 개선 작업
 
 * cursor based pagination 을 이용한 피드 조회 기능 개선
@@ -48,3 +46,6 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 * In memory DB 로 Redis 사용
 * 개별 insert 작업을 bulk insert 하여 DB 접속 비용 감소
 * Firbase API 를 활용한 푸시메시지 구현
+* 좋아요 캐싱을 통한 성능 개선
+* Quartz API를 사용한 Batch Insert 구현
+* DataBase Replication을 통한 read/write 성능 개선
