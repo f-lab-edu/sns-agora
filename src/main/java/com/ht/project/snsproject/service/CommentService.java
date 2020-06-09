@@ -1,11 +1,32 @@
 package com.ht.project.snsproject.service;
 
-/**
- * 댓글을 저장할 Main DataBase 가 MySQL 이지만
- * 이 후에 NoSQL 이나 다른 종류의 DataBase로 변경할 가능성이
- * 있기 때문에 전략패턴을 사용하여 느슨한 결합도를 유지합니다.
- */
-public interface CommentService {
+import com.ht.project.snsproject.mapper.CommentMapper;
+import com.ht.project.snsproject.model.comment.CommentInsertParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-  void insertCommentOnFeed(int id, String content, String userId);
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+
+/**
+ * interface가 꼭 필요한 곳에만 추상화하기.
+ * 기계적인 추상화는 오히려 코드 가독성을 떨어뜨리고,
+ * 유지보수성을 떨어뜨릴 수 있음.
+ */
+@Service
+public class CommentService{
+
+  @Autowired
+  private CommentMapper commentMapper;
+
+  public void insertCommentOnFeed(int id, String content, String userId) {
+
+    commentMapper.insertCommentOnFeed(
+            CommentInsertParam.builder()
+            .feedId(id)
+            .userId(userId)
+            .content(content)
+            .writeTime(Timestamp.valueOf(LocalDateTime.now()))
+            .build());
+  }
 }
