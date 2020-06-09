@@ -7,4 +7,22 @@
         VALUES (#{feedId}, #{userId}, #{content}, #{writeTime})
     </insert>
 
+    <select id="getCommentsOnFeed" parameterType="com.ht.project.snsproject.model.comment.CommentsParam"
+            resultType="com.ht.project.snsproject.model.comment.Comment">
+
+        SELECT a.feedId, a.userId,
+        a.content, a.writeTime,
+        b.userId AS replyUserId,
+        b.content AS replyContent,
+        b.writeTime AS replyWriteTime
+        FROM comments a
+        LEFT JOIN replys b
+        ON a.id = b.commentId
+        WHERE feedId = #{feedId}
+        <if test="cursor != null">
+            AND a.id<![CDATA[<]]>#{cursor}
+        </if>
+        GROUP BY a.id
+        LIMIT #{limit};
+    </select>
 </mapper>

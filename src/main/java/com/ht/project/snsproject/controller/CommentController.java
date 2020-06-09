@@ -2,11 +2,15 @@ package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.annotation.UserInfo;
+import com.ht.project.snsproject.model.comment.Comment;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/feeds")
@@ -37,5 +41,13 @@ public class CommentController {
     commentService.insertCommentOnFeed(feedId, content, user.getUserId());
 
     return HttpStatus.OK;
+  }
+
+  @GetMapping("/{feedId}/comments")
+  @LoginCheck
+  public ResponseEntity<List<Comment>> getCommentsOnFeed(@PathVariable int feedId,
+                                                         @RequestParam(required = false) Integer cursor) {
+
+    return ResponseEntity.ok(commentService.getCommentsOnFeed(feedId, cursor));
   }
 }
