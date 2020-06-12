@@ -63,13 +63,18 @@ public class FeedRecommendCacheService {
     goodService.getGoods(feedIds);
   }
 
+  /*
+  multi(); 호출과 함께 트랜잭션이 시작되고,
+  작업이 완료가 되면 트랜잭션 commit 까지 완료시킵니다.
+  하지만 작업 중간에 Exception이 발생한다면 트랜잭션 전체를 취소하고,
+  Unchecked Exception을 던지도록 합니다.
+   */
   private void deleteAndSetList(List<Integer> feedIds) {
 
     cacheRedisTemplate.execute((RedisCallback<Object>) connection -> {
 
       connection.multi();//트랜잭션 시작
 
-      boolean commitStatus = true;
       try {
         connection.del(RECOMMEND_LIST.getBytes());
 
@@ -77,17 +82,12 @@ public class FeedRecommendCacheService {
           connection.lPush(RECOMMEND_LIST.getBytes(), String.valueOf(feedId).getBytes());
         }
 
+        connection.exec();//트랙잭션 커밋
+
       } catch (Exception e) {
 
-        commitStatus = false;
+        connection.discard();//트랜잭션 취소
         throw new RedisCommandExecutionException("업데이트 오류");
-      } finally {
-
-        if(!commitStatus){
-          connection.discard();//트랜잭션 취소
-        } else {
-          connection.exec();//트랙잭션 커밋
-        }
       }
 
       return null;
