@@ -1,10 +1,10 @@
-package com.ht.project.snsproject.model.recommend;
+package com.ht.project.snsproject.model.good;
 
 import java.util.List;
 import lombok.Value;
 
 @Value
-public class RecommendUsersParam {
+public class GoodUsersParam {
 
   int feedId;
 

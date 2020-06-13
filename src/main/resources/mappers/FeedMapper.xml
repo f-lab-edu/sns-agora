@@ -4,8 +4,8 @@
 
     <insert id="feedUpload" useGeneratedKeys="true" keyProperty="id"
             parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
-        INSERT INTO feeds(userId, title, content, date, publicScope, recommend)
-        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope}, #{recommend})
+        INSERT INTO feeds(userId, title, content, date, publicScope, good)
+        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope}, #{good})
     </insert>
 
     <select id="getFeed" parameterType="com.ht.project.snsproject.model.feed.FeedParam"
@@ -49,7 +49,7 @@
             resultType="com.ht.project.snsproject.model.feed.FeedInfo">
         SELECT a.id, a.userId,
         a.title, a.content,
-        a.date, a.publicScope, a.recommend,
+        a.date, a.publicScope, a.good,
         b.filePath,
         GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
         FROM feeds a LEFT JOIN images b
@@ -76,7 +76,7 @@
             resultType="com.ht.project.snsproject.model.feed.FeedInfo">
         SELECT a.id, a.userId,
         a.title, a.content,
-        a.date, a.publicScope, a.recommend,
+        a.date, a.publicScope, a.good,
         b.filePath,
         GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
         FROM feeds a INNER JOIN images b

@@ -27,7 +27,7 @@ public class Feed {
 
   PublicScope publicScope;
 
-  int recommend;
+  int good;
 
   List<FileVo> files;
 }

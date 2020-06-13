@@ -2,8 +2,8 @@ package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
-import com.ht.project.snsproject.mapper.RecommendMapper;
-import com.ht.project.snsproject.model.recommend.RecommendUserDelete;
+import com.ht.project.snsproject.mapper.GoodMapper;
+import com.ht.project.snsproject.model.good.GoodUserDelete;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -15,10 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class RecommendServiceImpl implements RecommendService {
+public class GoodServiceImpl implements GoodService {
 
   @Autowired
-  RecommendMapper recommendMapper;
+  GoodMapper goodMapper;
 
   @Autowired
   FeedService feedService;
@@ -27,16 +27,16 @@ public class RecommendServiceImpl implements RecommendService {
   RedisTemplate<String,Object> redisTemplate;
 
   @Override
-  @Cacheable(value = "feeds", key = "'recommend:'+#feedId")
-  public int getRecommend(int feedId) {
+  @Cacheable(value = "feeds", key = "'Good:'+#feedId")
+  public int getGood(int feedId) {
 
-    return recommendMapper.getRecommend(feedId);
+    return goodMapper.getGood(feedId);
   }
 
   @Override
-  public List<String> getRecommendList(int feedId) {
+  public List<String> getGoodList(int feedId) {
 
-    String key = "recommendList:" + feedId;
+    String key = "goodList:" + feedId;
 
     if (redisTemplate.hasKey(key)) {
 
@@ -47,58 +47,58 @@ public class RecommendServiceImpl implements RecommendService {
               .collect(Collectors.toList());
     }
 
-    return recommendMapper.getRecommendList(feedId);
+    return goodMapper.getGoodList(feedId);
   }
 
   @Transactional
   @Override
-  public void increaseRecommend(int feedId, String userId) {
+  public void increaseGood(int feedId, String userId) {
 
     feedService.getFeedInfoCache(feedId);
-    getRecommend(feedId);
-    List<String> recommendList = getRecommendList(feedId);
+    getGood(feedId);
+    List<String> goodList = getGoodList(feedId);
 
-    if (recommendList.contains(userId)) {
+    if (goodList.contains(userId)) {
       throw new DuplicateRequestException("중복된 요청입니다.");
     }
 
-    String recommendListKey = "recommendList:" + feedId;
+    String goodListKey = "goodList:" + feedId;
 
 
     redisTemplate.expire("feedInfo:" + feedId,5L, TimeUnit.HOURS);
-    redisTemplate.opsForList().rightPush(recommendListKey, userId);
-    redisTemplate.expire(recommendListKey,5L, TimeUnit.HOURS);
+    redisTemplate.opsForList().rightPush(goodListKey, userId);
 
-    String recommendKey = "recommend:" + feedId;
-    redisTemplate.opsForValue().increment(recommendKey);
-    redisTemplate.expire(recommendKey,5L,TimeUnit.HOURS);
+    String goodKey = "good:" + feedId;
+    redisTemplate.expire(goodKey,5L, TimeUnit.HOURS);
+    redisTemplate.opsForValue().increment(goodKey);
+    redisTemplate.expire(goodKey,5L,TimeUnit.HOURS);
   }
 
   @Transactional
   @Override
-  public void cancelRecommend(int feedId, String userId) {
+  public void cancelGood(int feedId, String userId) {
 
-    String key = "recommend:" + feedId;
-    Integer recommend = (Integer) redisTemplate.opsForValue().get(key);
+    String key = "good:" + feedId;
+    Integer good = (Integer) redisTemplate.opsForValue().get(key);
 
-    if (recommend != null) {
-      if (recommend == 0) {
+    if (good != null) {
+      if (good == 0) {
         throw new InvalidApproachException("비정상적인 요청입니다.");
       }
       redisTemplate.opsForValue().decrement(key);
-      redisTemplate.opsForList().remove("recommendList:" + feedId,1, userId);
+      redisTemplate.opsForList().remove("goodList:" + feedId,1, userId);
     } else {
 
-      boolean deleteUserResult = recommendMapper.deleteRecommendUser(
-              new RecommendUserDelete(feedId, userId));
+      boolean deleteUserResult = goodMapper.deleteGoodUser(
+              new GoodUserDelete(feedId, userId));
 
       if (!deleteUserResult) {
         throw new InvalidApproachException("비정상적인 요청입니다.");
       }
 
-      boolean decrementRecommendResult = recommendMapper.decrementRecommend(feedId);
+      boolean decrementGoodResult = goodMapper.decrementGood(feedId);
 
-      if (!decrementRecommendResult) {
+      if (!decrementGoodResult) {
         throw new InvalidApproachException("비정상적인 요청입니다.");
       }
     }

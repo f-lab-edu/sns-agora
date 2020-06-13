@@ -21,5 +21,5 @@ public class FeedInsert {
 
   PublicScope publicScope;
 
-  int recommend;
+  int good;
 }

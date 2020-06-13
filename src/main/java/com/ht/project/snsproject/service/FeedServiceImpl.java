@@ -45,7 +45,7 @@ public class FeedServiceImpl implements FeedService {
   FileService fileService;
 
   @Autowired
-  RecommendService recommendService;
+  GoodService goodService;
 
   @Autowired
   RedisTemplate<String, Object> redisTemplate;
@@ -61,7 +61,7 @@ public class FeedServiceImpl implements FeedService {
             .content(feedVo.getContent())
             .date(date)
             .publicScope(feedVo.getPublicScope())
-            .recommend(0)
+            .good(0)
             .build();
     feedMapper.feedUpload(feedInsert);
     if (!files.isEmpty()) {
@@ -78,7 +78,7 @@ public class FeedServiceImpl implements FeedService {
 
     String fileNames = feedInfo.getFileNames();
     int feedId = feedInfo.getId();
-    int recommend = recommendService.getRecommend(id);
+    int good = goodService.getGood(id);
 
     feedBuilder.id(feedId)
             .userId(feedInfo.getUserId())
@@ -86,7 +86,7 @@ public class FeedServiceImpl implements FeedService {
             .content(feedInfo.getContent())
             .date(feedInfo.getDate())
             .publicScope(feedInfo.getPublicScope())
-            .recommend(recommend);
+            .good(good);
 
     if (fileNames != null) {
 
@@ -175,7 +175,7 @@ public class FeedServiceImpl implements FeedService {
   /*  getFeedList() 메소드의 경우,
       targetId 에 해당하는 user 의 피드 목록을 조회해야하므로 순서와 데이터 정확도가 중요하기 때문에
       피드 전체를 캐시에서 확인하지 않고,
-      recommend 수 증감은 redis 에서 저장하므로 캐시에서는 recommend 수만 체크하여 가져온다.
+      good 수 증감은 redis 에서 저장하므로 캐시에서는 good 수만 체크하여 가져온다.
   */
   @Transactional
   @Override
@@ -211,7 +211,7 @@ public class FeedServiceImpl implements FeedService {
 
       List<FileVo> files = new ArrayList<>();
       int feedId = feedInfo.getId();
-      int recommend = recommendService.getRecommend(feedId);
+      int good = goodService.getGood(feedId);
 
       Feed.FeedBuilder builder = Feed.builder()
               .id(feedId)
@@ -220,7 +220,7 @@ public class FeedServiceImpl implements FeedService {
               .content(feedInfo.getContent())
               .date(feedInfo.getDate())
               .publicScope(feedInfo.getPublicScope())
-              .recommend(recommend);
+              .good(good);
 
       int fileIndex = 0;
       if (feedInfo.getFileNames() != null) {
@@ -249,7 +249,7 @@ public class FeedServiceImpl implements FeedService {
       StringTokenizer st = new StringTokenizer(feedInfo.getFileNames(),",");
       int fileIndex = 0;
       int feedId = feedInfo.getId();
-      int recommend = recommendService.getRecommend(feedId);
+      int good = goodService.getGood(feedId);
 
       Feed.FeedBuilder builder = Feed.builder()
               .id(feedId)
@@ -258,7 +258,7 @@ public class FeedServiceImpl implements FeedService {
               .content(feedInfo.getContent())
               .date(feedInfo.getDate())
               .publicScope(feedInfo.getPublicScope())
-              .recommend(recommend);
+              .good(good);
 
       while (st.hasMoreTokens()) {
         FileVo tmpFile = FileVo.getInstance(++fileIndex,feedInfo.getPath(),st.nextToken());

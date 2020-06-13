@@ -2,7 +2,7 @@ package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.model.user.User;
-import com.ht.project.snsproject.service.RecommendService;
+import com.ht.project.snsproject.service.GoodService;
 import java.util.List;
 import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,37 +16,37 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/recommends")
-public class RecommendController {
+@RequestMapping("/goods")
+public class GoodController {
 
   @Autowired
-  RecommendService recommendService;
+  GoodService goodService;
 
   @LoginCheck
   @GetMapping("/{id}")
-  public ResponseEntity<List<String>> getRecommendList(@PathVariable int id) {
+  public ResponseEntity<List<String>> getGoodList(@PathVariable int id) {
 
-    return ResponseEntity.ok(recommendService.getRecommendList(id));
+    return ResponseEntity.ok(goodService.getGoodList(id));
   }
 
   @LoginCheck
   @PutMapping("/{id}")
-  public HttpStatus increaseRecommend(@PathVariable int id, HttpSession httpSession) {
+  public HttpStatus increaseGood(@PathVariable int id, HttpSession httpSession) {
 
     User userInfo = (User) httpSession.getAttribute("userInfo");
     String userId = userInfo.getUserId();
-    recommendService.increaseRecommend(id, userId);
+    goodService.increaseGood(id, userId);
 
     return HttpStatus.OK;
   }
 
   @LoginCheck
   @DeleteMapping("/{id}")
-  public HttpStatus cancelRecommend(@PathVariable int id, HttpSession httpSession) {
+  public HttpStatus cancelGood(@PathVariable int id, HttpSession httpSession) {
 
     User userInfo = (User) httpSession.getAttribute("userInfo");
     String userId = userInfo.getUserId();
-    recommendService.cancelRecommend(id, userId);
+    goodService.cancelGood(id, userId);
 
     return HttpStatus.NO_CONTENT;
   }
