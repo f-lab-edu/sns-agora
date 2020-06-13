@@ -1,125 +1,19 @@
 package com.ht.project.snsproject.service;
 
-import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
-import com.ht.project.snsproject.mapper.FeedRecommendMapper;
-import com.ht.project.snsproject.model.Pagination;
-import com.ht.project.snsproject.model.feed.*;
-import com.ht.project.snsproject.quartz.FeedRecommendCacheService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import java.util.ArrayList;
+import com.ht.project.snsproject.model.feed.RecommendFeed;
+
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-@Service
-public class FeedRecommendService {
+/**
+ * 인터페이스로 추상화를 한 이유
+ * 현재는 최신 순의 데이터를 추천 알고리즘으로 사용하지만
+ * 추후에 다른 API를 사용하거나, 다른 알고리즘을 통해서
+ * 추천 알고리즘을 구현하기 위해서는 결합도를 느슨하게 하는 것이
+ * 유리하도 생각하여 추상화를 하여 구현하였습니다.
+ */
+public interface FeedRecommendService {
 
-  @Resource(name = "cacheRedisTemplate")
-  private ListOperations<String, Object> listOps;
-
-  @Autowired
-  @Qualifier("cacheStrRedisTemplate")
-  private StringRedisTemplate cacheStrRedisTemplate;
-
-  @Autowired
-  private FeedRecommendMapper feedRecommendMapper;
-
-  @Autowired
-  private FeedCacheService feedCacheService;
-
-  @Autowired
-  private FeedService feedService;
-
-  @Autowired
-  private GoodService goodService;
-
-  @Transactional
-  public List<RecommendFeed> getFeedRecommendListByLatestOrder(Integer cursor) {
-
-    List<RecommendFeedInfo> recommendFeedInfoList;
-    List<Integer> feedIds;
-
-    if(cursor == null) {
-
-      feedIds = getRecommendFeedIdsFromCache();
-      recommendFeedInfoList = getRecommendFeedInfoListFromCache(feedIds);
-
-    } else {
-
-       recommendFeedInfoList = getRecommendFeedInfoList(cursor);
-
-       feedIds = getRecommendFeedIds(recommendFeedInfoList);
-    }
-
-    Map<Integer, Integer> goods = goodService.getGoods(feedIds);
-
-    return getRecommendFeedList(recommendFeedInfoList, goods);
-  }
-
-  private List<Integer> getRecommendFeedIdsFromCache() {
-    return listOps.range(FeedRecommendCacheService.RECOMMEND_LIST, 0, -1).stream()
-            .map(s->(Integer) s)
-            .collect(Collectors.toList());
-  }
-
-  private List<Integer> getRecommendFeedIds(List<RecommendFeedInfo> recommendFeedInfoList) {
-
-    List<Integer> feedIds = new ArrayList<>();
-
-    for (RecommendFeedInfo recommendFeedInfo : recommendFeedInfoList) {
-
-      feedIds.add(recommendFeedInfo.getId());
-    }
-
-    return feedIds;
-  }
-
-  private List<RecommendFeedInfo> getRecommendFeedInfoListFromCache(List<Integer> feedIds) {
-
-    return cacheStrRedisTemplate.opsForValue()
-            .multiGet(feedCacheService.makeMultiKeyList(CacheKeyPrefix.FEED,
-                    feedIds)).stream()
-            .map(s -> feedCacheService.convertJsonStrToFeedInfoCache(s))
-            .collect(Collectors.toList()).stream()
-            .map(RecommendFeedInfo::from)
-            .collect(Collectors.toList());
-  }
-
-  private List<RecommendFeed> getRecommendFeedList(List<RecommendFeedInfo> recommendFeedInfoList,
-                                                   Map<Integer, Integer> goods) {
-    List<RecommendFeed> recommendFeedList = new ArrayList<>();
-
-    for (RecommendFeedInfo recommendFeedInfo : recommendFeedInfoList) {
-
-      int feedId = recommendFeedInfo.getId();
-
-      List<FileVo> files = feedService.getFileList(recommendFeedInfo.getFileNames(),
-              recommendFeedInfo.getFilePath());
-
-      recommendFeedList.add(RecommendFeed.from(recommendFeedInfo, goods.get(feedId), files));
-    }
-
-    return recommendFeedList;
-  }
-
-  private List<RecommendFeedInfo> getRecommendFeedInfoList(Integer cursor) {
-
-    List<RecommendFeedInfo> feedInfoList =
-            feedRecommendMapper.getFeedRecommendListByLatestOrder(
-            Pagination.pageInfo(cursor));
-
-    feedCacheService.multiSetFeedInfoCache(feedInfoList.stream()
-            .map(FeedInfoCache::from)
-            .collect(Collectors.toList()), 60L);
-
-    return feedInfoList;
-  }
+  List<RecommendFeed> getFeedRecommendListByLatestOrder(Integer cursor);
 
 }

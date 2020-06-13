@@ -4,6 +4,7 @@ import com.ht.project.snsproject.mapper.FeedRecommendCacheMapper;
 import com.ht.project.snsproject.model.feed.FeedInfoCache;
 import com.ht.project.snsproject.service.FeedCacheService;
 import com.ht.project.snsproject.service.GoodService;
+import com.ht.project.snsproject.service.RedisCacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,6 +32,9 @@ public class FeedRecommendCacheService {
   private GoodService goodService;
 
   @Autowired
+  private RedisCacheService redisCacheService;
+
+  @Autowired
   @Qualifier("cacheRedisTemplate")
   private RedisTemplate<String, Object> cacheRedisTemplate;
 
@@ -54,7 +58,7 @@ public class FeedRecommendCacheService {
     }
 
     deleteAndSetList(feedIds);
-    feedCacheService.multiSetFeedInfoCache(feedInfoCacheList, RECOMMEND_EXPIRE);
+    redisCacheService.multiSetFeedInfoCache(feedInfoCacheList, RECOMMEND_EXPIRE);
     goodService.getGoods(feedIds);
   }
 
@@ -62,15 +66,22 @@ public class FeedRecommendCacheService {
 
     cacheRedisTemplate.execute((RedisCallback<Object>) connection -> {
 
-      connection.multi();
+      connection.multi();//트랜잭션 시작
 
-      connection.del(RECOMMEND_LIST.getBytes());
+      try {
+        connection.del(RECOMMEND_LIST.getBytes());
 
-      for(Integer feedId : feedIds) {
-        connection.lPush(RECOMMEND_LIST.getBytes(), String.valueOf(feedId).getBytes());
+        for (Integer feedId : feedIds) {
+          connection.lPush(RECOMMEND_LIST.getBytes(), String.valueOf(feedId).getBytes());
+        }
+
+      } catch (Exception e) {
+
+        connection.discard();//트랜잭션 취소
+      } finally {
+
+        connection.exec();//트랙잭션 커밋
       }
-
-      connection.exec();
 
       return null;
     });

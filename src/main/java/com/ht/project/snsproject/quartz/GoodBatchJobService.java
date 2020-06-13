@@ -3,7 +3,7 @@ package com.ht.project.snsproject.quartz;
 import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.mapper.GoodBachJobMapper;
 import com.ht.project.snsproject.model.good.GoodUser;
-import com.ht.project.snsproject.service.FeedCacheService;
+import com.ht.project.snsproject.service.RedisCacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ValueOperations;
@@ -28,7 +28,7 @@ public class GoodBatchJobService {
 
 
   @Autowired
-  private FeedCacheService feedCacheService;
+  private RedisCacheService redisCacheService;
 
   @Autowired
   private GoodBachJobMapper goodBachJobMapper;
@@ -41,8 +41,8 @@ public class GoodBatchJobService {
 
     log.info("The batch job has begun...");
 
-    List<String> goodPushedKeys = feedCacheService.scanKeys(
-            feedCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, "*"));
+    List<String> goodPushedKeys = redisCacheService.scanKeys(
+            redisCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, "*"));
 
     List<Object> values = valueOps.multiGet(goodPushedKeys);
     List<String> goodAddKeys = new ArrayList<>();

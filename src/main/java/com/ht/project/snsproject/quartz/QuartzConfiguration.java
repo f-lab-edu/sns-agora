@@ -1,13 +1,11 @@
 package com.ht.project.snsproject.quartz;
 
-import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobDetail;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.quartz.QuartzDataSource;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -29,18 +27,6 @@ import javax.sql.DataSource;
 @PropertySource("application-good-batch-scheduler.properties")
 public class QuartzConfiguration {
 
-
-  @Value("${spring.quartz.datasource.url}")
-  String url;
-
-  @Value("${spring.quartz.datasource.username}")
-  String userName;
-
-  @Value("${spring.quartz.datasource.password}")
-  String password;
-
-  @Value("${spring.quartz.datasource.driver-class-name}")
-  String driverClassName;
 
   @Autowired
   private ApplicationContext applicationContext;
@@ -97,6 +83,16 @@ public class QuartzConfiguration {
     return schedulerFactory;
   }
 
+  /**
+   * 피드 추천 목록을 주기적으로 업데이트 해주는 스케줄러 입니다.
+   * 기존의 좋아요를 Batch Insert 및 Delete 하는 스케줄러와 별도로 동작하게 하기 위해
+   * 빈을 분리하여 구성하였습니다.
+   *
+   * @param trigger
+   * @param job
+   * @param quartzDataSource
+   * @return
+   */
   @Bean
   public SchedulerFactoryBean feedRecommendCacheScheduler(
           @Qualifier("feedRecommendCacheTrigger") Trigger trigger,
@@ -139,6 +135,14 @@ public class QuartzConfiguration {
     return jobDetailFactory;
   }
 
+  /**
+   * feedRecommendCacheJobDetail
+   * Job의 실제 구현 내용과 Job 실행에 필요한 제반 상세 정보를 담고 있다.
+   * FeedRecommendCacheJob 의 인스턴스 정의.
+   * Job을 실행시키기 위한 정보를 담고 있는 객체이다.
+   * Job의 이름, 그룹, JobDataMap 속성 등을 지정할 수 있다.
+   * Trigger가 Job을 수행할 때 이 정보를 기반으로 스케줄링을 한다.
+   */
   @Bean(name = "feedRecommendCacheJobDetail")
   public JobDetailFactoryBean feedRecommendCacheJobDetail() {
 
@@ -181,6 +185,11 @@ public class QuartzConfiguration {
     return trigger;
   }
 
+  /**
+   * 추천 피드를 10초에 한 번 갱신합니다.
+   * @param job
+   * @return
+   */
   @Bean(name = "feedRecommendCacheTrigger")
   public SimpleTriggerFactoryBean feedRecommendTrigger(
           @Qualifier("feedRecommendCacheJobDetail") JobDetail job) {
@@ -204,15 +213,10 @@ public class QuartzConfiguration {
    */
   @Bean(name = "quartzDb")
   @QuartzDataSource
-  @ConfigurationProperties(prefix = "spring.quartz.datasource")
+  @ConfigurationProperties(prefix = "spring.quartz.datasource.hikari")
   public DataSource quartzDataSource() {
 
-    return DataSourceBuilder.create()
-            .url(url)
-            .username(userName)
-            .password(password)
-            .type(HikariDataSource.class)
-            .driverClassName(driverClassName)
-            .build();
+    return DataSourceBuilder.create().build();
+
   }
 }
