@@ -5,6 +5,7 @@ import com.ht.project.snsproject.model.feed.FeedInfoCache;
 import com.ht.project.snsproject.service.FeedCacheService;
 import com.ht.project.snsproject.service.GoodService;
 import com.ht.project.snsproject.service.RedisCacheService;
+import io.lettuce.core.RedisCommandExecutionException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -62,6 +63,12 @@ public class FeedRecommendCacheService {
     goodService.getGoods(feedIds);
   }
 
+  /*
+  multi(); 호출과 함께 트랜잭션이 시작되고,
+  작업이 완료가 되면 트랜잭션 commit 까지 완료시킵니다.
+  하지만 작업 중간에 Exception이 발생한다면 트랜잭션 전체를 취소하고,
+  Unchecked Exception을 던지도록 합니다.
+   */
   private void deleteAndSetList(List<Integer> feedIds) {
 
     cacheRedisTemplate.execute((RedisCallback<Object>) connection -> {
@@ -75,12 +82,12 @@ public class FeedRecommendCacheService {
           connection.lPush(RECOMMEND_LIST.getBytes(), String.valueOf(feedId).getBytes());
         }
 
+        connection.exec();//트랙잭션 커밋
+
       } catch (Exception e) {
 
         connection.discard();//트랜잭션 취소
-      } finally {
-
-        connection.exec();//트랙잭션 커밋
+        throw new RedisCommandExecutionException("업데이트 오류");
       }
 
       return null;

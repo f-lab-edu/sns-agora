@@ -1,12 +1,15 @@
 package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.mapper.CommentMapper;
+import com.ht.project.snsproject.model.comment.Comment;
 import com.ht.project.snsproject.model.comment.CommentInsertParam;
+import com.ht.project.snsproject.model.comment.CommentsParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * interface가 꼭 필요한 곳에만 추상화하기.
@@ -28,5 +31,10 @@ public class CommentService{
             .content(content)
             .writeTime(Timestamp.valueOf(LocalDateTime.now()))
             .build());
+  }
+
+  public List<Comment> getCommentsOnFeed(int feedId, Integer cursor) {
+
+    return commentMapper.getCommentsOnFeed(new CommentsParam(feedId, cursor));
   }
 }
