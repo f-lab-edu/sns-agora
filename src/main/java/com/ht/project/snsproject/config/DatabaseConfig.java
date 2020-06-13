@@ -1,7 +1,5 @@
 package com.ht.project.snsproject.config;
 
-import javax.sql.DataSource;
-
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
@@ -16,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.sql.DataSource;
 
 /**
  * 데이터베이스 설정.
@@ -42,16 +42,16 @@ public class DatabaseConfig {
 
 
   @Value("${spring.datasource.url}")
-  String url;
+  private String url;
 
   @Value("${spring.datasource.username}")
-  String userName;
+  private String userName;
 
   @Value("${spring.datasource.password}")
-  String password;
+  private String password;
 
   @Value("${spring.datasource.driver-class-name}")
-  String driverClassName;
+  private String driverClassName;
 
   /*
   애플리케이션에서 Quartz 스케줄러를 사용함에 따라 스키마를 2개로 분리하여 사용하게 되었습니다.

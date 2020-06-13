@@ -33,5 +33,5 @@ public interface FriendService {
 
   Friend getFriendRelationStatus(String userId, String targetId);
 
-  boolean checkPublicScopeByFriendStatus(PublicScope publicScope, FriendStatus friendStatus);
+  boolean isFeedReadableByFriendStatus(PublicScope publicScope, FriendStatus friendStatus);
 }

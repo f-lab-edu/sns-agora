@@ -21,7 +21,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpSession;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 @Aspect
 @Component
@@ -30,7 +29,10 @@ public class UserAspect {
 
   @Autowired
   @Qualifier("cacheStrRedisTemplate")
-  StringRedisTemplate cacheStrRedisTemplate;
+  private StringRedisTemplate cacheStrRedisTemplate;
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
   /**
    * 로그인 정보를 확인하고,
@@ -67,7 +69,6 @@ public class UserAspect {
   @Around("execution(* *(.., @com.ht.project.snsproject.annotation.UserInfo (*), ..))")
   public Object injectUserSession(ProceedingJoinPoint joinPoint) throws Throwable{
 
-    ObjectMapper mapper = new ObjectMapper();
     HttpSession httpSession = ((ServletRequestAttributes)RequestContextHolder
             .getRequestAttributes())
             .getRequest()
@@ -79,8 +80,8 @@ public class UserAspect {
       throw new UnauthorizedException("로그인 정보가 존재하지 않습니다.");
     }
 
-    User userInfo = User.create(
-            mapper.readValue(
+    User userInfo = User.from(
+            objectMapper.readValue(
                     cacheStrRedisTemplate.boundValueOps("userInfo:"+userId).get(), UserCache.class));
 
     Object[] args = joinPoint.getArgs();

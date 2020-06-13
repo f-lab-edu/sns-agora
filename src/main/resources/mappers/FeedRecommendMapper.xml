@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ht.project.snsproject.mapper.FeedRecommendMapper">
+
+    <select id="getFeedRecommendListByLatestOrder" parameterType="com.ht.project.snsproject.model.Pagination"
+            resultType="com.ht.project.snsproject.model.feed.RecommendFeedInfo">
+
+        SELECT a.id, a.userId,
+        a.title, a.content,
+        a.date, a.publicScope,
+        b.filePath, GROUP_CONCAT(b.fileName ORDER BY b.fileIndex ASC) AS fileNames
+        FROM feeds a
+        LEFT JOIN images b
+        ON (a.id = b.feedId)
+        WHERE a.publicScope = 'ALL'
+        <if test="cursor != null">
+            AND a.id<![CDATA[<]]>#{cursor}
+        </if>
+        GROUP BY a.id
+        ORDER BY a.id DESC
+        limit #{listSize};
+    </select>
+
+</mapper>

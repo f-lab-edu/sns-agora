@@ -1,11 +1,13 @@
 package com.ht.project.snsproject.model.good;
 
+import lombok.Builder;
 import lombok.Value;
 
 @Value
-public class GoodStatusPram {
+@Builder
+public class Good {
 
   int feedId;
 
-  String userId;
+  int good;
 }

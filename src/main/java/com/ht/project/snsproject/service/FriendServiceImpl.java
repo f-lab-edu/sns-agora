@@ -11,19 +11,20 @@ import com.ht.project.snsproject.model.friend.Friend;
 import com.ht.project.snsproject.model.friend.FriendList;
 import com.ht.project.snsproject.model.friend.FriendListParam;
 import com.ht.project.snsproject.model.friend.FriendStatusInsert;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class FriendServiceImpl implements FriendService {
 
   @Autowired
-  FriendMapper friendMapper;
+  private FriendMapper friendMapper;
 
   @Autowired
-  AlarmService alarmService;
+  private AlarmService alarmService;
 
   @Transactional
   @Override
@@ -174,9 +175,9 @@ public class FriendServiceImpl implements FriendService {
   }
 
   @Override
-  public boolean checkPublicScopeByFriendStatus(PublicScope publicScope, FriendStatus friendStatus) {
+  public boolean isFeedReadableByFriendStatus(PublicScope publicScope, FriendStatus friendStatus) {
 
-    boolean checkStatus = false;
+    boolean isReadable = false;
 
     switch (friendStatus) {
 
@@ -184,14 +185,14 @@ public class FriendServiceImpl implements FriendService {
         if(publicScope == PublicScope.ALL ||
                 publicScope == PublicScope.FRIENDS ||
                 publicScope == PublicScope.ME) {
-          checkStatus = true;
+          isReadable = true;
         }
         break;
 
       case FRIEND:
         if(publicScope == PublicScope.ALL ||
                 publicScope == PublicScope.FRIENDS) {
-          checkStatus =true;
+          isReadable =true;
         }
         break;
 
@@ -200,10 +201,10 @@ public class FriendServiceImpl implements FriendService {
 
       default:
         if(publicScope == PublicScope.ALL) {
-          checkStatus = true;
+          isReadable = true;
         }
     }
 
-    return checkStatus;
+    return isReadable;
   }
 }

@@ -9,13 +9,16 @@ public class FeedListParam {
 
   String userId;
 
+  String targetId;
+
   Pagination pagination;
 
   PublicScope publicScope;
 
   public static FeedListParam create(String userId,
+                                     String targetId,
                                      Pagination pagination, PublicScope publicScope) {
 
-    return new FeedListParam(userId, pagination, publicScope);
+    return new FeedListParam(userId, targetId, pagination, publicScope);
   }
 }

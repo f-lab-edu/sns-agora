@@ -23,11 +23,11 @@ public class FeedInfoCache {
 
   String publicScope;
 
-  String path;
+  String filePath;
 
   String fileNames;
 
-  public static FeedInfoCache feedInfoToCache(FeedInfo feedInfo) {
+  public static FeedInfoCache from(FeedInfo feedInfo) {
 
     return FeedInfoCache.builder()
             .id(String.valueOf(feedInfo.getId()))
@@ -36,7 +36,20 @@ public class FeedInfoCache {
             .content(feedInfo.getContent())
             .date(String.valueOf(feedInfo.getDate().getTime()))
             .publicScope(String.valueOf(feedInfo.getPublicScope()))
-            .path(feedInfo.getPath())
+            .filePath(feedInfo.getFilePath())
             .fileNames(feedInfo.getFileNames()).build();
+  }
+
+  public static FeedInfoCache from(RecommendFeedInfo recommendFeedInfo) {
+
+    return FeedInfoCache.builder()
+            .id(String.valueOf(recommendFeedInfo.getId()))
+            .userId(recommendFeedInfo.getUserId())
+            .title(recommendFeedInfo.getTitle())
+            .content(recommendFeedInfo.getContent())
+            .date(String.valueOf(recommendFeedInfo.getDate().getTime()))
+            .publicScope(String.valueOf(recommendFeedInfo.getPublicScope()))
+            .filePath(recommendFeedInfo.getFilePath())
+            .fileNames(recommendFeedInfo.getFileNames()).build();
   }
 }

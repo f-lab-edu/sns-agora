@@ -1,11 +1,11 @@
 package com.ht.project.snsproject.model.good;
 
+import lombok.Builder;
 import lombok.Value;
 
 @Value
-public class GoodUserDelete {
+@Builder
+public class GoodsParam {
 
   int feedId;
-
-  String userId;
 }
