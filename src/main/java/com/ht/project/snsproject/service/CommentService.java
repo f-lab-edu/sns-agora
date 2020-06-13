@@ -20,11 +20,11 @@ public class CommentService{
   @Autowired
   private CommentMapper commentMapper;
 
-  public void insertCommentOnFeed(int id, String content, String userId) {
+  public void insertCommentOnFeed(int feedId, String content, String userId) {
 
     commentMapper.insertCommentOnFeed(
             CommentInsertParam.builder()
-            .feedId(id)
+            .feedId(feedId)
             .userId(userId)
             .content(content)
             .writeTime(Timestamp.valueOf(LocalDateTime.now()))
@@ -36,9 +36,22 @@ public class CommentService{
     return commentMapper.getCommentsOnFeed(new CommentsParam(feedId, cursor));
   }
 
-  public List<Reply> getReplysOnComment(int commentId,  Integer cursor) {
+  public void updateCommentOnFeed(int commentId, String userId, String content) {
 
-    return commentMapper.getReplysOnComment(new ReplysParam(commentId, cursor));
+    if(!commentMapper.updateCommentOnFeed(CommentUpdateParam.builder()
+            .commentId(commentId)
+            .userId(userId)
+            .content(content)
+            .updateTime(Timestamp.valueOf(LocalDateTime.now()))
+            .build())) {
+
+      throw new IllegalArgumentException("해당 Comment가 존재하지 않습니다.");
+    }
+  }
+
+  public List<Reply> getRepliesOnComment(int commentId,  Integer cursor) {
+
+    return commentMapper.getRepliesOnComment(new RepliesParam(commentId, cursor));
   }
 
   public void insertReplyOnComment(int commentId, String content, String userId) {
@@ -49,5 +62,18 @@ public class CommentService{
             .content(content)
             .writeTime(Timestamp.valueOf(LocalDateTime.now()))
             .build());
+  }
+
+  public void updateReplyOnComment(int replyId, String userId, String content) {
+
+    if(!commentMapper.updateReplyOnComment(ReplyUpdateParam.builder()
+            .replyId(replyId)
+            .userId(userId)
+            .content(content)
+            .updateTime(Timestamp.valueOf(LocalDateTime.now()))
+            .build())) {
+
+      throw new IllegalArgumentException("해당 Reply가 존재하지 않습니다.");
+    }
   }
 }
