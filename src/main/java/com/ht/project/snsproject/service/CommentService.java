@@ -40,4 +40,14 @@ public class CommentService{
 
     return commentMapper.getReplysOnComment(new ReplysParam(commentId, cursor));
   }
+
+  public void insertReplyOnComment(int commentId, String content, String userId) {
+
+    commentMapper.insertReplyOnComment(ReplyInsertParam.builder()
+            .commentId(commentId)
+            .userId(userId)
+            .content(content)
+            .writeTime(Timestamp.valueOf(LocalDateTime.now()))
+            .build());
+  }
 }

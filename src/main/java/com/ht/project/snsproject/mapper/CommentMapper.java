@@ -13,4 +13,7 @@ public interface CommentMapper {
   List<Comment> getCommentsOnFeed(CommentsParam commentsParam);
 
   List<Reply> getReplysOnComment(ReplysParam replysParam);
+
+  void insertReplyOnComment(ReplyInsertParam replyInsertParam);
+
 }

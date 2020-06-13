@@ -57,4 +57,9 @@
         AND id<![CDATA[>]]>#{cursor}
         Limit #{limit}
     </select>
+
+    <insert id="insertReplyOnComment" parameterType="com.ht.project.snsproject.model.comment.ReplyInsertParam">
+        INSERT INTO replys(commentId, userId, content, writeTime)
+        VALUES(#{commentId}, #{userId}, #{content}, #{writeTime})
+    </insert>
 </mapper>
