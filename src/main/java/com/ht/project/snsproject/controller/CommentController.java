@@ -3,6 +3,7 @@ package com.ht.project.snsproject.controller;
 import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.comment.Comment;
+import com.ht.project.snsproject.model.comment.Reply;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,5 +50,21 @@ public class CommentController {
                                                          @RequestParam(required = false) Integer cursor) {
 
     return ResponseEntity.ok(commentService.getCommentsOnFeed(feedId, cursor));
+  }
+
+  /**
+   * 댓글에서 이미 첫번째 대댓글을 가져오기 때문에
+   * 첫 번째 대댓글의 id를 cursor 로 필수로 제공해야만 합니다.
+   * 그렇지 않으면 중복된 데이터가 발생될 수 있습니다.
+   * @param commentId
+   * @param cursor
+   * @return
+   */
+  @GetMapping("/{feedId}/comments/{commentId}/replys")
+  @LoginCheck
+  public ResponseEntity<List<Reply>> getReplyOnComment(@PathVariable int commentId,
+                                                       @RequestParam Integer cursor) {
+
+    return ResponseEntity.ok(commentService.getReplysOnComment(commentId, cursor));
   }
 }

@@ -1,9 +1,7 @@
 package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.mapper.CommentMapper;
-import com.ht.project.snsproject.model.comment.Comment;
-import com.ht.project.snsproject.model.comment.CommentInsertParam;
-import com.ht.project.snsproject.model.comment.CommentsParam;
+import com.ht.project.snsproject.model.comment.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,5 +34,10 @@ public class CommentService{
   public List<Comment> getCommentsOnFeed(int feedId, Integer cursor) {
 
     return commentMapper.getCommentsOnFeed(new CommentsParam(feedId, cursor));
+  }
+
+  public List<Reply> getReplysOnComment(int commentId,  Integer cursor) {
+
+    return commentMapper.getReplysOnComment(new ReplysParam(commentId, cursor));
   }
 }

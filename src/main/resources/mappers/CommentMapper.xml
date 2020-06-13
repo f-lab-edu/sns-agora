@@ -46,6 +46,15 @@
             AND a.id<![CDATA[<]]>#{cursor}
         </if>
         GROUP BY a.id
-        LIMIT #{limit};
+        LIMIT #{limit}
+    </select>
+
+    <select id="getReplysOnComment" parameterType="com.ht.project.snsproject.model.comment.ReplysParam"
+    resultType="com.ht.project.snsproject.model.comment.Reply">
+        SELECT id, userId, content, writeTime
+        FROM replys
+        WHERE commentId = #{commentId}
+        AND id<![CDATA[>]]>#{cursor}
+        Limit #{limit}
     </select>
 </mapper>
