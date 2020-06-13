@@ -16,9 +16,11 @@ public interface UserService {
 
   boolean existUser(UserLogin userLogin, HttpSession httpSession);
 
+  void logout(HttpSession httpSession);
+
   boolean verifyPassword(String userId, String password);
 
-  void deleteUser(String userId);
+  void deleteUser(HttpSession httpSession);
 
   void updateUserPassword(String userId, UserPassword userPassword);
 

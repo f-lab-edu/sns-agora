@@ -1,5 +1,7 @@
 package com.ht.project.snsproject.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.FriendStatus;
 import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.InvalidApproachException;
@@ -9,30 +11,40 @@ import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.Feed;
 import com.ht.project.snsproject.model.feed.FeedDeleteParam;
 import com.ht.project.snsproject.model.feed.FeedInfo;
+import com.ht.project.snsproject.model.feed.FeedInfoCache;
 import com.ht.project.snsproject.model.feed.FeedInsert;
 import com.ht.project.snsproject.model.feed.FeedListParam;
 import com.ht.project.snsproject.model.feed.FeedParam;
 import com.ht.project.snsproject.model.feed.FeedUpdate;
 import com.ht.project.snsproject.model.feed.FeedUpdateParam;
-import com.ht.project.snsproject.model.feed.FeedVO;
+import com.ht.project.snsproject.model.feed.FeedVo;
 import com.ht.project.snsproject.model.feed.FileVo;
 import com.ht.project.snsproject.model.feed.FriendsFeedList;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
+
 
 @Service
 public class FeedServiceImpl implements FeedService {
+
+  private static final long DEPRECATED = 0;
 
   @Autowired
   FeedMapper feedMapper;
@@ -48,11 +60,25 @@ public class FeedServiceImpl implements FeedService {
   GoodService goodService;
 
   @Autowired
-  RedisTemplate<String, Object> redisTemplate;
+  FeedCacheService feedCacheService;
+
+  @Autowired
+  FriendService friendService;
+
+  @Autowired
+  @Qualifier("cacheRedisTemplate")
+  RedisTemplate<String, Object> cacheRedisTemplate;
+
+  @Resource(name = "cacheRedisTemplate")
+  ZSetOperations<String, Object> zSetOps;
+
+  @Resource(name = "cacheRedisTemplate")
+  ValueOperations<String, Object> valueOps;
+
 
   @Transactional
   @Override
-  public void feedUpload(List<MultipartFile> files, FeedVO feedVo, String userId) {
+  public void feedUpload(List<MultipartFile> files, FeedVo feedVo, String userId) {
 
     Timestamp date = Timestamp.valueOf(LocalDateTime.now());
     FeedInsert feedInsert = FeedInsert.builder()
@@ -63,7 +89,9 @@ public class FeedServiceImpl implements FeedService {
             .publicScope(feedVo.getPublicScope())
             .good(0)
             .build();
+
     feedMapper.feedUpload(feedInsert);
+
     if (!files.isEmpty()) {
       fileService.fileUpload(files, userId, feedInsert.getId());
     }
@@ -78,7 +106,17 @@ public class FeedServiceImpl implements FeedService {
 
     String fileNames = feedInfo.getFileNames();
     int feedId = feedInfo.getId();
-    int good = goodService.getGood(id);
+    int good = goodService.getGood(feedId);
+
+    boolean goodStatus = feedInfo.isGoodStatus();
+
+    if (goodStatus) {
+      double time = Timestamp.valueOf(LocalDateTime.now()).getTime();
+      zSetOps.add("goodStatus:"+userId, feedId, time);
+      cacheRedisTemplate.expire("goodStatus:"+userId,
+              cacheRedisTemplate.getExpire("userInfo:"+userId) + 60L,
+              TimeUnit.SECONDS);//세션 만료 시간 + 60초로 설정 로그아웃 이후에도 한 번 더 batch insert를 해야하기 때문.
+    }
 
     feedBuilder.id(feedId)
             .userId(feedInfo.getUserId())
@@ -86,6 +124,7 @@ public class FeedServiceImpl implements FeedService {
             .content(feedInfo.getContent())
             .date(feedInfo.getDate())
             .publicScope(feedInfo.getPublicScope())
+            .goodStatus(goodStatus)
             .good(good);
 
     if (fileNames != null) {
@@ -104,70 +143,27 @@ public class FeedServiceImpl implements FeedService {
     return feedBuilder.build();
   }
 
-  public FeedInfo getFeedInfoCache(int feedId) {
-
-    String key = "feedInfo:" + feedId;
-    Map<?,?> cache = (Map<?, ?>) redisTemplate.opsForValue().get(key);
-
-    if (cache != null) {
-
-      return FeedInfo.builder().id((Integer) cache.get("id"))
-              .userId((String) cache.get("userId"))
-              .title((String) cache.get("title"))
-              .content((String) cache.get("content"))
-              .date(new Timestamp((Long) cache.get("date")))
-              .publicScope(PublicScope.valueOf((String) cache.get("publicScope")))
-              .path((String) cache.get("path"))
-              .fileNames((String) cache.get("fileNames"))
-              .build();
-    }
-
-
-    FeedInfo feedInfo = feedMapper.getFeedInfoCache(feedId);
-    redisTemplate.opsForValue().set(key, feedInfo);
-
-    return feedInfo;
-  }
-
+  @Transactional
   public FeedInfo getFeedInfo(int feedId, String userId, String targetId) {
 
     String key = "feedInfo:" + feedId;
-    Map<?,?> cache = (Map<?, ?>) redisTemplate.opsForValue().get(key);
 
-    if (cache != null) {
+    //친구 여부 확인
+    FriendStatus friendStatus = friendService.getFriendStatus(userId, targetId);
 
-      return FeedInfo.builder().id((Integer) cache.get("id"))
-              .userId((String) cache.get("userId"))
-              .title((String) cache.get("title"))
-              .content((String) cache.get("content"))
-              .date(new Timestamp((Long) cache.get("date")))
-              .publicScope(PublicScope.valueOf((String) cache.get("publicScope")))
-              .path((String) cache.get("path"))
-              .fileNames((String) cache.get("fileNames"))
-              .build();
+    FeedInfo feedInfo = feedCacheService.cacheToFeedInfo(feedId, userId, friendStatus);
+
+    if(feedInfo != null) {
+      return feedInfo;
     }
 
-    FeedInfo feedInfo;
+    feedInfo = feedMapper.getFeed(FeedParam.create(feedId, userId, friendStatus));
 
-    if (userId.equals(targetId)) {
-      feedInfo = feedMapper.getFeed(FeedParam.create(feedId, targetId, FriendStatus.ME));
-    } else {
-
-      FriendStatus friendStatus = friendMapper.getFriendRelationStatus(userId, targetId)
-              .getFriendStatus();
-
-      if (friendStatus == FriendStatus.BLOCK) {
-        throw new InvalidApproachException("유효하지 않은 접근입니다.");
-      }
-
-      feedInfo = feedMapper.getFeed(FeedParam.create(feedId, targetId, friendStatus));
-
-      if (feedInfo == null) {
-        throw new InvalidApproachException("일치하는 데이터가 없습니다.");
-      }
+    if (feedInfo == null || feedInfo.getId() == null) {
+      throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
 
-    redisTemplate.opsForValue().set(key, feedInfo);
+    valueOps.set(key, FeedInfoCache.feedInfoToCache(feedInfo),5L, TimeUnit.MINUTES);
 
     return feedInfo;
   }
@@ -206,12 +202,26 @@ public class FeedServiceImpl implements FeedService {
 
     List<FeedInfo> feedInfoList = feedMapper.getFeedList(feedListParam);
     List<Feed> feeds = new ArrayList<>();
+    String userId = feedListParam.getUserId();
 
     for (FeedInfo feedInfo:feedInfoList) {
 
       List<FileVo> files = new ArrayList<>();
       int feedId = feedInfo.getId();
+      String feedCacheKey = "feedInfo:" + feedId;
+
+      if(cacheRedisTemplate.hasKey(feedCacheKey)==null) {
+        cacheRedisTemplate.opsForValue().set(feedCacheKey, feedInfo, 5L, TimeUnit.MINUTES);
+      }
       int good = goodService.getGood(feedId);
+      boolean goodStatus = feedInfo.isGoodStatus();
+
+      if (goodStatus) {
+        zSetOps.add("goodStatus:"+userId, feedId, Timestamp.valueOf(LocalDateTime.now()).getTime());
+        cacheRedisTemplate.expire("goodStatus:"+userId,
+                cacheRedisTemplate.getExpire("userInfo"+userId)+60L,
+                TimeUnit.SECONDS);//세션 만료 시간과 일치
+      }
 
       Feed.FeedBuilder builder = Feed.builder()
               .id(feedId)
@@ -220,7 +230,8 @@ public class FeedServiceImpl implements FeedService {
               .content(feedInfo.getContent())
               .date(feedInfo.getDate())
               .publicScope(feedInfo.getPublicScope())
-              .good(good);
+              .good(good)
+              .goodStatus(goodStatus);
 
       int fileIndex = 0;
       if (feedInfo.getFileNames() != null) {
@@ -234,6 +245,7 @@ public class FeedServiceImpl implements FeedService {
       Feed tmp = builder.build();
       feeds.add(tmp);
     }
+
     return feeds;
   }
 
@@ -250,6 +262,15 @@ public class FeedServiceImpl implements FeedService {
       int fileIndex = 0;
       int feedId = feedInfo.getId();
       int good = goodService.getGood(feedId);
+      boolean goodStatus = feedInfo.isGoodStatus();
+
+      if (goodStatus) {
+
+        zSetOps.add("goodStatus:"+userId, feedId, Timestamp.valueOf(LocalDateTime.now()).getTime());
+        cacheRedisTemplate.expire("goodStatus:"+userId,
+                cacheRedisTemplate.getExpire("userInfo"+userId) + 60L,
+                TimeUnit.SECONDS);
+      }
 
       Feed.FeedBuilder builder = Feed.builder()
               .id(feedId)
@@ -258,7 +279,8 @@ public class FeedServiceImpl implements FeedService {
               .content(feedInfo.getContent())
               .date(feedInfo.getDate())
               .publicScope(feedInfo.getPublicScope())
-              .good(good);
+              .good(good)
+              .goodStatus(goodStatus);
 
       while (st.hasMoreTokens()) {
         FileVo tmpFile = FileVo.getInstance(++fileIndex,feedInfo.getPath(),st.nextToken());

@@ -1,13 +1,13 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
+import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.friend.Friend;
 import com.ht.project.snsproject.model.friend.FriendList;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.FriendService;
 import java.util.List;
-import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,43 +29,36 @@ public class FriendController {
 
   @LoginCheck
   @PostMapping("/{targetId}/requests")
-  public HttpStatus requestFriend(@PathVariable String targetId, HttpSession httpSession) {
+  public HttpStatus requestFriend(@PathVariable String targetId, @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    friendService.requestFriend(userInfo.getUserId(), targetId);
+    friendService.requestFriend(user.getUserId(), targetId);
 
     return HttpStatus.CREATED;
   }
 
   @LoginCheck
   @DeleteMapping("/{targetId}/requests")
-  public HttpStatus deleteFriendRequest(@PathVariable String targetId, HttpSession httpSession) {
+  public HttpStatus deleteFriendRequest(@PathVariable String targetId, @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
-    friendService.deleteFriendRequest(userId, targetId);
+    friendService.deleteFriendRequest(user.getUserId(), targetId);
 
     return HttpStatus.NO_CONTENT;
   }
 
   @LoginCheck
   @DeleteMapping("/{targetId}/requests/deny")
-  public HttpStatus denyFriendRequest(@PathVariable String targetId, HttpSession httpSession) {
+  public HttpStatus denyFriendRequest(@PathVariable String targetId, @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
-    friendService.denyFriendRequest(userId, targetId);
+    friendService.denyFriendRequest(user.getUserId(), targetId);
 
     return HttpStatus.NO_CONTENT;
   }
 
   @LoginCheck
   @PutMapping("/{targetId}/requests")
-  public HttpStatus permitFriendRequest(@PathVariable String targetId, HttpSession httpSession) {
+  public HttpStatus permitFriendRequest(@PathVariable String targetId, @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
-    friendService.permitFriendRequest(userId, targetId);
+    friendService.permitFriendRequest(user.getUserId(), targetId);
 
     return HttpStatus.OK;
   }
@@ -73,49 +66,42 @@ public class FriendController {
   @LoginCheck
   @GetMapping("/requests")
   public ResponseEntity<List<FriendList>> getFriendRequests(
-          @RequestParam(required = false) Integer cursor, HttpSession httpSession) {
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
+          @RequestParam(required = false) Integer cursor, @UserInfo User user) {
 
-    return ResponseEntity.ok(friendService.getFriendRequests(userId,Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(friendService.getFriendRequests(user.getUserId(),Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
   @GetMapping
   public ResponseEntity<List<FriendList>> getFriendList(
-          @RequestParam(required = false) Integer cursor, HttpSession httpSession) {
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
+          @RequestParam(required = false) Integer cursor, @UserInfo User user) {
 
-    return ResponseEntity.ok(friendService.getFriendList(userId, Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(friendService.getFriendList(user.getUserId(), Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
   @GetMapping("/{targetId}")
   public ResponseEntity<Friend> getFriendRelationStatus(@PathVariable String targetId,
-                                                        HttpSession httpSession) {
+                                                        @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-
-    return ResponseEntity.ok(friendService.getFriendRelationStatus(userInfo.getUserId(),targetId));
+    return ResponseEntity.ok(friendService.getFriendRelationStatus(user.getUserId(), targetId));
   }
 
   @LoginCheck
   @PostMapping("/{targetId}/blocks")
-  public HttpStatus blockUser(@PathVariable String targetId, HttpSession httpSession) {
+  public HttpStatus blockUser(@PathVariable String targetId, @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    friendService.blockUser(userInfo.getUserId(), targetId);
+    friendService.blockUser(user.getUserId(), targetId);
 
     return HttpStatus.OK;
   }
 
   @LoginCheck
   @DeleteMapping("/{targetId}/blocks")
-  public HttpStatus unblockUser(@PathVariable String targetId, HttpSession httpSession) {
+  public HttpStatus unblockUser(@PathVariable String targetId,
+                                @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    friendService.unblockUser(userInfo.getUserId(),targetId);
+    friendService.unblockUser(user.getUserId(),targetId);
 
     return HttpStatus.NO_CONTENT;
   }
@@ -123,19 +109,17 @@ public class FriendController {
   @LoginCheck
   @GetMapping("/blocks")
   public ResponseEntity<List<FriendList>> getBlockUserList(
-          @RequestParam(required = false) Integer cursor, HttpSession httpSession) {
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
+          @RequestParam(required = false) Integer cursor, @UserInfo User user) {
 
-    return ResponseEntity.ok(friendService.getBlockUserList(userId, Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(friendService.getBlockUserList(user.getUserId(), Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
   @DeleteMapping("/{targetId}")
-  public HttpStatus cancelFriend(@PathVariable String targetId, HttpSession httpSession) {
+  public HttpStatus cancelFriend(@PathVariable String targetId,
+                                 @UserInfo User user) {
 
-    User userInfo = (User)  httpSession.getAttribute("userInfo");
-    friendService.cancelFriend(userInfo.getUserId(),targetId);
+    friendService.cancelFriend(user.getUserId(), targetId);
 
     return HttpStatus.NO_CONTENT;
   }

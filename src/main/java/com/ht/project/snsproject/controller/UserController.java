@@ -1,13 +1,8 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
-import com.ht.project.snsproject.model.user.User;
-import com.ht.project.snsproject.model.user.UserJoinRequest;
-import com.ht.project.snsproject.model.user.UserLogin;
-import com.ht.project.snsproject.model.user.UserPassword;
-import com.ht.project.snsproject.model.user.UserPasswordVerify;
-import com.ht.project.snsproject.model.user.UserProfile;
-import com.ht.project.snsproject.model.user.UserProfileParam;
+import com.ht.project.snsproject.annotation.UserInfo;
+import com.ht.project.snsproject.model.user.*;
 import com.ht.project.snsproject.service.UserService;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
@@ -23,9 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-
-
 
 @RestController
 @RequestMapping("/users")
@@ -57,10 +49,10 @@ public class UserController {
   @LoginCheck
   @PutMapping("/account")
   public HttpStatus updateUserProfile(@RequestBody UserProfileParam userProfileParam,
-                                      HttpSession httpSession) {
+                                      @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    UserProfile userProfile = new UserProfile(userInfo.getId(),
+
+    UserProfile userProfile = new UserProfile(user.getId(),
             userProfileParam.getNickname(),
             userProfileParam.getEmail(),
             userProfileParam.getBirth());
@@ -85,24 +77,20 @@ public class UserController {
   @PostMapping("/logout")
   public HttpStatus logout(HttpSession httpSession) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    httpSession.invalidate();
-
+    userService.logout(httpSession);
     return HttpStatus.NO_CONTENT;
   }
 
   @LoginCheck
   @DeleteMapping("/account")
   public HttpStatus deleteUser(@RequestBody UserPasswordVerify userPasswordVerify,
-                               HttpSession httpSession) {
-
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    if (!userService.verifyPassword(userInfo.getUserId(), userPasswordVerify.getPassword())) {
+                               @UserInfo User user, HttpSession httpSession) {
+    String userId = user.getUserId();
+    if (!userService.verifyPassword(userId, userPasswordVerify.getPassword())) {
 
       return HttpStatus.BAD_REQUEST;
     }
-    userService.deleteUser(userInfo.getUserId());
-    httpSession.invalidate();
+    userService.deleteUser(httpSession);
 
     return HttpStatus.NO_CONTENT;
   }
@@ -110,10 +98,9 @@ public class UserController {
   @LoginCheck
   @PutMapping("/account/password")
   public HttpStatus updateUserPassword(@RequestBody @Valid UserPassword userPassword,
-                                       HttpSession httpSession) {
+                                       @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    userService.updateUserPassword(userInfo.getUserId(),userPassword);
+    userService.updateUserPassword(user.getUserId(), userPassword);
 
     return HttpStatus.OK;
   }

@@ -179,6 +179,6 @@ public class FileServiceLocal implements FileService {
       fileServiceLocal.deleteFiles(feedId, path, originFiles);
     }
 
-    fileMapper.insertAndUpdateFiles(fileInfoList);
+    fileMapper.upsertFiles(fileInfoList);
   }
 }

@@ -13,11 +13,14 @@
         SELECT a.id, a.userId,
         a.title, a.content,
         a.date, a.publicScope,
-        b.filePath, GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
-        FROM feeds a LEFT JOIN images b
+        b.filePath, GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames,
+        COUNT(DISTINCT c.userId) AS goodStatus
+        FROM feeds a
+        LEFT JOIN images b
         ON (a.id = b.feedId)
+        LEFT JOIN goods c
+        ON (a.id = c.feedId AND c.userId = #{userId})
         WHERE a.id = #{id}
-        AND a.userId = #{userId}
         AND (a.publicScope = 'ALL'
         <if test="friendStatus.name() == 'ME'">
             OR a.publicScope = 'FRIENDS'
@@ -27,16 +30,6 @@
             OR a.publicScope = 'FRIENDS'
         </if>
         )
-    </select>
-
-    <select id="getFeedInfoCache" parameterType="int" resultType="com.ht.project.snsproject.model.feed.FeedInfo">
-        SELECT a.id, a.userId,
-        a.title, a.content,
-        a.date, a.publicScope,
-        b.filePath, GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
-        FROM feeds a LEFT JOIN images b
-        ON (a.id = b.feedId)
-        WHERE a.id = #{feedId}
     </select>
 
     <!--LEFT JOIN 사용 이유

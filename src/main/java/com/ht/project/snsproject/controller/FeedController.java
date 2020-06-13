@@ -1,14 +1,14 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
+import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.Feed;
 import com.ht.project.snsproject.model.feed.FeedUpdateParam;
-import com.ht.project.snsproject.model.feed.FeedVO;
+import com.ht.project.snsproject.model.feed.FeedVo;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.FeedService;
 import java.util.List;
-import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,10 +32,9 @@ public class FeedController {
   @LoginCheck
   @PostMapping
   public HttpStatus feedUpload(@RequestParam("file") List<MultipartFile> files,
-                                 FeedVO feedVO, HttpSession httpSession) {
+                               FeedVo feedVo, @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    feedService.feedUpload(files, feedVO,userInfo.getUserId());
+    feedService.feedUpload(files, feedVo, user.getUserId());
 
     return HttpStatus.OK;
   }
@@ -43,44 +42,34 @@ public class FeedController {
   @LoginCheck
   @GetMapping("/users/{targetId}/{id}")
   public ResponseEntity<Feed> getFeed(@PathVariable String targetId,
-                                      @PathVariable int id, HttpSession httpSession) {
+                                      @PathVariable int id, @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
-
-    return ResponseEntity.ok(feedService.getFeed(userId, targetId, id));
+    return ResponseEntity.ok(feedService.getFeed(user.getUserId(), targetId, id));
   }
 
   @LoginCheck
   @GetMapping("/{targetId}")
   public ResponseEntity<List<Feed>> getFeedList(@PathVariable String targetId,
                                                 @RequestParam(required = false) Integer cursor,
-                                                HttpSession httpSession) {
+                                                @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
-
-    return ResponseEntity.ok(feedService.getFeedList(userId, targetId,
+    return ResponseEntity.ok(feedService.getFeedList(user.getUserId(), targetId,
             Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
   @GetMapping
   public ResponseEntity<List<Feed>> getFriendsFeedList(
-          @RequestParam(required = false) Integer cursor, HttpSession httpSession) {
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
+          @RequestParam(required = false) Integer cursor, @UserInfo User user) {
 
-    return ResponseEntity.ok(feedService.getFriendsFeedList(userId,Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(feedService.getFriendsFeedList(user.getUserId(),Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
   @DeleteMapping("/{id}")
-  public HttpStatus deleteFeed(@PathVariable int id, HttpSession httpSession) {
+  public HttpStatus deleteFeed(@PathVariable int id, @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
-    feedService.deleteFeed(id, userId);
+    feedService.deleteFeed(id, user.getUserId());
 
     return HttpStatus.NO_CONTENT;
   }
@@ -90,12 +79,9 @@ public class FeedController {
   public HttpStatus updateFeed(@PathVariable int id,
                                @RequestParam("file") List<MultipartFile> files,
                                FeedUpdateParam feedUpdateParam,
-                               HttpSession httpSession) {
+                               @UserInfo User user) {
 
-    User userInfo = (User) httpSession.getAttribute("userInfo");
-    String userId = userInfo.getUserId();
-
-    feedService.updateFeed(files, feedUpdateParam, id, userId);
+    feedService.updateFeed(files, feedUpdateParam, id, user.getUserId());
 
     return HttpStatus.OK;
   }

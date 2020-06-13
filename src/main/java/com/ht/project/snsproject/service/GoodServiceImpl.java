@@ -3,109 +3,106 @@ package com.ht.project.snsproject.service;
 import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.GoodMapper;
-import com.ht.project.snsproject.model.good.GoodUserDelete;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import com.ht.project.snsproject.model.good.GoodList;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class GoodServiceImpl implements GoodService {
 
+
+  private static final double DEPRECATED = 0;
+  /*
+  @Resource 를 통한 빈 주입이 아닌 @Qualifier 를 통한 부가정보를 사용한 이유
+  - @Resource 를 활용할 때, 빈 이름은 변경되기가 쉽고 그 자체로 의미 부여가 쉽지 않음.
+  - 빈 이름과는 별도로 추가적인 메타정보를 지정해서 의미를 부여해놓고 @Autowired에서 사용할 수 있도록 하는
+    @Autowired 가 훨씬 직관적이고 깔끔하다.
+  - 아래와 같이 선언시, cacheRedisTemplate 이라는 한정자 값을 가진 빈으로 자동와이어링 대상을 제한할 수 있다.
+   */
+  @Autowired
+  @Qualifier("cacheRedisTemplate")
+  RedisTemplate<String, Object> cacheRedisTemplate;
+
+  @Resource(name = "cacheRedisTemplate")
+  ValueOperations<String, Object> valueOps;
+
+  @Resource(name = "cacheRedisTemplate")
+  ZSetOperations<String, Object> zSetOps;
+
   @Autowired
   GoodMapper goodMapper;
 
-  @Autowired
-  FeedService feedService;
 
-  @Autowired
-  RedisTemplate<String,Object> redisTemplate;
-
+  /*
+  Spring cache 이용해도 괜찮을 것 같습니다.
+  테스트를 위해 ttl을 5분으로 설정했습니다.
+  실제 배치 성능을 위해서 캐시를 30초 이내로 짧게 설정할 예정입니다.
+  -> 정확한 시간은 이유와 함께 생각해보고 설정 예정.
+   */
   @Override
-  @Cacheable(value = "feeds", key = "'Good:'+#feedId")
-  public int getGood(int feedId) {
+  public Integer getGood(int feedId) {
 
-    return goodMapper.getGood(feedId);
-  }
+    String goodKey = "good:"+feedId;
 
-  @Override
-  public List<String> getGoodList(int feedId) {
+    Integer good = (Integer) valueOps.get(goodKey);
 
-    String key = "goodList:" + feedId;
-
-    if (redisTemplate.hasKey(key)) {
-
-      List<Object> cache = redisTemplate.opsForList().range(key,0,-1);
-
-      return cache.stream()
-              .map(object -> Objects.toString(object, null))
-              .collect(Collectors.toList());
+    if(good ==null){
+      good = goodMapper.getGood(feedId);
+      valueOps.set(goodKey, good, 5L, TimeUnit.MINUTES);
     }
 
-    return goodMapper.getGoodList(feedId);
+    return good;
   }
 
-  @Transactional
+
   @Override
-  public void increaseGood(int feedId, String userId) {
+  public GoodList getGoodList(int feedId, long cursor) {
+    return null;
+  }
 
-    feedService.getFeedInfoCache(feedId);
+  @Override
+  public void addGood(int feedId, String userId) {
+
+    String goodStatusKey = "goodStatus:" + userId;
+
     getGood(feedId);
-    List<String> goodList = getGoodList(feedId);
 
-    if (goodList.contains(userId)) {
+    Double isGoodPushed = zSetOps.score(goodStatusKey, feedId);
+
+    if ((isGoodPushed == null) || (isGoodPushed == DEPRECATED)) {
+      zSetOps.add("goodStatus:" + userId, feedId, Timestamp.valueOf(LocalDateTime.now()).getTime());
+
+    } else {
       throw new DuplicateRequestException("중복된 요청입니다.");
     }
 
-    String goodListKey = "goodList:" + feedId;
-
-
-    redisTemplate.expire("feedInfo:" + feedId,5L, TimeUnit.HOURS);
-    redisTemplate.opsForList().rightPush(goodListKey, userId);
-
-    String goodKey = "good:" + feedId;
-    redisTemplate.expire(goodKey,5L, TimeUnit.HOURS);
-    redisTemplate.opsForValue().increment(goodKey);
-    redisTemplate.expire(goodKey,5L,TimeUnit.HOURS);
+    valueOps.increment("good:"+feedId);
   }
 
-  @Transactional
   @Override
   public void cancelGood(int feedId, String userId) {
 
-    String key = "good:" + feedId;
-    Integer good = (Integer) redisTemplate.opsForValue().get(key);
+    String goodStatusKey = "goodStatus:"+userId;
 
-    if (good != null) {
-      if (good == 0) {
-        throw new InvalidApproachException("비정상적인 요청입니다.");
-      }
-      redisTemplate.opsForValue().decrement(key);
-      redisTemplate.opsForList().remove("goodList:" + feedId,1, userId);
+    getGood(feedId);
+
+    Double isGoodPushed = zSetOps.score(goodStatusKey, feedId);
+
+    if ((isGoodPushed == null) || (isGoodPushed == DEPRECATED)) {
+      throw new InvalidApproachException("비정상적인 요청입니다.");
     } else {
-
-      boolean deleteUserResult = goodMapper.deleteGoodUser(
-              new GoodUserDelete(feedId, userId));
-
-      if (!deleteUserResult) {
-        throw new InvalidApproachException("비정상적인 요청입니다.");
-      }
-
-      boolean decrementGoodResult = goodMapper.decrementGood(feedId);
-
-      if (!decrementGoodResult) {
-        throw new InvalidApproachException("비정상적인 요청입니다.");
-      }
+      zSetOps.add(goodStatusKey, feedId, DEPRECATED);
     }
+
+    valueOps.decrement("good:"+feedId);
   }
-
-  /*
-   * 스케줄러 수정 후 추가 예정.
-   */
-
 }

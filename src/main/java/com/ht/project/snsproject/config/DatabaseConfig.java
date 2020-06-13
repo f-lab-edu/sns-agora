@@ -2,12 +2,18 @@ package com.ht.project.snsproject.config;
 
 import javax.sql.DataSource;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -34,6 +40,41 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class DatabaseConfig {
 
+
+  @Value("${spring.datasource.url}")
+  String url;
+
+  @Value("${spring.datasource.username}")
+  String userName;
+
+  @Value("${spring.datasource.password}")
+  String password;
+
+  @Value("${spring.datasource.driver-class-name}")
+  String driverClassName;
+
+  /*
+  애플리케이션에서 Quartz 스케줄러를 사용함에 따라 스키마를 2개로 분리하여 사용하게 되었습니다.
+  Quartz 는 범용 스케줄러 프레임워크 이므로 다른 애플리케이션 프로젝트에서도 활용 범위가 넓다고 생각하였습니다.
+  그렇기 때문에 스키마를 별도로 분리하여 관리하고자 하였습니다.
+  스키마가 분리되었기 때문에 DataSource 도 2개가 필요하게 되었고,
+  이로 인해 datasource 빈의 이름을 분리하여 주입하게 되었습니다.
+  주로 사용하는 mybatis 에 필요한 datasource 의 빈을 primary로 선언하여 주입되게 하였습니다.
+   */
+  @Bean(name = "mainDb")
+  @Primary
+  @ConfigurationProperties(prefix = "spring.datasource")
+  public DataSource dataSource() {
+
+    return DataSourceBuilder.create()
+            .url(url)
+            .username(userName)
+            .password(password)
+            .type(HikariDataSource.class)
+            .driverClassName(driverClassName)
+            .build();
+  }
+
   /**
    * SqlSessionFactory 는 SqlSession 객체를 생성하기 위한 객체이다.
    * SqlSession 객체를 한번 생성하면 매핑구문을 실행하거나 커밋 또는 롤백을 하기 위해 세션을 사용할수 있다.
@@ -44,7 +85,8 @@ public class DatabaseConfig {
    * @throws Exception if fail to create SqlSessionFactory Object
    */
   @Bean
-  public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+  @Primary
+  public SqlSessionFactory sqlSessionFactory(@Qualifier("mainDb") DataSource dataSource) throws Exception {
 
     final SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
     sessionFactory.setDataSource(dataSource);
@@ -62,6 +104,7 @@ public class DatabaseConfig {
    * @throws Exception if fail to create SqlSessionTemplate Object
    */
   @Bean
+  @Primary
   public SqlSessionTemplate sqlSessionTemplate(SqlSessionFactory sqlSessionFactory)
           throws Exception {
 

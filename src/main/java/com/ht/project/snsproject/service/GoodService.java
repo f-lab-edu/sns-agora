@@ -1,14 +1,14 @@
 package com.ht.project.snsproject.service;
 
-import java.util.List;
+import com.ht.project.snsproject.model.good.GoodList;
 
 public interface GoodService {
 
-  int getGood(int feedId);
+  Integer getGood(int feedId);
 
-  List<String> getGoodList(int feedId);
+  GoodList getGoodList(int feedId, long cursor);
 
-  void increaseGood(int feedId, String userId);
+  void addGood(int feedId, String userId);
 
   void cancelGood(int feedId, String userId);
 }

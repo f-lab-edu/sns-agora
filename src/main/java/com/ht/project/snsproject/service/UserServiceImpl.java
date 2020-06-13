@@ -9,10 +9,19 @@ import com.ht.project.snsproject.model.user.UserPassword;
 import com.ht.project.snsproject.model.user.UserProfile;
 import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+
+  @Autowired
+  @Qualifier("cacheRedisTemplate")
+  RedisTemplate<String, Object> cacheRedisTemplate;
 
   @Autowired
   UserMapper userMapper;
@@ -40,13 +49,23 @@ public class UserServiceImpl implements UserService {
       return false;
     }
 
-    if (httpSession.getAttribute("userInfo") != null) {
+    if (httpSession.getAttribute("userId") != null) {
       throw new DuplicateRequestException("이미 로그인된 상태입니다.");
     }
 
-    httpSession.setAttribute("userInfo", userInfo);
+    String userId = userInfo.getUserId();
 
+    httpSession.setAttribute("userId", userId);
+    cacheRedisTemplate.opsForValue().set("userInfo:"+userId, userInfo, 30L, TimeUnit.MINUTES);
     return true;
+  }
+
+  @Override
+  public void logout(HttpSession httpSession) {
+
+    String userId = (String) httpSession.getAttribute("userId");
+    httpSession.invalidate();
+    cacheRedisTemplate.delete("userInfo:"+userId);
   }
 
   @Override
@@ -57,9 +76,13 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void deleteUser(String userId) {
+  public void deleteUser(HttpSession httpSession) {
 
+    String userId = (String) httpSession.getAttribute("userId");
     userMapper.deleteUser(userId);
+    cacheRedisTemplate.delete("userInfo:"+userId);
+    httpSession.invalidate();
+
   }
 
   @Override

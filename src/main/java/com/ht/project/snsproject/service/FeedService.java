@@ -5,15 +5,13 @@ import com.ht.project.snsproject.model.feed.Feed;
 import com.ht.project.snsproject.model.feed.FeedInfo;
 import com.ht.project.snsproject.model.feed.FeedListParam;
 import com.ht.project.snsproject.model.feed.FeedUpdateParam;
-import com.ht.project.snsproject.model.feed.FeedVO;
+import com.ht.project.snsproject.model.feed.FeedVo;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface FeedService {
 
-  void feedUpload(List<MultipartFile> files, FeedVO feedVo, String userId);
-
-  FeedInfo getFeedInfoCache(int feedId);
+  void feedUpload(List<MultipartFile> files, FeedVo feedVo, String userId);
 
   Feed getFeed(String userId, String targetId, int id);
 

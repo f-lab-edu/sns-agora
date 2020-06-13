@@ -3,40 +3,9 @@
 <mapper namespace="com.ht.project.snsproject.mapper.GoodMapper">
 
     <select id="getGood" parameterType="int" resultType="int">
-        SELECT good FROM feeds
-        WHERE id = #{feedId}
-    </select>
-
-    <select id="getGoodList" parameterType="int" resultType="java.util.List">
-        SELECT userId FROM goods
+        SELECT COUNT(*) FROM goods
         WHERE feedId = #{feedId}
     </select>
-
-    <insert id="updateFeedCacheDb" parameterType="java.util.List">
-        INSERT INTO feeds(id, userId, title, content, publicScope, date, good)
-        VALUES
-        <foreach item="item" index="index" collection="list" separator=",">
-            (#{item.userId}, #{item.title}, #{item.content}, #{item.publicScope}, #{item.date}, #{item.good})
-        </foreach>
-        ON DUPLICATE KEY UPDATE
-        good = VALUES(good)
-    </insert>
-
-    <insert id="updateGoodUsers" parameterType="java.util.List">
-        INSERT INTO goods(id, feedId, userId)
-        VALUES
-        <foreach item="item" index="index" collection="list" separator=",">
-            (#{feedId}, #{userId})
-        </foreach>
-        ON DUPLICATE KEY UPDATE
-        userId = VALUES(userId)
-    </insert>
-
-    <update id="decrementGood" parameterType="int">
-        UPDATE feeds
-        SET good = good - 1
-        WHERE feedId = #{feedId} AND good>0
-    </update>
 
     <delete id="deleteGoodUser" parameterType="com.ht.project.snsproject.model.good.GoodUserDelete">
         DELETE FROM goods

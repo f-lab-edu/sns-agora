@@ -2,6 +2,7 @@ package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.enumeration.AlarmType;
 import com.ht.project.snsproject.enumeration.FriendStatus;
+import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.FriendMapper;
@@ -43,6 +44,17 @@ public class FriendServiceImpl implements FriendService {
         throw new DuplicateRequestException("중복된 요청입니다.");
     }
 
+  }
+
+  @Override
+  public FriendStatus getFriendStatus(String userId, String targetId) {
+
+    if(userId.equals(targetId)) {
+      return FriendStatus.ME;
+    }
+
+    return friendMapper.getFriendRelationStatus(userId, targetId)
+            .getFriendStatus();
   }
 
   @Transactional
@@ -159,5 +171,39 @@ public class FriendServiceImpl implements FriendService {
   public Friend getFriendRelationStatus(String userId, String targetId) {
 
     return friendMapper.getFriendRelationStatus(userId, targetId);
+  }
+
+  @Override
+  public boolean checkPublicScopeByFriendStatus(PublicScope publicScope, FriendStatus friendStatus) {
+
+    boolean checkStatus = false;
+
+    switch (friendStatus) {
+
+      case ME:
+        if(publicScope == PublicScope.ALL ||
+                publicScope == PublicScope.FRIENDS ||
+                publicScope == PublicScope.ME) {
+          checkStatus = true;
+        }
+        break;
+
+      case FRIEND:
+        if(publicScope == PublicScope.ALL ||
+                publicScope == PublicScope.FRIENDS) {
+          checkStatus =true;
+        }
+        break;
+
+      case BLOCK:
+        break;
+
+      default:
+        if(publicScope == PublicScope.ALL) {
+          checkStatus = true;
+        }
+    }
+
+    return checkStatus;
   }
 }
