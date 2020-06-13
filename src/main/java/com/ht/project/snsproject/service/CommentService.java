@@ -1,0 +1,32 @@
+package com.ht.project.snsproject.service;
+
+import com.ht.project.snsproject.mapper.CommentMapper;
+import com.ht.project.snsproject.model.comment.CommentInsertParam;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+
+/**
+ * interface가 꼭 필요한 곳에만 추상화하기.
+ * 기계적인 추상화는 오히려 코드 가독성을 떨어뜨리고,
+ * 유지보수성을 떨어뜨릴 수 있음.
+ */
+@Service
+public class CommentService{
+
+  @Autowired
+  private CommentMapper commentMapper;
+
+  public void insertCommentOnFeed(int id, String content, String userId) {
+
+    commentMapper.insertCommentOnFeed(
+            CommentInsertParam.builder()
+            .feedId(id)
+            .userId(userId)
+            .content(content)
+            .writeTime(Timestamp.valueOf(LocalDateTime.now()))
+            .build());
+  }
+}
