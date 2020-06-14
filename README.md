@@ -37,7 +37,7 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 2. 푸시 메시지 발송 기능
 
 ## AGORA 구성도
-
+<center><img src="https://user-images.githubusercontent.com/54772162/84594122-04a79480-ae8b-11ea-9936-d4165cfda6c6.PNG" alt="agora_system_structure2" style="zoom:70%;" /></center>
 
 ## 성능 개선 작업
 
