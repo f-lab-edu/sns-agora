@@ -4,10 +4,10 @@
 * 실행만 되는 서비스가 아닌 대규모 트래픽을 처리할 수 있는 성능적으로 우수한 서비스 제작하기
 * 프로젝트 진행에 따라 ReadMe 업데이트 예정
 
+
 ## 사용 기술 및 개발환경
 
 Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
-
 
 
 ## 주요 기능
@@ -36,14 +36,41 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 
 2. 푸시 메시지 발송 기능
 
-## AGORA 구성도
-<center><img src="https://user-images.githubusercontent.com/54772162/84594122-04a79480-ae8b-11ea-9936-d4165cfda6c6.PNG" alt="agora_system_structure2" style="zoom:70%;" /></center>
 
-## 성능 개선 작업
+## AGORA 구성도
+
+<img src="https://user-images.githubusercontent.com/54772162/84594122-04a79480-ae8b-11ea-9936-d4165cfda6c6.PNG" alt="agora_system_structure2" style="zoom:70%;" />
+
+
+## 프로젝트 관리 전략
+
+* AGORA는 Git-Flow 를 이용하여 브랜치를 관리하였습니다.
+
+<img src="https://user-images.githubusercontent.com/54772162/84594283-2a816900-ae8c-11ea-9e88-0c1c7e4709a4.png" alt="git_flow" style="zoom:50%;" />
+
+* master : 배포시 사용할 브랜치. 초기 시행착오에 의하여 몇몇 기능이 merge 되어 있으나, 
+           원래 사용 용도는 완벽히 배포가 가능한 상태에만 merge가 되어야만 합니다.
+* develop : 다음 버전을 개발하는 브랜치, 완전히 배포가 가능하다고 생각되면 master 브랜치에 merge 합니다.
+* feature : 기능을 개발하는 브랜치
+* release : 배포를 준비할 때 사용할 브랜치
+* hotfix : 배포 후에 발생한 버그를 수정 하는 브랜치
+
+#### 참고 사이트
+
+* 우린 Git-flow를 사용하고 있어요, 우아한 형제들 기술 블로그, Oct 30, 2017, 나동호 
+  https://woowabros.github.io/experience/2017/10/30/baemin-mobile-git-branch-strategy.html
+
+
+## 프로젝트 중점사항
+
+자세한 내용을 확인하시려면 Wiki에서 확인하실 수 있습니다.
+현재는 작업 중으로 일부 내용이 누락되어 있을 수 있습니다.
+
+### 대규모 트래픽을 고려한 설계 및 성능 튜닝 작업
+
+https://github.com/f-lab-edu/sns-project/wiki/Large-Traffic-Handling-Task
 
 * cursor based pagination 을 이용한 피드 조회 기능 개선
-* 세션과 쿠키를 이용한 로그인 기능 구현
-* AspectJ 를 이용한 로그인 기능 분리
 * 클라우드 스토리지 서비스를 이용한 파일 업로드 기능 구현
 * WAS Session 이 아닌 Redis Session 사용(세션 클러스터링)
 * In memory DB 로 Redis 사용
@@ -52,3 +79,29 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 * 좋아요 캐싱을 통한 성능 개선
 * Quartz API를 사용한 Batch Insert 구현
 * DataBase Replication을 통한 read/write 성능 개선
+
+### 리펙토링을 통한 코드 개선 작업
+
+https://github.com/f-lab-edu/sns-project/wiki/Refactoring-Task
+
+* 세션과 쿠키를 이용한 로그인 기능 구현
+* 스프링 AOP 를 이용한 권한 검사 기능 분리
+* 변수명 및 메소드명 명명 방식 개선
+* URL 설계 방식 개선
+
+#### 참고 사이트
+
+* API 디자인 지침, Microsoft Azure Document, 2018. 01. 12.
+https://docs.microsoft.com/ko-kr/azure/architecture/best-practices/api-design
+
+
+## 프로젝트 디자인 설계
+
+* Wiki를 참고하여 주시기 바랍니다.
+https://github.com/f-lab-edu/sns-project/wiki/Front-Design
+
+
+## ERD
+
+* Wiki를 참고하여 주시기 바랍니다.
+https://github.com/f-lab-edu/sns-project/wiki/ER-Diagram
