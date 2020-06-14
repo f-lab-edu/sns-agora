@@ -2,12 +2,12 @@
 
 * Instagram, Facebook 과 같이 평소 사용하던 SNS를 직접 제작하여보기
 * 실행만 되는 서비스가 아닌 대규모 트래픽을 처리할 수 있는 성능적으로 우수한 서비스 제작하기
-* 프로젝트 진행에 따라 ReadMe 업데이트 예정
+* 프로젝트 진행에 따라 ReadMe 업데이트 예정  
 
 
 ## 사용 기술 및 개발환경
 
-Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
+Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ  
 
 
 ## 주요 기능
@@ -57,7 +57,7 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 
 #### 참고 사이트
 
-* 우린 Git-flow를 사용하고 있어요, 우아한 형제들 기술 블로그, Oct 30, 2017, 나동호 
+* 우린 Git-flow를 사용하고 있어요, 우아한 형제들 기술 블로그, Oct 30, 2017, 나동호  
   https://woowabros.github.io/experience/2017/10/30/baemin-mobile-git-branch-strategy.html
 
 
@@ -68,7 +68,7 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 
 ### 대규모 트래픽을 고려한 설계 및 성능 튜닝 작업
 
-https://github.com/f-lab-edu/sns-project/wiki/Large-Traffic-Handling-Task
+Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Large-Traffic-Handling-Task
 
 * cursor based pagination 을 이용한 피드 조회 기능 개선
 * 클라우드 스토리지 서비스를 이용한 파일 업로드 기능 구현
@@ -82,7 +82,7 @@ https://github.com/f-lab-edu/sns-project/wiki/Large-Traffic-Handling-Task
 
 ### 리펙토링을 통한 코드 개선 작업
 
-https://github.com/f-lab-edu/sns-project/wiki/Refactoring-Task
+Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Refactoring-Task
 
 * 세션과 쿠키를 이용한 로그인 기능 구현
 * 스프링 AOP 를 이용한 권한 검사 기능 분리
@@ -91,17 +91,17 @@ https://github.com/f-lab-edu/sns-project/wiki/Refactoring-Task
 
 #### 참고 사이트
 
-* API 디자인 지침, Microsoft Azure Document, 2018. 01. 12.
+* API 디자인 지침, Microsoft Azure Document, 2018. 01. 12.  
 https://docs.microsoft.com/ko-kr/azure/architecture/best-practices/api-design
 
 
 ## 프로젝트 디자인 설계
 
-* Wiki를 참고하여 주시기 바랍니다.
-https://github.com/f-lab-edu/sns-project/wiki/Front-Design
+* Wiki를 참고하여 주시기 바랍니다.  
+Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Front-Design
 
 
 ## ERD
 
-* Wiki를 참고하여 주시기 바랍니다.
-https://github.com/f-lab-edu/sns-project/wiki/ER-Diagram
+* Wiki를 참고하여 주시기 바랍니다.  
+Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/ER-Diagram
