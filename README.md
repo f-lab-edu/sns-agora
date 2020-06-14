@@ -38,7 +38,6 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 
 ## AGORA 구성도
 
-![agora_system_structure](https://user-images.githubusercontent.com/54772162/84593843-551df280-ae89-11ea-804b-beb0097d0a99.PNG)
 
 ## 성능 개선 작업
 
