@@ -36,6 +36,9 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 
 2. 푸시 메시지 발송 기능
 
+## AGORA Structure
+
+
 ## 성능 개선 작업
 
 * cursor based pagination 을 이용한 피드 조회 기능 개선
