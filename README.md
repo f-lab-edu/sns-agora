@@ -1,16 +1,16 @@
-# :heavy_check_mark: Social Network Service Project
+# Social Network Service Project
 
 * Instagram, Facebook 과 같이 평소 사용하던 SNS를 직접 제작하여보기
 * 실행만 되는 서비스가 아닌 대규모 트래픽을 처리할 수 있는 성능적으로 우수한 서비스 제작하기
 * 프로젝트 진행에 따라 ReadMe 업데이트 예정  
 
 
-## :heavy_check_mark: 사용 기술 및 개발환경
+## 사용 기술 및 개발환경
 
 Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ  
 
 
-## :heavy_check_mark: 주요 기능
+## 주요 기능
 
 ### User
 
@@ -37,12 +37,12 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 2. 푸시 메시지 발송 기능
 
 
-## :heavy_check_mark: AGORA 구성도
+## AGORA 구성도
 
-<img src="https://user-images.githubusercontent.com/54772162/84594122-04a79480-ae8b-11ea-9936-d4165cfda6c6.PNG" alt="agora_system_structure2" style="zoom:70%;" />
+![agora_system_structure2](https://user-images.githubusercontent.com/54772162/84670161-b5cc2e80-af60-11ea-9fc6-90f23a61f676.PNG)
 
 
-## :heavy_check_mark: 프로젝트 관리 전략
+## 프로젝트 관리 전략
 
 * AGORA는 Git-Flow 를 이용하여 브랜치를 관리하였습니다.
 
@@ -95,13 +95,13 @@ Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Refactoring-Task
 https://docs.microsoft.com/ko-kr/azure/architecture/best-practices/api-design
 
 
-## :heavy_check_mark: 프로젝트 디자인 설계
+## 프로젝트 디자인 설계
 
 * Wiki를 참고하여 주시기 바랍니다.  
 Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Front-Design
 
 
-## :heavy_check_mark: ERD
+## ERD
 
 * Wiki를 참고하여 주시기 바랍니다.  
 Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/ER-Diagram
