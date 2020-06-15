@@ -61,7 +61,7 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
   https://woowabros.github.io/experience/2017/10/30/baemin-mobile-git-branch-strategy.html
 
 
-## :heavy_check_mark: 프로젝트 중점사항
+## 프로젝트 중점사항
 
 자세한 내용을 확인하시려면 Wiki에서 확인하실 수 있습니다.
 현재는 작업 중으로 일부 내용이 누락되어 있을 수 있습니다.
