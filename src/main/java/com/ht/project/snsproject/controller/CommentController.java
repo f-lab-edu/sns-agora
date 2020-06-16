@@ -67,4 +67,14 @@ public class CommentController {
 
     return ResponseEntity.ok(commentService.getReplysOnComment(commentId, cursor));
   }
+
+  @PostMapping("/{feedId}/comments/{commentId}/replys")
+  @LoginCheck
+  public HttpStatus writeReplyOnComment(@PathVariable int commentId,
+                                  @RequestBody String content,
+                                  @UserInfo User user) {
+
+    commentService.insertReplyOnComment(commentId, content, user.getUserId());
+    return HttpStatus.OK;
+  }
 }
