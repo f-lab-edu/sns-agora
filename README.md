@@ -70,30 +70,9 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 
 Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Large-Traffic-Handling-Task
 
-* cursor based pagination 을 이용한 피드 조회 기능 개선
-* 클라우드 스토리지 서비스를 이용한 파일 업로드 기능 구현
-* WAS Session 이 아닌 Redis Session 사용(세션 클러스터링)
-* In memory DB 로 Redis 사용
-* 개별 insert 작업을 bulk insert 하여 DB 접속 비용 감소
-* Firbase API 를 활용한 푸시메시지 구현
-* 좋아요 캐싱을 통한 성능 개선
-* Quartz API를 사용한 Batch Insert 구현
-* DataBase Replication을 통한 read/write 성능 개선
-
 ### 리펙토링을 통한 코드 개선 작업
 
 Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Refactoring-Task
-
-* 세션과 쿠키를 이용한 로그인 기능 구현
-* 스프링 AOP 를 이용한 권한 검사 기능 분리
-* 변수명 및 메소드명 명명 방식 개선
-* URL 설계 방식 개선
-
-#### 참고 사이트
-
-* API 디자인 지침, Microsoft Azure Document, 2018. 01. 12.  
-https://docs.microsoft.com/ko-kr/azure/architecture/best-practices/api-design
-
 
 ## 프로젝트 디자인 설계
 
