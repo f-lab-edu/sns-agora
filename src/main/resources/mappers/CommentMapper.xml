@@ -78,4 +78,16 @@
         where id = #{replyId}
         AND userId = #{userId}
     </update>
+
+    <delete id="deleteCommentOnFeed" parameterType="com.ht.project.snsproject.model.comment.CommentDeleteParam">
+        DELETE FROM comments
+        WHERE id = #{commentId}
+        AND userId = #{userId}
+    </delete>
+
+    <delete id="deleteReplyOnComment" parameterType="com.ht.project.snsproject.model.comment.ReplyDeleteParam">
+        DELETE FROM replies
+        WHERE id = #{replyId}
+        AND userId = #{userId}
+    </delete>
 </mapper>

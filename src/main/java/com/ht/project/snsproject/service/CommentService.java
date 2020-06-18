@@ -1,5 +1,6 @@
 package com.ht.project.snsproject.service;
 
+import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.CommentMapper;
 import com.ht.project.snsproject.model.comment.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +75,27 @@ public class CommentService{
             .build())) {
 
       throw new IllegalArgumentException("해당 Reply가 존재하지 않습니다.");
+    }
+  }
+
+  /**
+   * 외래키 설정을 통해 commentId 와 연관된 대댓글까지 삭제 필요.
+   * @param commentId
+   * @param userId
+   */
+  public void deleteCommentOnFeed(int commentId, String userId) {
+
+    if(!commentMapper.deleteCommentOnFeed(new CommentDeleteParam(commentId, userId))) {
+
+      throw new InvalidApproachException("올바르지 않은 접근입니다.");
+    }
+  }
+
+  public void deleteReplyOnComment(int replyId, String userId) {
+
+    if(!commentMapper.deleteReplyOnComment(new ReplyDeleteParam(replyId, userId))) {
+
+      throw new InvalidApproachException("올바르지 않은 접근입니다.");
     }
   }
 }
