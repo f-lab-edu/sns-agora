@@ -84,3 +84,6 @@ Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Front-Design
 
 * Wiki를 참고하여 주시기 바랍니다.  
 Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/ER-Diagram
+
+#### 비즈니스 로직에 대한 자세한 내용을 확인하시려면 Wiki를 참고해주세요.    
+https://github.com/f-lab-edu/sns-project/wiki
