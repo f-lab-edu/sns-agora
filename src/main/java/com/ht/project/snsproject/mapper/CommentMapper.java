@@ -12,8 +12,11 @@ public interface CommentMapper {
 
   List<Comment> getCommentsOnFeed(CommentsParam commentsParam);
 
-  List<Reply> getReplysOnComment(ReplysParam replysParam);
+  boolean updateCommentOnFeed(CommentUpdateParam commentUpdateParam);
+
+  List<Reply> getRepliesOnComment(RepliesParam repliesParam);
 
   void insertReplyOnComment(ReplyInsertParam replyInsertParam);
 
+  boolean updateReplyOnComment(ReplyUpdateParam replyUpdateParam);
 }

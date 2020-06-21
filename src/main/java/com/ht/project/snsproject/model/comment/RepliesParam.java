@@ -3,7 +3,7 @@ package com.ht.project.snsproject.model.comment;
 import lombok.Value;
 
 @Value
-public class ReplysParam {
+public class RepliesParam {
 
   int commentId;
 

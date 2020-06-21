@@ -39,7 +39,7 @@
         b.content AS replyContent,
         b.writeTime AS replyDate
         FROM comments a
-        LEFT JOIN replys b
+        LEFT JOIN replies b
         ON a.id = b.commentId
         WHERE feedId = #{feedId}
         <if test="cursor != null">
@@ -49,17 +49,33 @@
         LIMIT #{limit}
     </select>
 
-    <select id="getReplysOnComment" parameterType="com.ht.project.snsproject.model.comment.ReplysParam"
+    <update id="updateCommentOnFeed" parameterType="com.ht.project.snsproject.model.comment.CommentUpdateParam">
+        Update comments
+        set content = #{content},
+        writeTime = #{updateTime}
+        where id = #{commentId}
+        AND userId = #{userId}
+    </update>
+
+    <select id="getRepliesOnComment" parameterType="com.ht.project.snsproject.model.comment.RepliesParam"
     resultType="com.ht.project.snsproject.model.comment.Reply">
         SELECT id, userId, content, writeTime
-        FROM replys
+        FROM replies
         WHERE commentId = #{commentId}
         AND id<![CDATA[>]]>#{cursor}
         Limit #{limit}
     </select>
 
     <insert id="insertReplyOnComment" parameterType="com.ht.project.snsproject.model.comment.ReplyInsertParam">
-        INSERT INTO replys(commentId, userId, content, writeTime)
+        INSERT INTO replies(commentId, userId, content, writeTime)
         VALUES(#{commentId}, #{userId}, #{content}, #{writeTime})
     </insert>
+
+    <update id="updateReplyOnComment" parameterType="com.ht.project.snsproject.model.comment.ReplyUpdateParam">
+        Update replies
+        set content = #{content},
+        writeTime = #{updateTime}
+        where id = #{replyId}
+        AND userId = #{userId}
+    </update>
 </mapper>

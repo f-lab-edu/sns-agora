@@ -52,6 +52,16 @@ public class CommentController {
     return ResponseEntity.ok(commentService.getCommentsOnFeed(feedId, cursor));
   }
 
+  @PutMapping("/{feedId}/comments/{commentId}")
+  @LoginCheck
+  public HttpStatus updateCommentOnFeed(@PathVariable int commentId,
+                                        @RequestBody String content,
+                                        @UserInfo User user) {
+
+    commentService.updateCommentOnFeed(commentId, user.getUserId(), content);
+    return HttpStatus.OK;
+  }
+
   /**
    * 댓글에서 이미 첫번째 대댓글을 가져오기 때문에
    * 첫 번째 대댓글의 id를 cursor 로 필수로 제공해야만 합니다.
@@ -60,21 +70,31 @@ public class CommentController {
    * @param cursor
    * @return
    */
-  @GetMapping("/{feedId}/comments/{commentId}/replys")
+  @GetMapping("/{feedId}/comments/{commentId}/replies")
   @LoginCheck
   public ResponseEntity<List<Reply>> getReplyOnComment(@PathVariable int commentId,
                                                        @RequestParam Integer cursor) {
 
-    return ResponseEntity.ok(commentService.getReplysOnComment(commentId, cursor));
+    return ResponseEntity.ok(commentService.getRepliesOnComment(commentId, cursor));
   }
 
-  @PostMapping("/{feedId}/comments/{commentId}/replys")
+  @PostMapping("/{feedId}/comments/{commentId}/replies")
   @LoginCheck
   public HttpStatus writeReplyOnComment(@PathVariable int commentId,
                                   @RequestBody String content,
                                   @UserInfo User user) {
 
     commentService.insertReplyOnComment(commentId, content, user.getUserId());
+    return HttpStatus.OK;
+  }
+
+  @PutMapping("/{feedId}/comments/{commentId}/replies/{replyId}")
+  @LoginCheck
+  public HttpStatus updateReplyOnComment(@PathVariable int replyId,
+                                         @RequestBody String content,
+                                         @UserInfo User user) {
+
+    commentService.updateReplyOnComment(replyId, user.getUserId(), content);
     return HttpStatus.OK;
   }
 }
