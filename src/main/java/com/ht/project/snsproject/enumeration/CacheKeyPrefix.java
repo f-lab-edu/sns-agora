@@ -1,7 +1,7 @@
 package com.ht.project.snsproject.enumeration;
 
 public enum CacheKeyPrefix {
-  FEED("feedInfo"), GOOD("good"), GOODPUSHED("goodPushed");
+  FEED("feedInfo"), GOOD("good"), GOODPUSHED("goodPushed"), COMMENTCOUNT("commentCount");
 
   private final String value;
 
@@ -14,6 +14,7 @@ public enum CacheKeyPrefix {
       case "feedInfo": return FEED;
       case "good": return GOOD;
       case "goodPusehd": return GOODPUSHED;
+      case "commentCount": return COMMENTCOUNT;
       default: throw new IllegalArgumentException("Unknown value: " + value);
     }
   }

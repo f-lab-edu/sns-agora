@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -41,25 +42,27 @@ public class GoodServiceImpl implements GoodService {
     return goodMapper.getGood(feedId);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public Map<Integer, Integer> getGoods(List<Integer> feedIds) {
 
     List<String> goodKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.GOOD, feedIds);
 
     List<Object> values = valueOps.multiGet(goodKeys);
-    List<GoodsParam> feedIdNotInCache = new ArrayList<>();
+    List<Integer> feedIdNotInCache = new ArrayList<>();
 
     Map<Integer, Integer> goodsMap = new Hashtable<>();
 
     for (int i=0; i<values.size(); i++) {
+
       Integer good = (Integer) values.get(i);
+      int feedId = feedIds.get(i);
+
       if(good != null) {
-        goodsMap.put(feedIds.get(i), good);
+        goodsMap.put(feedId, good);
 
       } else {
-        feedIdNotInCache.add(GoodsParam.builder()
-                .feedId(feedIds.get(i))
-                .build());
+        feedIdNotInCache.add(feedId);
       }
     }
 
@@ -69,14 +72,11 @@ public class GoodServiceImpl implements GoodService {
 
       for (Good good : goods) {
         int feedId = good.getFeedId();
-        feedIdNotInCache.remove(GoodsParam.builder()
-                .feedId(feedId)
-                .build());
+        feedIdNotInCache.remove(feedId);
         goodsMap.put(feedId, good.getGood());
       }
 
-      for (GoodsParam goodsParam : feedIdNotInCache) {
-        int feedId = goodsParam.getFeedId();
+      for (int feedId : feedIdNotInCache) {
         goodsMap.put(feedId, 0);
         goods.add(Good.builder()
                 .feedId(feedId)

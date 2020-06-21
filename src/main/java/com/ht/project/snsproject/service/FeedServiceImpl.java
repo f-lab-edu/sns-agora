@@ -48,6 +48,9 @@ public class FeedServiceImpl implements FeedService {
   @Autowired
   private RedisCacheService redisCacheService;
 
+  @Autowired
+  private CommentService commentService;
+
   @Transactional
   @Override
   public void feedUpload(List<MultipartFile> files, FeedVo feedVo, String userId) {
@@ -71,10 +74,11 @@ public class FeedServiceImpl implements FeedService {
 
     int feedId = feedInfo.getId();
     int good = goodService.getGood(feedId);
+    int commentCount = commentService.getCommentCount(feedId);
 
     boolean goodPushed = feedInfo.isGoodPushed();
 
-    return Feed.create(feedInfo, good, goodPushed, files);
+    return Feed.create(feedInfo, good, commentCount, goodPushed, files);
 
   }
 
@@ -197,6 +201,7 @@ public class FeedServiceImpl implements FeedService {
     List<Integer> feedIds = getFeedIds(feedInfoList);
     Map<Integer, Boolean> goodPushedMap = goodService.getGoodPushedStatusesFromCache(feedIds, userId);
     Map<Integer, Integer> goodsMap = goodService.getGoods(feedIds);
+    Map<Integer, Integer> commentCountMap = commentService.getCommentCounts(feedIds);
     List<Feed> feeds = new ArrayList<>();
     List<GoodPushedStatus> goodPushedStatuses = new ArrayList<>();
     List<FeedInfoCache> feedInfoCacheList = new ArrayList<>();
@@ -218,8 +223,9 @@ public class FeedServiceImpl implements FeedService {
               .build());
 
       Integer good = goodsMap.get(feedId);
+      Integer commentCount = commentCountMap.get(feedId);
 
-      feeds.add(Feed.create(feedInfo, good, goodPushed, files));
+      feeds.add(Feed.create(feedInfo, good, commentCount, goodPushed, files));
     }
 
     redisCacheService.multiSetGoodPushedStatus(goodPushedStatuses, userId, 60L);

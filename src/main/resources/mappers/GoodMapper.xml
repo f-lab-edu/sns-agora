@@ -18,7 +18,7 @@
         SELECT feedId, COUNT(*) AS good FROM goods
         WHERE
         <foreach item="item" collection="list" index="index" open="(" close=")" separator="OR">
-            feedId = #{item.feedId}
+            feedId = #{item}
         </foreach>
         GROUP BY feedId;
     </select>

@@ -16,6 +16,10 @@ public interface CommentMapper {
 
   List<Reply> getRepliesOnComment(RepliesParam repliesParam);
 
+  int getCommentCount(int feedId);
+
+  List<CommentCount> getCommentCounts(List<Integer> feedIds);
+
   void insertReplyOnComment(ReplyInsertParam replyInsertParam);
 
   boolean updateReplyOnComment(ReplyUpdateParam replyUpdateParam);

@@ -30,11 +30,13 @@ public class Feed {
 
   int good;
 
+  int commentCount;
+
   boolean goodPushed;
 
   List<FileVo> files;
 
-  public static Feed create(FeedInfo feedInfo, int good, boolean goodPushed, List<FileVo> files) {
+  public static Feed create(FeedInfo feedInfo, int good, int commentCount, boolean goodPushed, List<FileVo> files) {
 
     return Feed.builder().id(feedInfo.getId())
             .userId(feedInfo.getUserId())
@@ -43,6 +45,7 @@ public class Feed {
             .date(feedInfo.getDate())
             .publicScope(feedInfo.getPublicScope())
             .good(good)
+            .commentCount(commentCount)
             .goodPushed(goodPushed)
             .files(files).build();
   }
