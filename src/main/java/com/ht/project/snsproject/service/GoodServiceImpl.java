@@ -72,7 +72,7 @@ public class GoodServiceImpl implements GoodService {
 
       for (Good good : goods) {
         int feedId = good.getFeedId();
-        feedIdNotInCache.remove(feedId);
+        feedIdNotInCache.remove((Object) feedId);
         goodsMap.put(feedId, good.getGood());
       }
 
