@@ -19,4 +19,8 @@ public interface CommentMapper {
   void insertReplyOnComment(ReplyInsertParam replyInsertParam);
 
   boolean updateReplyOnComment(ReplyUpdateParam replyUpdateParam);
+
+  boolean deleteCommentOnFeed(CommentDeleteParam commentDeleteParam);
+
+  boolean deleteReplyOnComment(ReplyDeleteParam replyDeleteParam);
 }

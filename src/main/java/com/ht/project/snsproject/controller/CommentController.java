@@ -97,4 +97,22 @@ public class CommentController {
     commentService.updateReplyOnComment(replyId, user.getUserId(), content);
     return HttpStatus.OK;
   }
+
+  @DeleteMapping("/{feedId}/comments/{commentId}")
+  @LoginCheck
+  public HttpStatus deleteCommentOnFeed(@PathVariable int commentId,
+                                        @UserInfo User user) {
+
+    commentService.deleteCommentOnFeed(commentId, user.getUserId());
+    return HttpStatus.OK;
+  }
+
+  @DeleteMapping("/{feedId}/comments/{commentId}/replys/{replyId}")
+  @LoginCheck
+  public HttpStatus deleteReplyOnComment(@PathVariable int replyId,
+                                         @UserInfo User user) {
+
+    commentService.deleteReplyOnComment(replyId, user.getUserId());
+    return HttpStatus.OK;
+  }
 }
