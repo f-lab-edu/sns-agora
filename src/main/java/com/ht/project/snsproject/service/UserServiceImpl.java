@@ -1,11 +1,16 @@
 package com.ht.project.snsproject.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.mapper.UserMapper;
 import com.ht.project.snsproject.model.user.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
@@ -21,6 +26,16 @@ public class UserServiceImpl implements UserService {
 
   @Autowired
   private UserMapper userMapper;
+
+  @Autowired
+  private ObjectMapper objectMapper;
+
+  @Autowired
+  private RedisCacheService redisCacheService;
+
+  @Autowired
+  @Qualifier("cacheStrRedisTemplate")
+  private StringRedisTemplate cacheStrRedisTemplate;
 
   @Override
   public void joinUser(UserJoinRequest userJoinRequest) {
@@ -52,8 +67,38 @@ public class UserServiceImpl implements UserService {
     String userId = userInfo.getUserId();
 
     httpSession.setAttribute("userId", userId);
-    cacheRedisTemplate.opsForValue().set("userInfo:"+userId, UserCache.from(userInfo), 30L, TimeUnit.MINUTES);
+
+    cacheRedisTemplate.opsForValue()
+            .set(redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userId),
+                    UserCache.from(userInfo),
+                    30L, TimeUnit.MINUTES);
+
     return true;
+  }
+
+  @Override
+  public User getUserInfoCache(String userId) {
+
+    User userInfo;
+
+    String userInfoKey = redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userId);
+
+    if (cacheStrRedisTemplate.hasKey(userInfoKey) != null) {
+
+      try {
+        userInfo = User.from(
+               objectMapper.readValue(
+                       cacheStrRedisTemplate.boundValueOps(userInfoKey).get(), UserCache.class));
+      } catch (JsonProcessingException e) {
+        throw new SerializationException("변환에 실패하였습니다.", e);
+      }
+
+    } else {
+      userInfo = userMapper.getUserFromUserId(userId);
+      cacheRedisTemplate.opsForValue().set(userInfoKey, UserCache.from(userInfo), 30L, TimeUnit.MINUTES);
+    }
+
+    return userInfo;
   }
 
   @Override
@@ -61,7 +106,7 @@ public class UserServiceImpl implements UserService {
 
     String userId = (String) httpSession.getAttribute("userId");
     httpSession.invalidate();
-    cacheRedisTemplate.delete("userInfo:"+userId);
+    cacheRedisTemplate.delete(redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userId));
   }
 
   @Override
@@ -76,7 +121,7 @@ public class UserServiceImpl implements UserService {
 
     String userId = (String) httpSession.getAttribute("userId");
     userMapper.deleteUser(userId);
-    cacheRedisTemplate.delete("userInfo:"+userId);
+    cacheRedisTemplate.delete(redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userId));
     httpSession.invalidate();
 
   }

@@ -42,7 +42,7 @@ public class GoodBatchJobService {
     log.info("The batch job has begun...");
 
     List<String> goodPushedKeys = redisCacheService.scanKeys(
-            redisCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, "*"));
+            redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, "*"));
 
     List<Object> values = valueOps.multiGet(goodPushedKeys);
     List<String> goodAddKeys = new ArrayList<>();

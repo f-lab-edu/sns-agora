@@ -106,7 +106,7 @@ public class GoodServiceImpl implements GoodService {
   @Override
   public Map<Integer, Boolean> getGoodPushedStatusesFromCache(List<Integer> feedIds, String userId) {
 
-    List<String> goodPushedKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.GOODPUSHED, feedIds, userId);
+    List<String> goodPushedKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.GOOD_PUSHED, feedIds, userId);
     List<Object> goodPushedStatusesFromCache = valueOps.multiGet(goodPushedKeys);
 
     Map<Integer, Boolean> goodPushedMap = new HashMap<>();
@@ -136,7 +136,7 @@ public class GoodServiceImpl implements GoodService {
   @Override
   public void addGood(int feedId, String userId) {
 
-    String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, feedId, userId);
+    String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
     String goodKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
     getGood(feedId);
@@ -156,7 +156,7 @@ public class GoodServiceImpl implements GoodService {
   @Override
   public void cancelGood(int feedId, String userId) {
 
-    String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOODPUSHED, feedId, userId);
+    String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
     String goodKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
     getGood(feedId);

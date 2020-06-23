@@ -105,7 +105,7 @@ public class CommentController {
                                         @UserInfo User user) {
 
     commentService.deleteCommentOnFeed(feedId, commentId, user.getUserId());
-    return HttpStatus.OK;
+    return HttpStatus.NO_CONTENT;
   }
 
   @DeleteMapping("/{feedId}/comments/{commentId}/replys/{replyId}")
@@ -114,6 +114,6 @@ public class CommentController {
                                          @UserInfo User user) {
 
     commentService.deleteReplyOnComment(replyId, user.getUserId());
-    return HttpStatus.OK;
+    return HttpStatus.NO_CONTENT;
   }
 }

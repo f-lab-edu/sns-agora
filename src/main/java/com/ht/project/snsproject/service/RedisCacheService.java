@@ -38,17 +38,27 @@ public class RedisCacheService {
 
   public String makeCacheKey(CacheKeyPrefix cacheKeyPrefix, String suffix) {
 
+    String key;
 
-    if(cacheKeyPrefix != CacheKeyPrefix.GOODPUSHED) {
-      throw new InvalidApproachException("유효하지 않은 키입니다.");
+    switch (cacheKeyPrefix) {
+      case GOOD_PUSHED:
+        key = SPRING_CACHE_PREFIX + "goodPushed:" + suffix;
+        break;
+
+      case USER_INFO:
+        key = "userInfo:" + suffix;
+        break;
+
+      default:
+        throw new InvalidApproachException("유효하지 않은 키입니다.");
     }
 
-    return SPRING_CACHE_PREFIX + "goodPushed:" + suffix;
+    return key;
   }
 
   public String makeCacheKey(CacheKeyPrefix cacheKeyPrefix, int feedId, String userId) {
 
-    if(cacheKeyPrefix != CacheKeyPrefix.GOODPUSHED) {
+    if(cacheKeyPrefix != CacheKeyPrefix.GOOD_PUSHED) {
       throw new InvalidApproachException("유효하지 않은 키입니다.");
     }
 
@@ -68,7 +78,7 @@ public class RedisCacheService {
         key = SPRING_CACHE_PREFIX + "good:" + feedId;
         break;
 
-      case COMMENTCOUNT:
+      case COMMENT_COUNT:
         key = SPRING_CACHE_PREFIX + "commentCount:" + feedId;
         break;
 
@@ -80,7 +90,7 @@ public class RedisCacheService {
 
   public List<String> makeMultiKeyList(CacheKeyPrefix cacheKeyPrefix, List<Integer> feedIds, String userId) {
 
-    if (cacheKeyPrefix != CacheKeyPrefix.GOODPUSHED) {
+    if (cacheKeyPrefix != CacheKeyPrefix.GOOD_PUSHED) {
       throw new IllegalArgumentException("유효하지 않은 키입니다.");
     }
 
@@ -216,7 +226,7 @@ public class RedisCacheService {
     for (GoodPushedStatus goodPushedStatus :  goodPushedStatusList) {
 
       int feedId = goodPushedStatus.getFeedId();
-      String key = makeCacheKey(CacheKeyPrefix.GOODPUSHED, feedId, userId);
+      String key = makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
 
       multiSetTargetList.add(MultiSetTarget.builder()
               .key(key)
