@@ -68,23 +68,21 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 
 ### 대규모 트래픽을 고려한 설계 및 성능 튜닝 작업
 
-Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Large-Traffic-Handling-Task
+Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/4.-Large-Traffic-Handling-Task
 
 ### 리펙토링을 통한 코드 개선 작업
 
-Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Refactoring-Task
+Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/5.-Refactoring-Task
 
 ## 프로젝트 디자인 설계
 
 * Wiki를 참고하여 주시기 바랍니다.  
-Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/Front-Design
-
+Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/2.-Front-Design
 
 ## ERD
 
 * Wiki를 참고하여 주시기 바랍니다.  
-Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/ER-Diagram
-
+Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/3.-ER-Diagram
 ## API
 
 ### API에 대한 자세한 내용을 확인하시려면 Wiki를 참고해주세요.    
