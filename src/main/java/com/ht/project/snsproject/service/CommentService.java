@@ -15,10 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * interface가 꼭 필요한 곳에만 추상화하기.
@@ -56,7 +56,7 @@ public class CommentService{
 
   private void increaseCommentCountInCache(int feedId) {
 
-    String commentCountKey = redisCacheService.makeCacheKey(CacheKeyPrefix.COMMENTCOUNT, feedId);
+    String commentCountKey = redisCacheService.makeCacheKey(CacheKeyPrefix.COMMENT_COUNT, feedId);
 
     if(cacheRedisTemplate.hasKey(commentCountKey) != null) {
       valueOps.increment(commentCountKey);
@@ -79,16 +79,18 @@ public class CommentService{
   public Map<Integer, Integer> getCommentCounts(List<Integer> feedIds) {
 
     Map<Integer, Integer> commentCountMap = getCommentCountCache(feedIds);
-    List<Integer> feedIdsNotInCache = new ArrayList<>();
 
-    for(int feedId : feedIds) {
-
-      if(!commentCountMap.containsKey(feedId)) {
-        feedIdsNotInCache.add(feedId);
-      }
-    }
-
-    commentCountMap.putAll(getCommentCountsFromDb(feedIdsNotInCache));
+    /*
+    Java Stream은 Java 8 버전 부터 사용 가능합니다.
+    java stream filter
+    필요 없는 데이터를 걸러낼 때 사용합니다.
+    feedIds Collection의 스트림을 생성하고, filter를 통과한 요소만 종단 연산으로 보내게 됩니다.
+    collect 종단 연산을 통해 중개 연산으로부터 Stream 타입으로 받은 결과값을
+    List 타입으로 변환한 뒤 메소드 파라미터에 전달합니다.
+     */
+    commentCountMap.putAll(getCommentCountsFromDb(feedIds.stream()
+            .filter(x -> !commentCountMap.containsKey(x))
+            .collect(Collectors.toList())));
 
     return commentCountMap;
   }
@@ -123,7 +125,7 @@ public class CommentService{
   private Map<Integer, Integer> getCommentCountCache(List<Integer> feedIds) {
 
     Map<Integer,Integer> commentCountMap = new HashMap<>();
-    List<String> commentCountKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.COMMENTCOUNT, feedIds);
+    List<String> commentCountKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.COMMENT_COUNT, feedIds);
     List<Object> commentCountCaches = valueOps.multiGet(commentCountKeys);
 
     for (int i=0; i<commentCountCaches.size(); i++) {
@@ -199,7 +201,7 @@ public class CommentService{
 
   private void decreaseCommentInCache(int feedId) {
 
-    String commentCountKey = redisCacheService.makeCacheKey(CacheKeyPrefix.COMMENTCOUNT, feedId);
+    String commentCountKey = redisCacheService.makeCacheKey(CacheKeyPrefix.COMMENT_COUNT, feedId);
 
     if(cacheRedisTemplate.hasKey(commentCountKey) != null) {
       valueOps.decrement(commentCountKey);

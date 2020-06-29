@@ -1,10 +1,9 @@
 package com.ht.project.snsproject.aop;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.exception.UnauthorizedException;
 import com.ht.project.snsproject.model.user.User;
-import com.ht.project.snsproject.model.user.UserCache;
+import com.ht.project.snsproject.service.UserService;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -12,8 +11,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -26,13 +23,8 @@ import java.lang.reflect.Method;
 @Component
 public class UserAspect {
 
-
   @Autowired
-  @Qualifier("cacheStrRedisTemplate")
-  private StringRedisTemplate cacheStrRedisTemplate;
-
-  @Autowired
-  private ObjectMapper objectMapper;
+  private UserService userService;
 
   /**
    * 로그인 정보를 확인하고,
@@ -80,9 +72,7 @@ public class UserAspect {
       throw new UnauthorizedException("로그인 정보가 존재하지 않습니다.");
     }
 
-    User userInfo = User.from(
-            objectMapper.readValue(
-                    cacheStrRedisTemplate.boundValueOps("userInfo:"+userId).get(), UserCache.class));
+    User userInfo = userService.getUserInfoCache(userId);
 
     Object[] args = joinPoint.getArgs();
     MethodSignature signature = (MethodSignature) joinPoint.getSignature();

@@ -4,20 +4,13 @@ import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.user.*;
 import com.ht.project.snsproject.service.UserService;
-import javax.servlet.http.HttpSession;
-import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
@@ -52,11 +45,10 @@ public class UserController {
                                       @UserInfo User user) {
 
 
-    UserProfile userProfile = new UserProfile(user.getId(),
+    userService.updateUserProfile(new UserProfile(user.getId(),
             userProfileParam.getNickname(),
             userProfileParam.getEmail(),
-            userProfileParam.getBirth());
-    userService.updateUserProfile(userProfile);
+            userProfileParam.getBirth()));
 
     return HttpStatus.OK;
   }

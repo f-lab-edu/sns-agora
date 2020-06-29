@@ -1,9 +1,7 @@
 package com.ht.project.snsproject.service;
 
-import com.ht.project.snsproject.model.user.UserJoinRequest;
-import com.ht.project.snsproject.model.user.UserLogin;
-import com.ht.project.snsproject.model.user.UserPassword;
-import com.ht.project.snsproject.model.user.UserProfile;
+import com.ht.project.snsproject.model.user.*;
+
 import javax.servlet.http.HttpSession;
 
 public interface UserService {
@@ -15,6 +13,8 @@ public interface UserService {
   void updateUserProfile(UserProfile userProfile);
 
   boolean existUser(UserLogin userLogin, HttpSession httpSession);
+
+  User getUserInfoCache(String userId);
 
   void logout(HttpSession httpSession);
 
