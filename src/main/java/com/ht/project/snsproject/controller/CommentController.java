@@ -100,10 +100,11 @@ public class CommentController {
 
   @DeleteMapping("/{feedId}/comments/{commentId}")
   @LoginCheck
-  public HttpStatus deleteCommentOnFeed(@PathVariable int commentId,
+  public HttpStatus deleteCommentOnFeed(@PathVariable int feedId,
+                                        @PathVariable int commentId,
                                         @UserInfo User user) {
 
-    commentService.deleteCommentOnFeed(commentId, user.getUserId());
+    commentService.deleteCommentOnFeed(feedId, commentId, user.getUserId());
     return HttpStatus.OK;
   }
 

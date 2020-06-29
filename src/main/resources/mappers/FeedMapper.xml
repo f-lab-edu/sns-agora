@@ -13,7 +13,7 @@
         SELECT a.id, a.userId,
         a.title, a.content,
         a.date, a.publicScope,
-        b.filePath, GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames,
+        b.filePath, GROUP_CONCAT(DISTINCT b.fileName ORDER BY b.fileIndex) AS fileNames,
         COUNT(DISTINCT c.userId) AS goodPushed
         FROM feeds a
         LEFT JOIN images b
@@ -44,7 +44,7 @@
         a.title, a.content,
         a.date, a.publicScope,
         b.filePath,
-        GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames,
+        GROUP_CONCAT(DISTINCT b.fileName ORDER BY b.fileIndex) AS fileNames,
         COUNT(DISTINCT c.userId) AS goodPushed
         FROM feeds a
         LEFT JOIN images b
@@ -76,7 +76,7 @@
         a.title, a.content,
         a.date, a.publicScope,
         b.filePath,
-        GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames,
+        GROUP_CONCAT(DISTINCT b.fileName ORDER BY b.fileIndex) AS fileNames,
         COUNT(DISTINCT d.userId) AS goodPushed
         FROM feeds a INNER JOIN images b
         ON (a.id = b.feedId)

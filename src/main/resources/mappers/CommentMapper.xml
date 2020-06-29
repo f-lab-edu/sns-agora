@@ -49,6 +49,23 @@
         LIMIT #{limit}
     </select>
 
+    <select id="getCommentCount" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+        FROM comments
+        WHERE feedId = #{feedId}
+    </select>
+
+    <select id="getCommentCounts" parameterType="java.util.List"
+            resultType="com.ht.project.snsproject.model.comment.CommentCount">
+
+        SELECT feedId, COUNT(*) AS commentCount FROM comments
+        WHERE
+        <foreach item="item" collection="list" index="index" open="(" close=")" separator="OR">
+            feedId = #{item}
+        </foreach>
+        GROUP BY feedId;
+    </select>
+
     <update id="updateCommentOnFeed" parameterType="com.ht.project.snsproject.model.comment.CommentUpdateParam">
         Update comments
         set content = #{content},
