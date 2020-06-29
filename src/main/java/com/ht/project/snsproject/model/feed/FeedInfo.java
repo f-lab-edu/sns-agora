@@ -36,7 +36,7 @@ public class FeedInfo {
             .userId(feedInfoCache.getUserId())
             .title(feedInfoCache.getTitle())
             .content(feedInfoCache.getContent())
-            .date(new Timestamp(Long.parseLong(feedInfoCache.getDate())))
+            .date(Timestamp.valueOf(feedInfoCache.getDate()))
             .publicScope(PublicScope.valueOf(feedInfoCache.getPublicScope()))
             .filePath(feedInfoCache.getFilePath())
             .fileNames(feedInfoCache.getFileNames())

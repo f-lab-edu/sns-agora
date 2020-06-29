@@ -9,6 +9,11 @@
         </foreach>
     </insert>
 
+    <insert id="fileUpload" parameterType="com.ht.project.snsproject.model.feed.FileInfo">
+        INSERT INTO images(filePath, fileName, fileIndex, feedId)
+        VALUES (#{filePath}, #{fileName}, #{fileIndex}, #{feedId})
+    </insert>
+
     <select id="getFilePath" parameterType="int" resultType="String">
         SELECT filePath From images
         WHERE feedId = #{feedId}
@@ -16,7 +21,8 @@
     </select>
 
     <select id="getFiles" parameterType="int" resultType="com.ht.project.snsproject.model.feed.FileVo">
-        SELECT fileIndex, filePath, fileName FROM images
+        SELECT fileIndex, filePath, fileName
+        FROM images
         WHERE feedId = #{feedId}
     </select>
 

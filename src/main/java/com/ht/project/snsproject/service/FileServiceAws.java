@@ -1,15 +1,13 @@
 package com.ht.project.snsproject.service;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.ht.project.snsproject.enumeration.ErrorCode;
 import com.ht.project.snsproject.exception.FileUploadException;
 import com.ht.project.snsproject.mapper.FileMapper;
-import com.ht.project.snsproject.model.feed.FileAdd;
-import com.ht.project.snsproject.model.feed.FileDelete;
-import com.ht.project.snsproject.model.feed.FileInfo;
-import com.ht.project.snsproject.model.feed.FileVo;
+import com.ht.project.snsproject.model.feed.*;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +24,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -103,6 +103,43 @@ public class FileServiceAws implements FileService {
 
   }
 
+  private void fileUpload(MultipartFile file, String dirPath) {
+
+    ObjectMetadata metadata = new ObjectMetadata();
+
+    try {
+      metadata.setContentType(MediaType.IMAGE_JPEG_VALUE);
+      metadata.setContentLength(file.getSize());
+      String keyName = dirPath + File.separator + file.getOriginalFilename();
+
+      s3Client.putObject(bucketName, keyName, file.getInputStream(), metadata);
+
+    } catch (IOException ioe) {
+      throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+    }
+  }
+
+  @Override
+  public void fileUploadForFeed(MultipartFile file, String userId, int feedId){
+
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    String dirPath = userId + File.separator + time;
+
+    fileUpload(file, dirPath);
+    fileMapper.fileUpload(new FileInfo(dirPath, file.getOriginalFilename(), 1, feedId));
+  }
+
+  @Override
+  public FileForProfile fileUploadForProfile(MultipartFile file, String userId) {
+
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    String dirPath = userId + File.separator + time;
+
+    fileUpload(file, dirPath);
+
+    return new FileForProfile(dirPath, file.getOriginalFilename());
+  }
+
   @Transactional
   @Override
   public void deleteAllFiles(int feedId) {
@@ -122,6 +159,18 @@ public class FileServiceAws implements FileService {
     }
     fileMapper.deleteFile(feedId);
   }
+
+  @Override
+  public void deleteFile(String filePath, String fileName) {
+
+    try {
+
+      s3Client.deleteObject(new DeleteObjectRequest(bucketName, filePath + File.separator + fileName));
+    } catch (Exception e) {
+      throw new FileUploadException("파일 업로드에 실패하였습니다.", e, ErrorCode.UPLOAD_ERROR);
+    }
+  }
+
 
   @Transactional
   @Override

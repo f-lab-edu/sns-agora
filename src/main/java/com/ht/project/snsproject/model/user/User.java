@@ -24,6 +24,10 @@ public class User {
 
   Date birth;
 
+  String filePath;
+
+  String fileName;
+
   public static User from(UserCache userCache){
 
     return User.builder()
@@ -33,6 +37,8 @@ public class User {
             .name(userCache.getName())
             .nickname(userCache.getNickname())
             .birth(Date.valueOf(userCache.birth))
+            .filePath(userCache.getFilePath())
+            .fileName(userCache.getFileName())
             .build();
   }
 }

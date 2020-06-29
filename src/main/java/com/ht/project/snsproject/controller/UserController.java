@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
@@ -41,14 +42,12 @@ public class UserController {
 
   @LoginCheck
   @PutMapping("/account")
-  public HttpStatus updateUserProfile(@RequestBody UserProfileParam userProfileParam,
+  public HttpStatus updateUserProfile(@RequestParam("file") MultipartFile file,
+                                      UserProfileParam userProfileParam,
                                       @UserInfo User user) {
 
 
-    userService.updateUserProfile(new UserProfile(user.getId(),
-            userProfileParam.getNickname(),
-            userProfileParam.getEmail(),
-            userProfileParam.getBirth()));
+    userService.updateUserProfile(userProfileParam, user.getUserId(), file);
 
     return HttpStatus.OK;
   }
@@ -75,10 +74,10 @@ public class UserController {
 
   @LoginCheck
   @DeleteMapping("/account")
-  public HttpStatus deleteUser(@RequestBody UserPasswordVerify userPasswordVerify,
+  public HttpStatus deleteUser(@RequestBody String password,
                                @UserInfo User user, HttpSession httpSession) {
     String userId = user.getUserId();
-    if (!userService.verifyPassword(userId, userPasswordVerify.getPassword())) {
+    if (!userService.verifyPassword(userId, password)) {
 
       return HttpStatus.BAD_REQUEST;
     }

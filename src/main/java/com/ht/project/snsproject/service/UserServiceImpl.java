@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.mapper.UserMapper;
+import com.ht.project.snsproject.model.feed.FileForProfile;
 import com.ht.project.snsproject.model.user.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +28,10 @@ public class UserServiceImpl implements UserService {
 
   @Autowired
   private UserMapper userMapper;
+
+  @Autowired
+  @Qualifier("awsFileService")
+  private FileService fileService;
 
   @Autowired
   private ObjectMapper objectMapper;
@@ -48,14 +54,44 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void updateUserProfile(UserProfile userProfile) {
+  public void updateUserProfile(UserProfileParam userProfileParam, String userId, MultipartFile profile) {
+
+    deleteUserProfileImage(userId);
+
+    FileForProfile fileForProfile = fileService.fileUploadForProfile(profile, userId);
+
+    UserProfile userProfile = UserProfile.from(userProfileParam, userId, fileForProfile);
+
     userMapper.updateUserProfile(userProfile);
+
+    updateUserCache(userProfile);
+
+  }
+
+  private void updateUserCache(UserProfile userProfile) {
+
+    String userCacheKey = redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userProfile.getUserId());
+
+    User user = getUserInfoCache(userProfile.getUserId());
+
+    cacheRedisTemplate.opsForValue().setIfPresent(userCacheKey,
+            UserCache.updateFrom(userProfile, user.getId(), user.getName()), 30L, TimeUnit.MINUTES);
+
+  }
+
+  public void deleteUserProfileImage(String userId) {
+
+    FileForProfile fileForProfile = userMapper.getUserProfileImage(userId);
+
+    if (fileForProfile != null) {
+      fileService.deleteFile(fileForProfile.getFilePath(), fileForProfile.getFileName());
+    }
   }
 
   @Override
   public boolean existUser(UserLogin userLogin, HttpSession httpSession) {
 
-    User userInfo = userMapper.getUser(userLogin);
+    User userInfo = userMapper.getAuthenticatedUser(userLogin);
     if (userInfo == null) {
       return false;
     }
@@ -83,7 +119,9 @@ public class UserServiceImpl implements UserService {
 
     String userInfoKey = redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userId);
 
-    if (cacheStrRedisTemplate.hasKey(userInfoKey) != null) {
+    Boolean keyPresence = cacheStrRedisTemplate.hasKey(userInfoKey);
+
+    if ((keyPresence != null) && (keyPresence)) {
 
       try {
         userInfo = User.from(

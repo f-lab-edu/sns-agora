@@ -5,6 +5,7 @@ import com.ht.project.snsproject.exception.FileUploadException;
 import com.ht.project.snsproject.mapper.FileMapper;
 import com.ht.project.snsproject.model.feed.FileAdd;
 import com.ht.project.snsproject.model.feed.FileDelete;
+import com.ht.project.snsproject.model.feed.FileForProfile;
 import com.ht.project.snsproject.model.feed.FileInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ public class FileServiceLocal implements FileService {
   @Transactional
   public void fileUpload(List<MultipartFile> files, String userId, int feedId) {
 
-    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmSS"));
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
     String dirPath = localPath + userId + File.separator + time;
     int fileIndex = 1;// file 순서를 정해줄 index
     List<FileInfo> fileInfoList = new ArrayList<>();
@@ -78,6 +79,48 @@ public class FileServiceLocal implements FileService {
     }
   }
 
+  private void fileUpload(MultipartFile file, String dirPath) {
+
+    File destDir = new File(dirPath);
+
+    if(!destDir.exists()) {
+      destDir.mkdirs();
+    }
+
+    String originalFileName = file.getOriginalFilename();
+    String filePath = dirPath + File.separator + originalFileName;
+
+    File destFile = new File(filePath);
+
+    try{
+
+      file.transferTo(destFile);
+    } catch (IOException ioe) {
+      throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+    }
+  }
+
+  @Override
+  public void fileUploadForFeed(MultipartFile file, String userId, int feedId) {
+
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    String dirPath = localPath + userId + File.separator + time;
+
+    fileUpload(file, dirPath);
+    fileMapper.fileUpload(new FileInfo(dirPath, file.getOriginalFilename(), 1, feedId));
+  }
+
+  @Override
+  public FileForProfile fileUploadForProfile(MultipartFile file, String userId) {
+
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    String dirPath = localPath + userId + File.separator + time;
+
+    fileUpload(file, dirPath);
+
+    return new FileForProfile(dirPath, file.getOriginalFilename());
+  }
+
   @Transactional
   @Override
   public void deleteFiles(int feedId, String path, List<String> fileNames) {
@@ -94,6 +137,19 @@ public class FileServiceLocal implements FileService {
     }
     fileMapper.deleteFiles(fileDeleteList);
   }
+
+  @Override
+  public void deleteFile(String filePath, String fileName) {
+
+    try {
+
+      File file = new File(filePath + File.separator + fileName);
+      file.delete();
+    } catch (Exception e) {
+      throw new FileUploadException("파일 업로드에 실패하였습니다.", e, ErrorCode.UPLOAD_ERROR);
+    }
+  }
+
 
   @Transactional
   @Override
