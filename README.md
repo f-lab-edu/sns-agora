@@ -42,7 +42,14 @@ Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ
 ![agora_system_structure2](https://user-images.githubusercontent.com/54772162/84670161-b5cc2e80-af60-11ea-9fc6-90f23a61f676.PNG)
 
 
-## 프로젝트 관리 전략
+## 코딩 컨벤션
+
+* 코딩 컨벤션은 예쁜 코드를 위해서도 필요하지만, 협업시, 장기 프로젝트를 운영할 때 등 유용합니다.
+
+* 해당 프로젝트에서는 **Google CheckStyle**을 적용하였습니다. (최대한 코딩 컨벤션을 신경쓰려하였으나, 수정 중에 일부 적용이 누락된 부분이 있을 수 있습니다.)
+
+
+## 브랜치 관리 전략
 
 * AGORA는 Git-Flow 를 이용하여 브랜치를 관리하였습니다.
 
