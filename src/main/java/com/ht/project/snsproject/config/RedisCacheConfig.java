@@ -61,7 +61,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
   @Autowired
   private ObjectMapper mapper;
 
-  @Bean("cacheRedis")
+  @Bean("cacheRedisFactory")
   public RedisConnectionFactory cacheRedisConnectionFactory() {
 
     RedisStandaloneConfiguration redisStandaloneConfiguration =

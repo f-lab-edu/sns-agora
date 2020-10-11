@@ -3,13 +3,15 @@ package com.ht.project.snsproject.model.feed;
 import com.ht.project.snsproject.enumeration.PublicScope;
 import lombok.Value;
 
+import javax.validation.constraints.NotNull;
+
 @Value
 public class FeedUpdateParam {
 
-  String title;
+  @NotNull String title;
 
   String content;
 
-  PublicScope publicScope;
+  @NotNull PublicScope publicScope;
 
 }

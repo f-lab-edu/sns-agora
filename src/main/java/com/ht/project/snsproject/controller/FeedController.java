@@ -3,10 +3,7 @@ package com.ht.project.snsproject.controller;
 import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.Pagination;
-import com.ht.project.snsproject.model.feed.Feed;
-import com.ht.project.snsproject.model.feed.FeedUpdateParam;
-import com.ht.project.snsproject.model.feed.FeedVo;
-import com.ht.project.snsproject.model.feed.RecommendFeed;
+import com.ht.project.snsproject.model.feed.*;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.FeedRecommendService;
 import com.ht.project.snsproject.service.FeedService;
@@ -39,57 +36,57 @@ public class FeedController {
   }
 
   @LoginCheck
-  @GetMapping("/users/{targetId}/{id}")
-  public ResponseEntity<Feed> getFeed(@PathVariable String targetId,
-                                      @PathVariable int id, @UserInfo User user) {
-
-    return ResponseEntity.ok(feedService.getFeed(user.getUserId(), targetId, id));
-  }
-
-  @LoginCheck
-  @GetMapping("/{targetId}")
-  public ResponseEntity<List<Feed>> getFeedList(@PathVariable String targetId,
+  @GetMapping("users/{targetId}")
+  public ResponseEntity<List<FeedsDto>> getFeedList(@PathVariable String targetId,
                                                 @RequestParam(required = false) Integer cursor,
                                                 @UserInfo User user) {
 
-    return ResponseEntity.ok(feedService.getFeedListByUser(user.getUserId(), targetId,
-            Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(feedService.findFeedListByUserId(user.getUserId(), targetId, new Pagination(cursor)));
   }
 
   @LoginCheck
   @GetMapping
-  public ResponseEntity<List<Feed>> getFriendsFeedList(
-          @RequestParam(required = false) Integer cursor, @UserInfo User user) {
+  public ResponseEntity<List<FeedsDto>> getFriendsFeedList(@RequestParam(required = false) Integer cursor,
+                                                        @UserInfo User user) {
 
-    return ResponseEntity.ok(feedService.getFriendsFeedList(user.getUserId(),Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(feedService.findFriendsFeedListByUserId(user.getUserId(), new Pagination(cursor)));
   }
 
   @LoginCheck
-  @DeleteMapping("/{id}")
-  public HttpStatus deleteFeed(@PathVariable int id, @UserInfo User user) {
+  @GetMapping("/users/{targetId}/{feedId}")
+  public ResponseEntity<FeedsVo> getFeed(@PathVariable String targetId,
+                                          @PathVariable int feedId, @UserInfo User user) {
 
-    feedService.deleteFeed(id, user.getUserId());
+    return ResponseEntity.ok(feedService.findFeedByFeedId(user.getUserId(), targetId, feedId));
+  }
+
+  @LoginCheck
+  @DeleteMapping("/{feedId}")
+  public HttpStatus deleteFeed(@PathVariable int feedId, @UserInfo User user) {
+
+    feedService.deleteFeed(feedId, user.getUserId());
 
     return HttpStatus.NO_CONTENT;
   }
 
   @LoginCheck
-  @PutMapping("/{id}")
-  public HttpStatus updateFeed(@PathVariable int id,
+  @PutMapping("/{feedId}")
+  public HttpStatus updateFeed(@PathVariable int feedId,
                                @RequestParam("file") List<MultipartFile> files,
                                FeedUpdateParam feedUpdateParam,
                                @UserInfo User user) {
 
-    feedService.updateFeed(files, feedUpdateParam, id, user.getUserId());
+    feedService.updateFeed(files, feedUpdateParam, feedId, user.getUserId());
 
     return HttpStatus.OK;
   }
 
   @LoginCheck
   @GetMapping("/recommends")
-  public ResponseEntity<List<RecommendFeed>> getFeedRecommendList(
-          @RequestParam(required = false) Integer cursor) {
+  public ResponseEntity<List<FeedsInfo>> getFeedRecommendList(
+          @RequestParam(required = false) Integer cursor,
+          @UserInfo User user) {
 
-    return ResponseEntity.ok(feedRecommendService.getFeedRecommendListByLatestOrder(cursor));
+    return ResponseEntity.ok(feedRecommendService.findLatestAllFeedList(user.getUserId(), new Pagination(cursor)));
   }
 }

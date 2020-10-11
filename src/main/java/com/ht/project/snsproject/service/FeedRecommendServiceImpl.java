@@ -125,4 +125,16 @@ public class FeedRecommendServiceImpl implements FeedRecommendService {
     return feedInfoList;
   }
 
+
+  @Override
+  public List<FeedsInfo> findLatestAllFeedList(String userId, Pagination pagination) {
+
+    return feedRecommendMapper.findLatestAllFeedList(new FeedsParam(userId, pagination));
+  }
+  /*
+  explore feed
+  하면 가장 최근 리스트를 캐싱하고 캐싱 배제 패턴으로 변경
+  리스트를 갖고 있다가, 만료되면 다시 새로 리스트 자체를 캐싱하도록 처리
+   */
+
 }

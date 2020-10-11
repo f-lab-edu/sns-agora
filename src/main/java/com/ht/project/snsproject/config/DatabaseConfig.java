@@ -154,7 +154,6 @@ public class DatabaseConfig {
   public SqlSessionTemplate sqlSessionTemplate(@Qualifier("sqlSessionFactory") SqlSessionFactory sqlSessionFactory)
           throws Exception {
 
-    final SqlSessionTemplate sqlSessionTemplate = new SqlSessionTemplate(sqlSessionFactory);
-    return sqlSessionTemplate;
+    return new SqlSessionTemplate(sqlSessionFactory);
   }
 }

@@ -20,8 +20,14 @@ public interface FeedService {
 
   List<FileVo> getFileList(String fileNames, String path);
 
+  List<FeedsDto> findFeedListByUserId(String userId, String targetId, Pagination pagination);
+
+  FeedsVo findFeedByFeedId(String userId, String targetId, int feedId);
+
   void deleteFeed(int id, String userId);
 
   void updateFeed(List<MultipartFile> files,
                   FeedUpdateParam feedUpdateParam, int feedId, String userId);
+
+  List<FeedsDto> findFriendsFeedListByUserId(String userId, Pagination pagination);
 }

@@ -1,5 +1,6 @@
 package com.ht.project.snsproject.service;
 
+import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Android Device ID test data 가 필요하므로,
@@ -95,23 +97,23 @@ public class NotificationServiceFcm implements NotificationService {
       throw new NoSuchUserIdException("해당 서비스에 등록된 사용자가 아닙니다.");
     }
 
-    try {
-      Message message = Message.builder()
-              .setAndroidConfig(AndroidConfig.builder()
-                      .setTtl(3600 * 1000)
-                      .setPriority(AndroidConfig.Priority.NORMAL)
-                      .setNotification(AndroidNotification.builder()
-                              .setTitle(notificationRequest.getTitle())
-                              .setBody(notificationRequest.getMessage())
-                              .build())
-                      .build())
-              .setToken(deviceId)
-              .build();
+    Message message = Message.builder()
+            .setAndroidConfig(AndroidConfig.builder()
+                    .setTtl(3600 * 1000)
+                    .setPriority(AndroidConfig.Priority.NORMAL)
+                    .setNotification(AndroidNotification.builder()
+                            .setTitle(notificationRequest.getTitle())
+                            .setBody(notificationRequest.getMessage())
+                            .build())
+                    .build())
+            .setToken(deviceId)
+            .build();
 
-      String response = FirebaseMessaging.getInstance().send(message);
-      logger.info("Successfully sent message: " + response);
-    } catch (FirebaseMessagingException fme) {
-      logger.error(fme.getErrorCode());
+    ApiFuture<String> response = FirebaseMessaging.getInstance().sendAsync(message);
+    try {
+      logger.info("Successfully sent message: " + response.get());
+    } catch (InterruptedException | ExecutionException e) {
+      throw new RuntimeException();
     }
   }
 }

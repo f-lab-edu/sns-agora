@@ -141,7 +141,7 @@ public class FeedServiceImpl implements FeedService {
 
   }
 
-  public List<FeedInfo> getFeedInfoListByUser(FeedListParam feedListParam) {
+  private List<FeedInfo> getFeedInfoListByUser(FeedListParam feedListParam) {
 
     return feedMapper.getFeedList(feedListParam);
   }
@@ -154,7 +154,7 @@ public class FeedServiceImpl implements FeedService {
 
   }
 
-  public List<FeedInfo> getFeedInfoListByFriends (FriendsFeedList friendsFeedList) {
+  private List<FeedInfo> getFeedInfoListByFriends (FriendsFeedList friendsFeedList) {
 
     return feedMapper.getFriendsFeedList(friendsFeedList);
   }
@@ -181,7 +181,7 @@ public class FeedServiceImpl implements FeedService {
     return files;
   }
 
-  public List<Integer> getFeedIds(List<FeedInfo> feedInfoList) {
+  private List<Integer> getFeedIds(List<FeedInfo> feedInfoList) {
 
     List<Integer> feedIds = new ArrayList<>();
 
@@ -196,7 +196,7 @@ public class FeedServiceImpl implements FeedService {
 
 
 
-  public List<Feed> getFeeds(List<FeedInfo> feedInfoList, String userId) {
+  private List<Feed> getFeeds(List<FeedInfo> feedInfoList, String userId) {
 
     List<Integer> feedIds = getFeedIds(feedInfoList);
     Map<Integer, Boolean> goodPushedMap = goodService.getGoodPushedStatusesFromCache(feedIds, userId);
@@ -234,6 +234,125 @@ public class FeedServiceImpl implements FeedService {
     return feeds;
   }
 
+
+  @Transactional(readOnly = true)
+  @Override
+  public List<FeedsDto> findFriendsFeedListByUserId(String userId, Pagination pagination) {
+
+    return feedMapper.findFriendsFeedListByUserId(new FeedsParam(userId, pagination));
+  }
+
+  @Override
+  public List<FeedsDto> findFeedListByUserId(String userId, String targetId, Pagination pagination) {
+
+    List<FeedsDto> feedsDtoList;
+
+    switch (friendService.getFriendStatus(userId, targetId)) {
+
+      case ME:
+        feedsDtoList = findMyFeedListByUserId(userId, targetId, pagination);
+        break;
+
+      case FRIEND:
+        feedsDtoList = findFriendFeedListByUserId(userId, targetId, pagination);
+        break;
+
+      case BLOCK:
+        throw new InvalidApproachException("유효 하지 않은 접근입니다.");
+
+      default:
+        feedsDtoList = findAllFeedListByUserId(userId, targetId, pagination);
+    }
+
+    return feedsDtoList;
+  }
+
+  @Transactional(readOnly = true)
+  private List<FeedsDto> findMyFeedListByUserId(String userId, String targetId, Pagination pagination) {
+
+    return feedMapper.findMyFeedListByUserId(new TargetFeedsParam(userId, targetId, pagination));
+  }
+
+  @Transactional(readOnly = true)
+  private List<FeedsDto> findAllFeedListByUserId(String userId, String targetId, Pagination pagination) {
+
+    return feedMapper.findAllFeedListByUserId(new TargetFeedsParam(userId, targetId, pagination));
+  }
+
+
+  @Transactional(readOnly = true)
+  private List<FeedsDto> findFriendFeedListByUserId(String userId, String targetId, Pagination pagination) {
+
+    return feedMapper.findFriendFeedListByUserId(new TargetFeedsParam(userId, targetId, pagination));
+  }
+
+
+  @Transactional
+  @Override
+  public FeedsVo findFeedByFeedId(String userId, String targetId, int feedId) {
+
+    FeedsInfo feed;
+
+    switch(friendService.getFriendStatus(userId, targetId)) {
+
+      case ME:
+
+        feed = findMyFeedByFeedId(feedId, targetId, userId);
+        break;
+
+      case FRIEND:
+
+        feed = findFriendsFeedFeedId(feedId, targetId, userId);
+        break;
+
+      default:
+
+        feed = findAllFeedByFeedId(feedId, targetId, userId);
+    }
+
+    boolean goodPushedStatus = goodService.isGoodPushed(feedId, userId);
+
+    return FeedsVo.create(feed, goodPushedStatus);
+  }
+
+  @Transactional(readOnly = true)
+  private FeedsInfo findMyFeedByFeedId(int feedId, String targetId, String userId) {
+
+    FeedsInfo feed = feedMapper.findMyFeedByFeedId(new FeedDtoParam(feedId, targetId, userId));
+
+    if(feed.getId() == null) {
+
+      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
+    }
+
+    return feed;
+  }
+
+  @Transactional(readOnly = true)
+  private FeedsInfo findFriendsFeedFeedId(int feedId, String targetId, String userId) {
+
+    FeedsInfo feed = feedMapper.findFriendsFeedByFeedId(new FeedDtoParam(feedId, targetId, userId));
+
+    if(feed.getId() == null) {
+      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
+    }
+
+    return feed;
+  }
+
+  @Transactional(readOnly = true)
+  private FeedsInfo findAllFeedByFeedId(int feedId, String targetId, String userId) {
+
+    FeedsInfo feed = feedMapper.findAllFeedByFeedId(new FeedDtoParam(feedId, targetId, userId));
+
+    if(feed.getId() == null) {
+
+      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
+    }
+
+    return feed;
+  }
+
   @Transactional
   @Override
   public void deleteFeed(int id, String userId) {
@@ -258,4 +377,5 @@ public class FeedServiceImpl implements FeedService {
     }
     fileService.updateFiles(files,userId,feedId);
   }
+
 }
