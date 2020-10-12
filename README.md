@@ -96,5 +96,7 @@ Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/03.-ER-Diagram
 https://github.com/f-lab-edu/sns-project/wiki
 
 ## CD 적용
-
+![cd](https://user-images.githubusercontent.com/54772162/91732703-8cc44d00-ebe3-11ea-9d04-009fce30bc72.png)
+* CD란 무엇인가?(참고 사이트)    
+https://www.redhat.com/ko/topics/devops/what-is-ci-cd    
 ## ngrinder 성능 테스트
