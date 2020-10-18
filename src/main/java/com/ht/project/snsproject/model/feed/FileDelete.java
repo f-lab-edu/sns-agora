@@ -5,11 +5,11 @@ import lombok.Value;
 @Value
 public class FileDelete {
 
-    int feedId;
+  int feedId;
 
-    String fileName;
+  String fileName;
 
-    public static FileDelete create(int feedId, String fileName){
-        return new FileDelete(feedId, fileName);
-    }
+  public static FileDelete create(int feedId, String fileName) {
+    return new FileDelete(feedId, fileName);
+  }
 }

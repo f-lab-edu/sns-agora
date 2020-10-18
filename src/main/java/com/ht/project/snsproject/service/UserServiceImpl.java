@@ -1,64 +1,77 @@
 package com.ht.project.snsproject.service;
 
+import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.mapper.UserMapper;
-import com.ht.project.snsproject.model.user.*;
+import com.ht.project.snsproject.model.user.User;
+import com.ht.project.snsproject.model.user.UserJoinRequest;
+import com.ht.project.snsproject.model.user.UserLogin;
+import com.ht.project.snsproject.model.user.UserPassword;
+import com.ht.project.snsproject.model.user.UserProfile;
+import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpSession;
-
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
-    @Autowired
-    UserMapper userMapper;
+  @Autowired
+  UserMapper userMapper;
 
-    @Override
-    public void joinUser(UserJoinRequest userJoinRequest) {
-        userMapper.insertUser(userJoinRequest);
+  @Override
+  public void joinUser(UserJoinRequest userJoinRequest) {
+    userMapper.insertUser(userJoinRequest);
+  }
+
+  @Override
+  public boolean isDuplicateUserId(String userId) {
+    return userMapper.isDuplicateUserId(userId);
+  }
+
+  @Override
+  public void updateUserProfile(UserProfile userProfile) {
+    userMapper.updateUserProfile(userProfile);
+  }
+
+  @Override
+  public boolean existUser(UserLogin userLogin, HttpSession httpSession) {
+
+    User userInfo = userMapper.getUser(userLogin);
+    if (userInfo == null) {
+      return false;
     }
 
-    @Override
-    public boolean isDuplicateUserId(String userId) {
-        return userMapper.isDuplicateUserId(userId);
+    if (httpSession.getAttribute("userInfo") != null) {
+      throw new DuplicateRequestException("이미 로그인된 상태입니다.");
     }
 
-    @Override
-    public void updateUserProfile(UserProfile userProfile) {
-        userMapper.updateUserProfile(userProfile);
-    }
+    httpSession.setAttribute("userInfo", userInfo);
 
-    @Override
-    public boolean existUser(UserLogin userLogin, HttpSession httpSession) {
-        User userInfo = userMapper.getUser(userLogin);
+    return true;
+  }
 
-        if(userInfo==null){
-            return false;
-        }
-        httpSession.setAttribute("userInfo", userInfo);
+  @Override
+  public boolean verifyPassword(String userId, String password) {
 
-        return true;
-    }
+    String currentPassword = userMapper.getPassword(userId);
+    return currentPassword.equals(password);
+  }
 
-    @Override
-    public boolean verifyPassword(String userId, String password) {
-        String currentPassword = userMapper.getPassword(userId);
-        return currentPassword.equals(password);
-    }
+  @Override
+  public void deleteUser(String userId) {
 
-    @Override
-    public void deleteUser(String userId) {
-        userMapper.deleteUser(userId);
-    }
+    userMapper.deleteUser(userId);
+  }
 
-    @Override
-    public void updateUserPassword(String userId, UserPassword userPassword) {
-        userMapper.updateUserPassword(userId, userPassword.getCurrentPassword(), userPassword.getNewPassword());
-    }
+  @Override
+  public void updateUserPassword(String userId, UserPassword userPassword) {
 
-    @Override
-    public UserProfile getUserProfile(String userId){
-        return userMapper.getUserProfile(userId);
-    }
+    userMapper.updateUserPassword(userId,
+            userPassword.getCurrentPassword(), userPassword.getNewPassword());
+  }
 
+  @Override
+  public UserProfile getUserProfile(String userId) {
+
+    return userMapper.getUserProfile(userId);
+  }
 }

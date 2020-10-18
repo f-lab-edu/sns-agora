@@ -1,25 +1,23 @@
 package com.ht.project.snsproject.model.feed;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
+import java.sql.Timestamp;
 import lombok.Builder;
 import lombok.Value;
-
-import java.sql.Timestamp;
 
 @Builder
 @Value
 public class FeedUpdate {
 
-    int id;
+  int id;
 
-    String userId;
+  String userId;
 
-    String title;
+  String title;
 
-    String content;
+  String content;
 
-    Timestamp date;
+  Timestamp date;
 
-    PublicScope publicScope;
-
+  PublicScope publicScope;
 }

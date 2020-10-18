@@ -1,15 +1,14 @@
 package com.ht.project.snsproject.model.user;
 
-import lombok.Value;
-
 import java.sql.Date;
+import lombok.Value;
 
 @Value
 public class UserProfileParam {
 
-    String nickname;
+  String nickname;
 
-    String email;
+  String email;
 
-    Date birth;
+  Date birth;
 }

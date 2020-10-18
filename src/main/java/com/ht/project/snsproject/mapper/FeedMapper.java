@@ -1,22 +1,29 @@
 package com.ht.project.snsproject.mapper;
 
-import com.ht.project.snsproject.model.feed.*;
-import org.apache.ibatis.annotations.Mapper;
-
+import com.ht.project.snsproject.model.feed.FeedDeleteParam;
+import com.ht.project.snsproject.model.feed.FeedInfo;
+import com.ht.project.snsproject.model.feed.FeedInsert;
+import com.ht.project.snsproject.model.feed.FeedListParam;
+import com.ht.project.snsproject.model.feed.FeedParam;
+import com.ht.project.snsproject.model.feed.FeedUpdate;
+import com.ht.project.snsproject.model.feed.FriendsFeedList;
 import java.util.List;
+import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface FeedMapper {
 
-    void feedUpload(FeedInsert feedInsert);
+  void feedUpload(FeedInsert feedInsert);
 
-    List<Feed> getFeed(FeedParam feedParam);
+  FeedInfo getFeed(FeedParam feedParam);
 
-    List<FeedList> getFeedList(FeedListParam feedListParam);
+  FeedInfo getFeedInfoCache(int feedId);
 
-    List<FeedList> getFriendsFeedList(FriendsFeedList friendsFeedList);
+  List<FeedInfo> getFeedList(FeedListParam feedListParam);
 
-    boolean deleteFeed(FeedDeleteParam feedDeleteParam);
+  List<FeedInfo> getFriendsFeedList(FriendsFeedList friendsFeedList);
 
-    boolean updateFeed(FeedUpdate feedUpdate);
+  boolean deleteFeed(FeedDeleteParam feedDeleteParam);
+
+  boolean updateFeed(FeedUpdate feedUpdate);
 }

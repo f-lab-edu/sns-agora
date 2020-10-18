@@ -5,13 +5,13 @@ import lombok.Value;
 @Value
 public class FileUpdate {
 
-    int feedId;
+  int feedId;
 
-    int fileIndex;
+  int fileIndex;
 
-    String fileName;
+  String fileName;
 
-    public static FileUpdate create(int feedId, int fileIndex, String fileName){
-        return new FileUpdate(feedId,fileIndex,fileName);
-    }
+  public static FileUpdate create(int feedId, int fileIndex, String fileName) {
+    return new FileUpdate(feedId,fileIndex,fileName);
+  }
 }

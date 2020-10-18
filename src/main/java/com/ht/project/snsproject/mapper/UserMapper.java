@@ -9,20 +9,19 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface UserMapper {
 
-    void insertUser(UserJoinRequest userJoinRequest);
+  void insertUser(UserJoinRequest userJoinRequest);
 
-    boolean isDuplicateUserId(String userId);
+  boolean isDuplicateUserId(String userId);
 
-    void updateUserProfile(UserProfile userProfile);
+  void updateUserProfile(UserProfile userProfile);
 
-    User getUser(UserLogin userLogin);
+  User getUser(UserLogin userLogin);
 
-    String getPassword(String userId);
+  String getPassword(String userId);
 
-    void deleteUser(String userId);
+  void deleteUser(String userId);
 
-    void updateUserPassword(String userId, String currentPw, String newPw);
+  void updateUserPassword(String userId, String currentPw, String newPw);
 
-    UserProfile getUserProfile(String targetId);
-
+  UserProfile getUserProfile(String targetId);
 }
