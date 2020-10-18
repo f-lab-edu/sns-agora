@@ -32,6 +32,7 @@
             (feedId = #{item.feedId} AND fileName=#{item.fileName})
         </foreach>
     </delete>
+
 <!--ON DUPLICATE KEY UPDATE 를 사용한 이유 및 주의사항
     - 중복 값에 대한 오류가 발생하였을 때 UPDATE 문을 실행하고,
       값이 없을 때에는 INSERT 하기 위해서 사용합니다.
@@ -46,7 +47,7 @@
     - ON DUPLICATE UPDATE 방식을 사용한 이유는 REPLACE INTO 사용시
       삭제 후 삽입 연산으로 인한 자동 인덱스 증가를 막을 수 있기 때문에 인덱스가 무분별하게 증가하는 것을 방지할 수 있습니다.
 -->
-    <insert id="insertAndUpdateFiles" parameterType="java.util.List">
+    <insert id="upsertFiles" parameterType="java.util.List">
         INSERT INTO images(filePath, fileName, fileIndex, feedId)
         VALUES
         <foreach item="item" index="index" collection="list" separator=",">

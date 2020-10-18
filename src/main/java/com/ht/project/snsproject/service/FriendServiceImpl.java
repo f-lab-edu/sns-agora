@@ -2,6 +2,7 @@ package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.enumeration.AlarmType;
 import com.ht.project.snsproject.enumeration.FriendStatus;
+import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.FriendMapper;
@@ -10,19 +11,20 @@ import com.ht.project.snsproject.model.friend.Friend;
 import com.ht.project.snsproject.model.friend.FriendList;
 import com.ht.project.snsproject.model.friend.FriendListParam;
 import com.ht.project.snsproject.model.friend.FriendStatusInsert;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class FriendServiceImpl implements FriendService {
 
   @Autowired
-  FriendMapper friendMapper;
+  private FriendMapper friendMapper;
 
   @Autowired
-  AlarmService alarmService;
+  private AlarmService alarmService;
 
   @Transactional
   @Override
@@ -43,6 +45,17 @@ public class FriendServiceImpl implements FriendService {
         throw new DuplicateRequestException("중복된 요청입니다.");
     }
 
+  }
+
+  @Override
+  public FriendStatus getFriendStatus(String userId, String targetId) {
+
+    if(userId.equals(targetId)) {
+      return FriendStatus.ME;
+    }
+
+    return friendMapper.getFriendRelationStatus(userId, targetId)
+            .getFriendStatus();
   }
 
   @Transactional
@@ -159,5 +172,39 @@ public class FriendServiceImpl implements FriendService {
   public Friend getFriendRelationStatus(String userId, String targetId) {
 
     return friendMapper.getFriendRelationStatus(userId, targetId);
+  }
+
+  @Override
+  public boolean isFeedReadableByFriendStatus(PublicScope publicScope, FriendStatus friendStatus) {
+
+    boolean isReadable = false;
+
+    switch (friendStatus) {
+
+      case ME:
+        if(publicScope == PublicScope.ALL ||
+                publicScope == PublicScope.FRIENDS ||
+                publicScope == PublicScope.ME) {
+          isReadable = true;
+        }
+        break;
+
+      case FRIEND:
+        if(publicScope == PublicScope.ALL ||
+                publicScope == PublicScope.FRIENDS) {
+          isReadable =true;
+        }
+        break;
+
+      case BLOCK:
+        break;
+
+      default:
+        if(publicScope == PublicScope.ALL) {
+          isReadable = true;
+        }
+    }
+
+    return isReadable;
   }
 }

@@ -1,12 +1,13 @@
 package com.ht.project.snsproject.model.feed;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
-import java.sql.Timestamp;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.sql.Timestamp;
+import java.util.List;
 
 
 @Builder
@@ -27,7 +28,25 @@ public class Feed {
 
   PublicScope publicScope;
 
-  int recommend;
+  int good;
+
+  int commentCount;
+
+  boolean goodPushed;
 
   List<FileVo> files;
+
+  public static Feed create(FeedInfo feedInfo, int good, int commentCount, boolean goodPushed, List<FileVo> files) {
+
+    return Feed.builder().id(feedInfo.getId())
+            .userId(feedInfo.getUserId())
+            .title(feedInfo.getTitle())
+            .content(feedInfo.getContent())
+            .date(feedInfo.getDate())
+            .publicScope(feedInfo.getPublicScope())
+            .good(good)
+            .commentCount(commentCount)
+            .goodPushed(goodPushed)
+            .files(files).build();
+  }
 }

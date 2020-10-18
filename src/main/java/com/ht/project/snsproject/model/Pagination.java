@@ -6,9 +6,11 @@ import lombok.Value;
 public class Pagination {
 
   Integer cursor;
+
   int listSize = 10;
 
   public static Pagination pageInfo(Integer cursor) {
+
     return new Pagination(cursor);
   }
 }

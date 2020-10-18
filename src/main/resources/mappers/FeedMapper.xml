@@ -4,8 +4,8 @@
 
     <insert id="feedUpload" useGeneratedKeys="true" keyProperty="id"
             parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
-        INSERT INTO feeds(userId, title, content, date, publicScope, recommend)
-        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope}, #{recommend})
+        INSERT INTO feeds(userId, title, content, date, publicScope)
+        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope})
     </insert>
 
     <select id="getFeed" parameterType="com.ht.project.snsproject.model.feed.FeedParam"
@@ -13,11 +13,14 @@
         SELECT a.id, a.userId,
         a.title, a.content,
         a.date, a.publicScope,
-        b.filePath, GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
-        FROM feeds a LEFT JOIN images b
+        b.filePath, GROUP_CONCAT(DISTINCT b.fileName ORDER BY b.fileIndex) AS fileNames,
+        COUNT(DISTINCT c.userId) AS goodPushed
+        FROM feeds a
+        LEFT JOIN images b
         ON (a.id = b.feedId)
+        LEFT JOIN goods c
+        ON (a.id = c.feedId AND c.userId = #{userId})
         WHERE a.id = #{id}
-        AND a.userId = #{userId}
         AND (a.publicScope = 'ALL'
         <if test="friendStatus.name() == 'ME'">
             OR a.publicScope = 'FRIENDS'
@@ -27,16 +30,6 @@
             OR a.publicScope = 'FRIENDS'
         </if>
         )
-    </select>
-
-    <select id="getFeedInfoCache" parameterType="int" resultType="com.ht.project.snsproject.model.feed.FeedInfo">
-        SELECT a.id, a.userId,
-        a.title, a.content,
-        a.date, a.publicScope,
-        b.filePath, GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
-        FROM feeds a LEFT JOIN images b
-        ON (a.id = b.feedId)
-        WHERE a.id = #{feedId}
     </select>
 
     <!--LEFT JOIN 사용 이유
@@ -49,12 +42,16 @@
             resultType="com.ht.project.snsproject.model.feed.FeedInfo">
         SELECT a.id, a.userId,
         a.title, a.content,
-        a.date, a.publicScope, a.recommend,
+        a.date, a.publicScope,
         b.filePath,
-        GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
-        FROM feeds a LEFT JOIN images b
+        GROUP_CONCAT(DISTINCT b.fileName ORDER BY b.fileIndex) AS fileNames,
+        COUNT(DISTINCT c.userId) AS goodPushed
+        FROM feeds a
+        LEFT JOIN images b
         ON (a.id = b.feedId)
-        WHERE a.userId = #{userId}
+        LEFT JOIN goods c
+        ON (a.id = c.feedId AND c.userId = #{userId})
+        WHERE a.userId = #{targetId}
         AND (a.publicScope = 'ALL'
         <if test="publicScope.name() == 'FRIENDS' or publicScope.name() == 'ME'">
             OR a.publicScope = 'FRIENDS'
@@ -74,15 +71,19 @@
     <select id="getFriendsFeedList"
             parameterType="com.ht.project.snsproject.model.feed.FriendsFeedList"
             resultType="com.ht.project.snsproject.model.feed.FeedInfo">
+
         SELECT a.id, a.userId,
         a.title, a.content,
-        a.date, a.publicScope, a.recommend,
+        a.date, a.publicScope,
         b.filePath,
-        GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
+        GROUP_CONCAT(DISTINCT b.fileName ORDER BY b.fileIndex) AS fileNames,
+        COUNT(DISTINCT d.userId) AS goodPushed
         FROM feeds a INNER JOIN images b
         ON (a.id = b.feedId)
         LEFT JOIN friends c
         ON(a.userId = c.userId)
+        LEFT JOIN goods d
+        ON (a.id = d.feedId AND d.userId = #{userId})
         WHERE (a.publicScope = 'ALL'
         OR a.publicScope = 'FRIENDS')
         AND (c.targetId = #{userId})

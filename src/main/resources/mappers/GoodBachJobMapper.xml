@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ht.project.snsproject.mapper.GoodBachJobMapper">
+
+    <delete id="batchDeleteGoodUserList" parameterType="com.ht.project.snsproject.model.good.GoodUser">
+
+        DELETE FROM goods
+        WHERE
+        <foreach item="item" index="index" collection="list" separator="OR">
+            (feedId = #{item.feedId} AND userId = #{item.userId})
+        </foreach>
+    </delete>
+
+    <!--feedId, userId 복합 UNIQUE KEY 지정-->
+    <insert id="batchInsertGoodUserList" parameterType="com.ht.project.snsproject.model.good.GoodUser">
+        INSERT INTO goods(feedId, userId)
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=",">
+            (#{item.feedId}, #{item.userId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        userId = VALUES(userId)
+    </insert>
+</mapper>

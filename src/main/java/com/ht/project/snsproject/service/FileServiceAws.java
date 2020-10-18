@@ -10,13 +10,6 @@ import com.ht.project.snsproject.model.feed.FileAdd;
 import com.ht.project.snsproject.model.feed.FileDelete;
 import com.ht.project.snsproject.model.feed.FileInfo;
 import com.ht.project.snsproject.model.feed.FileVo;
-import java.io.File;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +21,14 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -47,7 +48,8 @@ public class FileServiceAws implements FileService {
   private static final Logger logger = LoggerFactory.getLogger(FileServiceAws.class);
 
   @Autowired
-  FileMapper fileMapper;
+  private FileMapper fileMapper;
+
   /** ThreadLocal 객체를 사용하면 SimpleDateFormat 의 Thread Safety 를 보장할 수 있다.
    * ThreadLocal 은 한 쓰레드에서 실행되는 코드가 동일한 객체를 사용할 수 있도록 해 주기 때문에
    * 쓰레드와 관련된 코드에서 파라미터를 사용하지 않고 객체를 전파하기 위한 용도로 주로 사용된다.
@@ -161,7 +163,7 @@ public class FileServiceAws implements FileService {
       fileServiceAws.deleteFiles(feedId, path, originFiles);
     }
 
-    fileMapper.insertAndUpdateFiles(fileInfoList);
+    fileMapper.upsertFiles(fileInfoList);
   }
 
   @Transactional

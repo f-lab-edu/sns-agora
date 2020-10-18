@@ -6,64 +6,60 @@ import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.mapper.FriendMapper;
 import com.ht.project.snsproject.model.Pagination;
-import com.ht.project.snsproject.model.feed.Feed;
-import com.ht.project.snsproject.model.feed.FeedDeleteParam;
-import com.ht.project.snsproject.model.feed.FeedInfo;
-import com.ht.project.snsproject.model.feed.FeedInsert;
-import com.ht.project.snsproject.model.feed.FeedListParam;
-import com.ht.project.snsproject.model.feed.FeedParam;
-import com.ht.project.snsproject.model.feed.FeedUpdate;
-import com.ht.project.snsproject.model.feed.FeedUpdateParam;
-import com.ht.project.snsproject.model.feed.FeedVO;
-import com.ht.project.snsproject.model.feed.FileVo;
-import com.ht.project.snsproject.model.feed.FriendsFeedList;
+import com.ht.project.snsproject.model.feed.*;
+import com.ht.project.snsproject.model.good.GoodPushedStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
 public class FeedServiceImpl implements FeedService {
 
   @Autowired
-  FeedMapper feedMapper;
+  private FeedMapper feedMapper;
 
   @Autowired
-  FriendMapper friendMapper;
+  private FriendMapper friendMapper;
 
   @Autowired
   @Qualifier("awsFileService")
-  FileService fileService;
+  private FileService fileService;
 
   @Autowired
-  RecommendService recommendService;
+  private GoodService goodService;
 
   @Autowired
-  RedisTemplate<String, Object> redisTemplate;
+  private FeedCacheService feedCacheService;
+
+  @Autowired
+  private FriendService friendService;
+
+  @Autowired
+  private RedisCacheService redisCacheService;
+
+  @Autowired
+  private CommentService commentService;
 
   @Transactional
   @Override
-  public void feedUpload(List<MultipartFile> files, FeedVO feedVo, String userId) {
+  public void feedUpload(List<MultipartFile> files, FeedVo feedVo, String userId) {
 
     Timestamp date = Timestamp.valueOf(LocalDateTime.now());
-    FeedInsert feedInsert = FeedInsert.builder()
-            .userId(userId)
-            .title(feedVo.getTitle())
-            .content(feedVo.getContent())
-            .date(date)
-            .publicScope(feedVo.getPublicScope())
-            .recommend(0)
-            .build();
+    FeedInsert feedInsert = FeedInsert.create(feedVo, userId, date);
+
     feedMapper.feedUpload(feedInsert);
+
     if (!files.isEmpty()) {
       fileService.fileUpload(files, userId, feedInsert.getId());
     }
@@ -73,101 +69,38 @@ public class FeedServiceImpl implements FeedService {
   @Override
   public Feed getFeed(String userId, String targetId, int id) {
 
-    Feed.FeedBuilder feedBuilder = Feed.builder();
     FeedInfo feedInfo = getFeedInfo(id, userId, targetId);
+    List<FileVo> files = getFileList(feedInfo.getFileNames(), feedInfo.getFilePath());
 
-    String fileNames = feedInfo.getFileNames();
     int feedId = feedInfo.getId();
-    int recommend = recommendService.getRecommend(id);
+    int good = goodService.getGood(feedId);
+    int commentCount = commentService.getCommentCount(feedId);
 
-    feedBuilder.id(feedId)
-            .userId(feedInfo.getUserId())
-            .title(feedInfo.getTitle())
-            .content(feedInfo.getContent())
-            .date(feedInfo.getDate())
-            .publicScope(feedInfo.getPublicScope())
-            .recommend(recommend);
+    boolean goodPushed = feedInfo.isGoodPushed();
 
-    if (fileNames != null) {
+    return Feed.create(feedInfo, good, commentCount, goodPushed, files);
 
-      String filePath = feedInfo.getPath();
-      String[] fileNameArray = fileNames.split(",");
-      List<FileVo> fileVoList = new ArrayList<>();
-      int fileIndex = 0;
-
-      for (String fileName:fileNameArray) {
-        fileVoList.add(FileVo.getInstance(++fileIndex, filePath, fileName));
-      }
-      feedBuilder.files(fileVoList);
-    }
-
-    return feedBuilder.build();
   }
 
-  public FeedInfo getFeedInfoCache(int feedId) {
-
-    String key = "feedInfo:" + feedId;
-    Map<?,?> cache = (Map<?, ?>) redisTemplate.opsForValue().get(key);
-
-    if (cache != null) {
-
-      return FeedInfo.builder().id((Integer) cache.get("id"))
-              .userId((String) cache.get("userId"))
-              .title((String) cache.get("title"))
-              .content((String) cache.get("content"))
-              .date(new Timestamp((Long) cache.get("date")))
-              .publicScope(PublicScope.valueOf((String) cache.get("publicScope")))
-              .path((String) cache.get("path"))
-              .fileNames((String) cache.get("fileNames"))
-              .build();
-    }
-
-
-    FeedInfo feedInfo = feedMapper.getFeedInfoCache(feedId);
-    redisTemplate.opsForValue().set(key, feedInfo);
-
-    return feedInfo;
-  }
-
+  @Transactional
   public FeedInfo getFeedInfo(int feedId, String userId, String targetId) {
 
-    String key = "feedInfo:" + feedId;
-    Map<?,?> cache = (Map<?, ?>) redisTemplate.opsForValue().get(key);
+    //친구 여부 확인
+    FriendStatus friendStatus = friendService.getFriendStatus(userId, targetId);
 
-    if (cache != null) {
+    FeedInfo feedInfo = feedCacheService.getFeedInfoFromCache(feedId, userId, friendStatus);
 
-      return FeedInfo.builder().id((Integer) cache.get("id"))
-              .userId((String) cache.get("userId"))
-              .title((String) cache.get("title"))
-              .content((String) cache.get("content"))
-              .date(new Timestamp((Long) cache.get("date")))
-              .publicScope(PublicScope.valueOf((String) cache.get("publicScope")))
-              .path((String) cache.get("path"))
-              .fileNames((String) cache.get("fileNames"))
-              .build();
+    if(feedInfo != null) {
+      return feedInfo;
     }
 
-    FeedInfo feedInfo;
+    feedInfo = feedMapper.getFeed(FeedParam.create(feedId, userId, friendStatus));
 
-    if (userId.equals(targetId)) {
-      feedInfo = feedMapper.getFeed(FeedParam.create(feedId, targetId, FriendStatus.ME));
-    } else {
-
-      FriendStatus friendStatus = friendMapper.getFriendRelationStatus(userId, targetId)
-              .getFriendStatus();
-
-      if (friendStatus == FriendStatus.BLOCK) {
-        throw new InvalidApproachException("유효하지 않은 접근입니다.");
-      }
-
-      feedInfo = feedMapper.getFeed(FeedParam.create(feedId, targetId, friendStatus));
-
-      if (feedInfo == null) {
-        throw new InvalidApproachException("일치하는 데이터가 없습니다.");
-      }
+    if (feedInfo == null || feedInfo.getId() == null) {
+      throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
 
-    redisTemplate.opsForValue().set(key, feedInfo);
+    feedCacheService.addFeedInfoToCache(FeedInfoCache.from(feedInfo), 60L, TimeUnit.SECONDS);
 
     return feedInfo;
   }
@@ -175,14 +108,14 @@ public class FeedServiceImpl implements FeedService {
   /*  getFeedList() 메소드의 경우,
       targetId 에 해당하는 user 의 피드 목록을 조회해야하므로 순서와 데이터 정확도가 중요하기 때문에
       피드 전체를 캐시에서 확인하지 않고,
-      recommend 수 증감은 redis 에서 저장하므로 캐시에서는 recommend 수만 체크하여 가져온다.
+      good 수 증감은 redis 에서 저장하므로 캐시에서는 good 수만 체크하여 가져온다.
   */
   @Transactional
   @Override
-  public List<Feed> getFeedList(String userId, String targetId, Pagination pagination) {
+  public List<Feed> getFeedListByUser(String userId, String targetId, Pagination pagination) {
 
     if (userId.equals(targetId)) {
-      return getFeeds(FeedListParam.create(targetId, pagination, PublicScope.ME));
+      return getFeedsByUser(FeedListParam.create(userId, targetId, pagination, PublicScope.ME));
     }
 
     FriendStatus friendStatus = friendMapper.getFriendRelationStatus(userId, targetId)
@@ -190,89 +123,116 @@ public class FeedServiceImpl implements FeedService {
 
     switch (friendStatus) {
       case FRIEND:
-        return getFeeds(FeedListParam.create(targetId, pagination, PublicScope.FRIENDS));
+        return getFeedsByUser(FeedListParam.create(userId, targetId, pagination, PublicScope.FRIENDS));
 
       case BLOCK:
         throw new InvalidApproachException("유효하지 않은 접근입니다.");
 
       default:
-        return getFeeds(FeedListParam.create(targetId, pagination, PublicScope.ALL));
+        return getFeedsByUser(FeedListParam.create(userId, targetId, pagination, PublicScope.ALL));
     }
   }
 
   @Transactional
   @Override
-  public List<Feed> getFeeds(FeedListParam feedListParam) {
+  public List<Feed> getFeedsByUser(FeedListParam feedListParam) {
 
-    List<FeedInfo> feedInfoList = feedMapper.getFeedList(feedListParam);
-    List<Feed> feeds = new ArrayList<>();
+    return getFeeds(getFeedInfoListByUser(feedListParam), feedListParam.getUserId());
 
-    for (FeedInfo feedInfo:feedInfoList) {
-
-      List<FileVo> files = new ArrayList<>();
-      int feedId = feedInfo.getId();
-      int recommend = recommendService.getRecommend(feedId);
-
-      Feed.FeedBuilder builder = Feed.builder()
-              .id(feedId)
-              .userId(feedInfo.getUserId())
-              .title(feedInfo.getTitle())
-              .content(feedInfo.getContent())
-              .date(feedInfo.getDate())
-              .publicScope(feedInfo.getPublicScope())
-              .recommend(recommend);
-
-      int fileIndex = 0;
-      if (feedInfo.getFileNames() != null) {
-        StringTokenizer st = new StringTokenizer(feedInfo.getFileNames(), ",");
-        while (st.hasMoreTokens()) {
-          FileVo tmpFile = FileVo.getInstance(++fileIndex, feedInfo.getPath(), st.nextToken());
-          files.add(tmpFile);
-        }
-        builder.files(files);
-      }
-      Feed tmp = builder.build();
-      feeds.add(tmp);
-    }
-    return feeds;
   }
 
+  public List<FeedInfo> getFeedInfoListByUser(FeedListParam feedListParam) {
+
+    return feedMapper.getFeedList(feedListParam);
+  }
+
+  @Transactional
   @Override
   public List<Feed> getFriendsFeedList(String userId, Pagination pagination) {
 
-    List<FeedInfo> feedInfoList = feedMapper.getFriendsFeedList(
-            FriendsFeedList.create(userId,pagination));
-    List<Feed> feeds = new ArrayList<>();
-    for (FeedInfo feedInfo:feedInfoList) {
+    return getFeeds(getFeedInfoListByFriends(FriendsFeedList.create(userId, pagination)), userId);
 
-      List<FileVo> files = new ArrayList<>();
-      StringTokenizer st = new StringTokenizer(feedInfo.getFileNames(),",");
-      int fileIndex = 0;
-      int feedId = feedInfo.getId();
-      int recommend = recommendService.getRecommend(feedId);
+  }
 
-      Feed.FeedBuilder builder = Feed.builder()
-              .id(feedId)
-              .userId(feedInfo.getUserId())
-              .title(feedInfo.getTitle())
-              .content(feedInfo.getContent())
-              .date(feedInfo.getDate())
-              .publicScope(feedInfo.getPublicScope())
-              .recommend(recommend);
+  public List<FeedInfo> getFeedInfoListByFriends (FriendsFeedList friendsFeedList) {
+
+    return feedMapper.getFriendsFeedList(friendsFeedList);
+  }
+
+  @Override
+  public List<FileVo> getFileList(String fileNames, String path) {
+
+    List<FileVo> files = new ArrayList<>();
+    int fileIndex = 0;
+
+    if (fileNames != null) {
+
+      StringTokenizer st = new StringTokenizer(fileNames, ",");
 
       while (st.hasMoreTokens()) {
-        FileVo tmpFile = FileVo.getInstance(++fileIndex,feedInfo.getPath(),st.nextToken());
-        files.add(tmpFile);
+
+        FileVo file = FileVo.getInstance(++fileIndex, path, st.nextToken());
+        files.add(file);
+      }
+    } else {
+      files = null;
+    }
+
+    return files;
+  }
+
+  public List<Integer> getFeedIds(List<FeedInfo> feedInfoList) {
+
+    List<Integer> feedIds = new ArrayList<>();
+
+    for(FeedInfo feedInfo: feedInfoList) {
+      int feedId = feedInfo.getId();
+
+      feedIds.add(feedId);
+    }
+
+    return feedIds;
+  }
+
+
+
+  public List<Feed> getFeeds(List<FeedInfo> feedInfoList, String userId) {
+
+    List<Integer> feedIds = getFeedIds(feedInfoList);
+    Map<Integer, Boolean> goodPushedMap = goodService.getGoodPushedStatusesFromCache(feedIds, userId);
+    Map<Integer, Integer> goodsMap = goodService.getGoods(feedIds);
+    Map<Integer, Integer> commentCountMap = commentService.getCommentCounts(feedIds);
+    List<Feed> feeds = new ArrayList<>();
+    List<GoodPushedStatus> goodPushedStatuses = new ArrayList<>();
+    List<FeedInfoCache> feedInfoCacheList = new ArrayList<>();
+
+    for(FeedInfo feedInfo: feedInfoList) {
+
+      int feedId = feedInfo.getId();
+      List<FileVo> files = getFileList(feedInfo.getFileNames(), feedInfo.getFilePath());
+      Boolean goodPushed = goodPushedMap.get(feedId);
+      feedInfoCacheList.add(FeedInfoCache.from(feedInfo));
+
+      if(goodPushed == null) {
+        goodPushed = feedInfo.isGoodPushed();
       }
 
-      builder.files(files);
-      Feed tmp = builder.build();
-      feeds.add(tmp);
+      goodPushedStatuses.add(GoodPushedStatus.builder()
+              .feedId(feedId)
+              .pushedStatus(goodPushed)
+              .build());
+
+      Integer good = goodsMap.get(feedId);
+      Integer commentCount = commentCountMap.get(feedId);
+
+      feeds.add(Feed.create(feedInfo, good, commentCount, goodPushed, files));
     }
+
+    redisCacheService.multiSetGoodPushedStatus(goodPushedStatuses, userId, 60L);
+    redisCacheService.multiSetFeedInfoCache(feedInfoCacheList,60L);
 
     return feeds;
   }
-
 
   @Transactional
   @Override
@@ -291,16 +251,8 @@ public class FeedServiceImpl implements FeedService {
                          FeedUpdateParam feedUpdateParam, int feedId, String userId) {
 
     Timestamp date = Timestamp.valueOf(LocalDateTime.now());
-    FeedUpdate feedUpdate = FeedUpdate.builder()
-            .id(feedId)
-            .userId(userId)
-            .title(feedUpdateParam.getTitle())
-            .content(feedUpdateParam.getContent())
-            .date(date)
-            .publicScope(feedUpdateParam.getPublicScope())
-            .build();
 
-    boolean result = feedMapper.updateFeed(feedUpdate);
+    boolean result = feedMapper.updateFeed(FeedUpdate.create(feedId, userId, feedUpdateParam, date));
     if (!result) {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }

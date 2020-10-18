@@ -6,12 +6,6 @@ import com.ht.project.snsproject.mapper.FileMapper;
 import com.ht.project.snsproject.model.feed.FileAdd;
 import com.ht.project.snsproject.model.feed.FileDelete;
 import com.ht.project.snsproject.model.feed.FileInfo;
-import java.io.File;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,16 +16,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
 @Slf4j
 @Service
 @Qualifier("localFileService")
 public class FileServiceLocal implements FileService {
 
   @Autowired
-  FileMapper fileMapper;
+  private FileMapper fileMapper;
 
   @Autowired
-  FileServiceLocal fileServiceLocal;
+  private FileServiceLocal fileServiceLocal;
 
   @Value("${file.windows.path}")
   private String localPath;
@@ -179,6 +180,6 @@ public class FileServiceLocal implements FileService {
       fileServiceLocal.deleteFiles(feedId, path, originFiles);
     }
 
-    fileMapper.insertAndUpdateFiles(fileInfoList);
+    fileMapper.upsertFiles(fileInfoList);
   }
 }

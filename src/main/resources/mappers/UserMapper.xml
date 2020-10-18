@@ -27,6 +27,12 @@
         WHERE userId = #{userId} AND password = #{password}
     </select>
 
+    <select id="getUserFromUserId" parameterType="String" resultType="com.ht.project.snsproject.model.user.User">
+        SELECT id, userId, name, nickname, email, birth
+        FROM users
+        WHERE userId = #{userId}
+    </select>
+
     <select id="getPassword" parameterType="String" resultType="String">
         SELECT password
         FROM users

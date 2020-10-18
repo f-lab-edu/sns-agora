@@ -1,15 +1,24 @@
 package com.ht.project.snsproject.config;
 
-import javax.sql.DataSource;
-
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 데이터베이스 설정.
@@ -34,6 +43,86 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 public class DatabaseConfig {
 
+  /*
+  애플리케이션에서 Quartz 스케줄러를 사용함에 따라 스키마를 2개로 분리하여 사용하게 되었습니다.
+  Quartz 는 범용 스케줄러 프레임워크 이므로 다른 애플리케이션 프로젝트에서도 활용 범위가 넓다고 생각하였습니다.
+  그렇기 때문에 스키마를 별도로 분리하여 관리하고자 하였습니다.
+  스키마가 분리되었기 때문에 DataSource 도 2개가 필요하게 되었고,
+  이로 인해 datasource 빈의 이름을 분리하여 주입하게 되었습니다.
+  주로 사용하는 mybatis 에 필요한 datasource 의 빈을 primary로 선언하여 주입되게 하였습니다.
+   */
+  @Primary
+  @Bean(name = "masterDataSource")
+  @ConfigurationProperties(prefix = "spring.datasource.master.hikari")
+  public DataSource masterDataSource() {
+
+    return DataSourceBuilder.create().build();
+    
+  }
+
+  /*
+  slaveDataSource 는 읽기 전용 DataSource 로
+  @Transactional readOnly 속성을 true 로 설정한다.
+  default 는 false 이다.
+   */
+  @Bean(name = "slaveDataSource")
+  @ConfigurationProperties(prefix = "spring.datasource.slave.hikari")
+  public DataSource slaveDataSource() {
+
+    return DataSourceBuilder.create().build();
+
+  }
+
+  /**
+   * routingDataSource 를 생성해서 리턴.
+   *결국 routingDataSource 여러 개의 Datasource 객체를 Key, Value 형태로 담고 있고
+   * determineCurrentLookupKey라는 메소드에서 리턴하는 Key 값과 매칭되는 Datasource 객체를 반환하게 됩니다.
+   * @param masterDataSource
+   * @param slaveDataSource
+   * @return
+   */
+  @Bean(name = "routingDataSource")
+  public DataSource routingDataSource(@Qualifier("masterDataSource") DataSource masterDataSource, @Qualifier("slaveDataSource") DataSource slaveDataSource) {
+
+    ReplicationRoutingDataSource routingDataSource = new ReplicationRoutingDataSource();
+    Map<Object, Object> dataSourceMap = new HashMap<>();
+    dataSourceMap.put("master", masterDataSource);
+    dataSourceMap.put("slave", slaveDataSource);
+    routingDataSource.setTargetDataSources(dataSourceMap);
+    routingDataSource.setDefaultTargetDataSource(masterDataSource);
+
+    return routingDataSource;
+  }
+
+  /**
+   * 실질적인 쿼리 실행 여부와 상관없이 트랜잭션이 걸리면 무조건 Connection 객체를 확보하는 Spring의 단점을 보완하여
+   * 트랜잭션 시작시에 Connection Proxy 객체를 리턴하고 실제로 쿼리가 발생할 때
+   * 데이터소스에서 getConnection()을 호출하는 역할을 하는 것.
+   *
+   * TransactionManager 선별 ->
+   * LazyConnectionDataSourceProxy에서 Connection Proxy 객체 획득 ->
+   * Transaction 동기화(Synchronization) ->
+   * 실제 쿼리 호출시에 ReplicationRoutingDataSource.getConnection()/determineCurrentLookupKey() 호출
+   *
+   * TransactionManager나 영속 계층 프레임워크는 dataSource 이것만 바라보게 해야한다.
+   * writeDataSource, readDatasource, routingDataSource는 설정 속에만 존재할 뿐
+   * 영속 계층 프레임워크들에게는 그 존재를 모르게 해야한다.
+   * @param routingDataSource
+   * @return
+   */
+  @Bean(name = "dataSource")
+  public DataSource dataSource(@Qualifier("routingDataSource") DataSource routingDataSource) {
+
+    return new LazyConnectionDataSourceProxy(routingDataSource);
+  }
+
+
+  @Bean(name = "transactionManager")
+  public PlatformTransactionManager transactionManager(@Qualifier("dataSource") DataSource dataSource) {
+
+    return new DataSourceTransactionManager(dataSource);
+  }
+
   /**
    * SqlSessionFactory 는 SqlSession 객체를 생성하기 위한 객체이다.
    * SqlSession 객체를 한번 생성하면 매핑구문을 실행하거나 커밋 또는 롤백을 하기 위해 세션을 사용할수 있다.
@@ -43,8 +132,8 @@ public class DatabaseConfig {
    * @return SqlSessionFactory
    * @throws Exception if fail to create SqlSessionFactory Object
    */
-  @Bean
-  public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+  @Bean(name = "sqlSessionFactory")
+  public SqlSessionFactory sqlSessionFactory(@Qualifier("dataSource") DataSource dataSource) throws Exception {
 
     final SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
     sessionFactory.setDataSource(dataSource);
@@ -61,8 +150,8 @@ public class DatabaseConfig {
    * @return SqlSessionTemplate
    * @throws Exception if fail to create SqlSessionTemplate Object
    */
-  @Bean
-  public SqlSessionTemplate sqlSessionTemplate(SqlSessionFactory sqlSessionFactory)
+  @Bean(name = "sqlSessionTemplate")
+  public SqlSessionTemplate sqlSessionTemplate(@Qualifier("sqlSessionFactory") SqlSessionFactory sqlSessionFactory)
           throws Exception {
 
     final SqlSessionTemplate sqlSessionTemplate = new SqlSessionTemplate(sqlSessionFactory);

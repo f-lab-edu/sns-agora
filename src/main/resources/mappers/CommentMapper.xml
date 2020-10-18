@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ht.project.snsproject.mapper.CommentMapper">
+
+    <insert id="insertCommentOnFeed" parameterType="com.ht.project.snsproject.model.comment.CommentInsertParam">
+        INSERT INTO comments(feedId, userId, content, writeTime)
+        VALUES (#{feedId}, #{userId}, #{content}, #{writeTime})
+    </insert>
+
+    <!--resultMap의 association 태그를 사용하게 되면
+        객체의 Composition을 구현할 수 있습니다.
+        즉 1:1 구조로 객체에 데이터를 매핑가능합니다.
+        기존의 개별적인 변수에 담아오는 것보다는 해당 방식으로 가져오게 되면
+        객체 구조가 더 잘 드러날 것이라고 생각해서 해당 방식으로 변경하였습니다.-->
+
+    <resultMap id="commentResultMap" type="com.ht.project.snsproject.model.comment.Comment">
+        <id property="id" javaType="int" column="commentId"/>
+        <result property="feedId" javaType="int" column="commentFeedId"/>
+        <result property="userId" javaType="String" column="commentUserId"/>
+        <result property="content" javaType="String" column="commentContent"/>
+        <result property="writeTime" javaType="java.sql.Timestamp" column="commentDate"/>
+        <association property="reply" javaType="com.ht.project.snsproject.model.comment.Reply">
+            <id property="id" javaType="int" column="replyId"/>
+            <result property="userId" javaType="String" column="replyUserId"/>
+            <result property="content" javaType="String" column="replyContent"/>
+            <result property="writeTime" javaType="java.sql.Timestamp" column="replyDate"/>
+        </association>
+    </resultMap>
+
+    <select id="getCommentsOnFeed" parameterType="com.ht.project.snsproject.model.comment.CommentsParam"
+            resultMap="commentResultMap">
+        SELECT a.id AS commentId,
+        a.feedId AS commentFeedId,
+        a.userId AS commentUserId,
+        a.content AS commentContent,
+        a.writeTime AS commentDate,
+        b.id AS replyId,
+        b.userId AS replyUserId,
+        b.content AS replyContent,
+        b.writeTime AS replyDate
+        FROM comments a
+        LEFT JOIN replies b
+        ON a.id = b.commentId
+        WHERE feedId = #{feedId}
+        <if test="cursor != null">
+            AND a.id<![CDATA[<]]>#{cursor}
+        </if>
+        GROUP BY a.id
+        LIMIT #{limit}
+    </select>
+
+    <select id="getCommentCount" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+        FROM comments
+        WHERE feedId = #{feedId}
+    </select>
+
+    <select id="getCommentCounts" parameterType="java.util.List"
+            resultType="com.ht.project.snsproject.model.comment.CommentCount">
+
+        SELECT feedId, COUNT(*) AS commentCount FROM comments
+        WHERE
+        <foreach item="item" collection="list" index="index" open="(" close=")" separator="OR">
+            feedId = #{item}
+        </foreach>
+        GROUP BY feedId;
+    </select>
+
+    <update id="updateCommentOnFeed" parameterType="com.ht.project.snsproject.model.comment.CommentUpdateParam">
+        Update comments
+        set content = #{content},
+        writeTime = #{updateTime}
+        where id = #{commentId}
+        AND userId = #{userId}
+    </update>
+
+    <select id="getRepliesOnComment" parameterType="com.ht.project.snsproject.model.comment.RepliesParam"
+    resultType="com.ht.project.snsproject.model.comment.Reply">
+        SELECT id, userId, content, writeTime
+        FROM replies
+        WHERE commentId = #{commentId}
+        AND id<![CDATA[>]]>#{cursor}
+        Limit #{limit}
+    </select>
+
+    <insert id="insertReplyOnComment" parameterType="com.ht.project.snsproject.model.comment.ReplyInsertParam">
+        INSERT INTO replies(commentId, userId, content, writeTime)
+        VALUES(#{commentId}, #{userId}, #{content}, #{writeTime})
+    </insert>
+
+    <update id="updateReplyOnComment" parameterType="com.ht.project.snsproject.model.comment.ReplyUpdateParam">
+        Update replies
+        set content = #{content},
+        writeTime = #{updateTime}
+        where id = #{replyId}
+        AND userId = #{userId}
+    </update>
+
+    <delete id="deleteCommentOnFeed" parameterType="com.ht.project.snsproject.model.comment.CommentDeleteParam">
+        DELETE FROM comments
+        WHERE id = #{commentId}
+        AND userId = #{userId}
+    </delete>
+
+    <delete id="deleteReplyOnComment" parameterType="com.ht.project.snsproject.model.comment.ReplyDeleteParam">
+        DELETE FROM replies
+        WHERE id = #{replyId}
+        AND userId = #{userId}
+    </delete>
+</mapper>

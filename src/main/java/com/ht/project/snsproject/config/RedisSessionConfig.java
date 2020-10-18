@@ -3,11 +3,13 @@ package com.ht.project.snsproject.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 import org.springframework.session.web.context.AbstractHttpSessionApplicationInitializer;
@@ -27,18 +29,17 @@ import org.springframework.session.web.context.AbstractHttpSessionApplicationIni
  * cleanupCron 속성 : 만료 된 세션 정리 작업에 대한 cron 표현식으로 기본적으로 1 분마다 실행된다.
  * saveMode 속성 : redis session 의 Save Mode 를 설정한다. 기본은 ON_SET_ATTRIBUTE 이다.
  */
-
 @Configuration
 @EnableRedisHttpSession(maxInactiveIntervalInSeconds = 1800)
-public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
+public class RedisSessionConfig extends AbstractHttpSessionApplicationInitializer {
 
-  @Value("${spring.redis.host}")
+  @Value("${redis.session.host}")
   private String host;
 
-  @Value("${spring.redis.password:@null}")
+  @Value("${redis.session.password:@null}")
   private String password;
 
-  @Value("${spring.redis.port}")
+  @Value("${redis.session.port}")
   private int port;
 
   /**
@@ -49,52 +50,68 @@ public class RedisConfig extends AbstractHttpSessionApplicationInitializer {
    * 비동기로 요청을 처리하기 때문에 고성능을 자랑합니다.
    * @return RedisConnectionFactory
    */
+
+  /*
+  현재는 임시로 primay 빈으로 등록하여 사용하고 있으나,
+  해당 빈을 세션에 주입해야 하므로 명확하게는 Qualifier 설정을 하여 주입하는 것이
+  맞다고 생각합니다.
+  하지만 스프링 부트 내부에서 동작하는 빈을 설정하는 방법을 현재는 잘 모르는 상황이라
+  조금 더 찾아 봐야 할 것 같습니다.
+   */
+
+  @Primary
   @Bean
-  public RedisConnectionFactory redisConnectionFactory() {
+  public RedisConnectionFactory sessionRedisConnectionFactory() {
 
     RedisStandaloneConfiguration redisStandaloneConfiguration =
             new RedisStandaloneConfiguration(host, port);
     redisStandaloneConfiguration.setPassword(password);
+
     LettuceConnectionFactory lettuceConnectionFactory =
             new LettuceConnectionFactory(redisStandaloneConfiguration);
+
+    /*개발의 편의성을 위해 레디스의 논리적으로 database 를 분할하였습니다.
+      실제 서비스 시에는 properties 에서 호스트를 변경해야만 합니다.
+    */
+    lettuceConnectionFactory.setDatabase(2);
 
     return lettuceConnectionFactory;
   }
 
-  /**
-   * RedisTemplate : RedisConnection 은 row level 의 메서드를 제공하는 반면
-   *                 RedisTemplate 은 커넥션 위에서 값을 조작하는 메서드 제공한다.
-   *                 주어진 객체들과 레디스 저장소 내부의 이진 데이터 사이에서 자동적으로 직렬화와 역직렬화를 수행한다.
-   *                 RedisCallback interface 를 구현하여 Redis 접근을 지원하는 메소드를 실행한다.
-   *                 RedisTemplate 은 RedisCallback 구현체나 호출한 코드들이 명시적으로 RedisConnection 을 찾거나,
-   *                 닫는 것을 신경쓰지 않고 혹은 Connection 생명주기 예외를 다루지 않도록 Redis Connection 처리를 제공한다.
-   *                 일단 구성이 되면 이 클래스는 Thread-safe 하다.
-   *                 Default 값으로 JDKSerializationRedisSerializer 를 사용한다.
-   * StringRedisTemplate: 대부분 레디스 key-value 는 문자열 위주이기 때문에 문자열에 특화된 템플릿을 제공한다.
-   *                      RedisTemplate 을 상속받은 클래스이다.
-   *                      StringRedisSerializer 로 직렬화한다.
-   * setConnectionFactory() : setter 를 통한 RedisConnectionFactory 객체를 주입받는다.
-   *                          여기서는 lettuce 를 사용한다.
-   * setKeySerializer() : template 에서 사용될 key(map 에서의 key,value 중 key 에 해당)
-   *                      serializer 를 StringRedisSerializer 로 설정한다.
-   *                      StringRedisSerializer 는 String 타입의 테이터를 byte[] 타입으로
-   *                      혹은 그 역으로 직렬화해주는 serializer 이다.
-   * setValueSerializer() : template 에서 사용될 value serializer 를 Jackson2JsonRedisSerializer 로 설정한다.
-   *                        Jackson 은 text/html 형태의 문자가 아닌 객체등의 데이터를
-   *                        JSON 으로 처리(데이터 바인딩)해 주는 라이브러리이다.
-   *                        즉, Jackson 을 사용해서 JSON 을 읽고 쓸 수 있는 RedisSerializer 이다.
-   *                        이 변환기는 타입이 지정된 빈들 혹은 타입이 지정되지 않은 HashMap 인스턴스들을
-   *                        바인딩 하는데 사용된다.
-   * @return RedisTemplate
-   */
-  @Bean
-  public RedisTemplate<String, Object> redisTemplate() {
+  @Bean("sessionRedisTemplate")
+  public RedisTemplate<String, Object> sessionRedisTemplate() {
 
     RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-    redisTemplate.setConnectionFactory(redisConnectionFactory());
+    redisTemplate.setConnectionFactory(sessionRedisConnectionFactory());
+    redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
     redisTemplate.setKeySerializer(new StringRedisSerializer());
-    redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
 
     return redisTemplate;
   }
+
+  /*
+  기존에 Spring Session DefaultRedisSerializer 가
+  JdkSerializationRedisSerializer 로 설정 되어 있어서 Java Serialize 를 해야만 했으나,
+  springSessionDefaultRedisSerializer 에 Jackson Serializer 를 주입 하면서
+  추가로 Java Serialize 를 하지 않도록 설정했습니다.
+
+  * Java Serialize 를 피해야 하는 이유
+  - java Serialize 의 경우 가장 근본적인 문제는 공격 범위가 넓고 이는 지속적으로 더 넓어져서 방어가 어렵다는 접입니다.
+  - ObjectInputStream 의 readObject 를 호출하면 객체 그래프가 역직렬화되기 때문에
+    클래스패스 안의 거의 모든 타입의 객체를 만들어낼 수 있습니다.
+    바이트 스트림을 역직렬화 하는 과정에서 메소드는 내부의 모든 메소드를 수행할 수 있으므로 전체가 공격 대상이 됩니다.
+    신뢰할 수 없는 스트림을 역직렬화 하게 되면
+    원격 코드 실행(Remote Code Execution), 서비스 거부(Dos) 등의 공격 대상이 될 수 있습니다.
+    직렬화의 위험을 피하는 방법은 직렬화를 하지 않는 것입니다.
+    하지만 직렬화를 해야한다면 JSON 이나 프로토콜 버퍼와 같은 대안을 사용하는 것을 추천합니다.
+    이 또한 모든 공격을 막아줄 수는 없다는 것을 인식해야 합니다.
+   */
+
+  @Bean
+  RedisSerializer<Object> springSessionDefaultRedisSerializer() {
+
+    return new GenericJackson2JsonRedisSerializer();
+  }
+
+
 }

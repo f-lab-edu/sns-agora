@@ -14,6 +14,6 @@ public class FileVo {
   String fileName;
 
   public static FileVo getInstance(int fileIndex, String filePath, String fileName) {
-    return new FileVo(fileIndex,filePath,fileName);
+    return new FileVo(fileIndex, filePath, fileName);
   }
 }

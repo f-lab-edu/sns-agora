@@ -1,9 +1,10 @@
 package com.ht.project.snsproject.model.feed;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
-import java.sql.Timestamp;
 import lombok.Builder;
 import lombok.Value;
+
+import java.sql.Timestamp;
 
 @Builder
 @Value
@@ -21,5 +22,16 @@ public class FeedInsert {
 
   PublicScope publicScope;
 
-  int recommend;
+  int good;
+
+  public static FeedInsert create(FeedVo feedVo, String userId, Timestamp date) {
+    return FeedInsert.builder()
+            .userId(userId)
+            .title(feedVo.getTitle())
+            .content(feedVo.getContent())
+            .date(date)
+            .publicScope(feedVo.getPublicScope())
+            .good(0)
+            .build();
+  }
 }

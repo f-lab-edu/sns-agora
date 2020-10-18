@@ -1,9 +1,10 @@
 package com.ht.project.snsproject.model.feed;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
-import java.sql.Timestamp;
 import lombok.Builder;
 import lombok.Value;
+
+import java.sql.Timestamp;
 
 @Builder
 @Value
@@ -20,4 +21,16 @@ public class FeedUpdate {
   Timestamp date;
 
   PublicScope publicScope;
+
+  public static FeedUpdate create (int feedId, String userId, FeedUpdateParam feedUpdateParam, Timestamp date) {
+
+    return FeedUpdate.builder()
+            .id(feedId)
+            .userId(userId)
+            .title(feedUpdateParam.getTitle())
+            .content(feedUpdateParam.getContent())
+            .date(date)
+            .publicScope(feedUpdateParam.getPublicScope())
+            .build();
+  }
 }

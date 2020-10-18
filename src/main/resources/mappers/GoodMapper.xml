@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ht.project.snsproject.mapper.GoodMapper">
+
+    <select id="getGood" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM goods
+        WHERE feedId = #{feedId}
+    </select>
+
+    <select id="getGoodPushedStatus" parameterType="com.ht.project.snsproject.model.good.GoodStatusParam"
+            resultType="boolean">
+        SELECT EXISTS
+        (SELECT userId FROM goods WHERE feedId = #{feedId} AND userId = #{userId})
+    </select>
+
+    <select id="getGoods" parameterType="java.util.List" resultType="com.ht.project.snsproject.model.good.Good">
+
+        SELECT feedId, COUNT(*) AS good FROM goods
+        WHERE
+        <foreach item="item" collection="list" index="index" open="(" close=")" separator="OR">
+            feedId = #{item}
+        </foreach>
+        GROUP BY feedId;
+    </select>
+
+    <select id="getGoodList" parameterType="com.ht.project.snsproject.model.good.GoodListParam"
+            resultType="com.ht.project.snsproject.model.good.GoodUser">
+        SELECT id, userId From goods
+        WHERE feedId = #{feedId}
+        <if test="cursor != null">
+            AND id <![CDATA[<]]> #{cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{limit};
+    </select>
+
+</mapper>
