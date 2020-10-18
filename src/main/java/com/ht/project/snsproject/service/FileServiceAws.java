@@ -1,11 +1,13 @@
 package com.ht.project.snsproject.service;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.ht.project.snsproject.Exception.FileUploadException;
 import com.ht.project.snsproject.enumeration.ErrorCode;
 import com.ht.project.snsproject.mapper.FileMapper;
 import com.ht.project.snsproject.model.feed.FileInfo;
+import com.ht.project.snsproject.model.feed.FileVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -86,4 +88,18 @@ public class FileServiceAws implements FileService {
 
     }
 
+    @Transactional
+    @Override
+    public void deleteFile(int feedId) {
+
+        List<FileVo> files = fileMapper.getFiles(feedId);
+        if(files!=null){
+            for (FileVo file : files) {
+                String keyName = file.getPath() + File.separator + file.getFileName();
+
+                S3Client.deleteObject(new DeleteObjectRequest(bucketName,keyName));
+            }
+        }
+        fileMapper.deleteFile(feedId);
+    }
 }

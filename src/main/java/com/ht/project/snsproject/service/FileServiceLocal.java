@@ -67,4 +67,29 @@ public class FileServiceLocal implements FileService {
         }
     }
 
+    @Transactional
+    @Override
+    public void deleteFile(int feedId){
+
+
+        String path = fileMapper.getFilePath(feedId);
+
+        if(path!=null) {
+            File dir = new File(path);
+
+            if (dir.exists()) {
+
+                File[] files = dir.listFiles();
+
+                if (files != null) {
+                    for (File file : files) {
+                        file.delete();
+                    }
+                }
+                dir.delete();
+            }
+        }
+
+        fileMapper.deleteFile(feedId);
+    }
 }

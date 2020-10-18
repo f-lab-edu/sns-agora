@@ -3,6 +3,7 @@ package com.ht.project.snsproject.controller;
 import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.Feed;
+import com.ht.project.snsproject.model.feed.FeedUpdateParam;
 import com.ht.project.snsproject.model.feed.FeedVO;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.FeedService;
@@ -64,4 +65,26 @@ public class FeedController {
         return ResponseEntity.ok(feedService.getFriendsFeedList(userId,Pagination.pageInfo(cursor)));
     }
 
+    @LoginCheck
+    @DeleteMapping("/{id}")
+    public HttpStatus deleteFeed(@PathVariable int id, HttpSession httpSession){
+        User userInfo = (User) httpSession.getAttribute("userInfo");
+        String userId = userInfo.getUserId();
+        feedService.deleteFeed(id, userId);
+        return HttpStatus.NO_CONTENT;
+    }
+
+    @LoginCheck
+    @PutMapping("/{id}")
+    public HttpStatus updateFeed(@PathVariable int id,
+                                 @RequestParam("file") List<MultipartFile> files,
+                                 FeedUpdateParam feedUpdateParam,
+                                 HttpSession httpSession){
+        User userInfo = (User) httpSession.getAttribute("userInfo");
+        String userId = userInfo.getUserId();
+
+        feedService.updateFeed(files, feedUpdateParam, id, userId);
+
+        return HttpStatus.OK;
+    }
 }

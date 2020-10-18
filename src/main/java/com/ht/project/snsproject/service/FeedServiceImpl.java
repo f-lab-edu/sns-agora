@@ -153,4 +153,37 @@ public class FeedServiceImpl implements FeedService{
 
         return feeds;
     }
+
+    @Transactional
+    @Override
+    public void deleteFeed(int id, String userId) {
+        boolean result = feedMapper.deleteFeed(new FeedDeleteParam(id, userId));
+
+        if(!result){
+            throw new InvalidApproachException("일치하는 데이터가 없습니다.");
+        }
+        fileService.deleteFile(id);
+    }
+
+    @Transactional
+    @Override
+    public void updateFeed(List<MultipartFile> files, FeedUpdateParam feedUpdateParam, int feedId, String userId) {
+        Timestamp date = Timestamp.valueOf(LocalDateTime.now());
+        FeedInsert.FeedInsertBuilder builder = FeedInsert.builder();
+        builder.id(feedId);
+        builder.userId(userId);
+        builder.title(feedUpdateParam.getTitle());
+        builder.content(feedUpdateParam.getContent());
+        builder.date(date);
+        builder.publicScope(feedUpdateParam.getPublicScope());
+        builder.recommend(feedUpdateParam.getRecommend());
+        FeedInsert feedInsert = builder.build();
+
+        boolean result = feedMapper.updateFeed(feedInsert);
+        if(!result){
+            throw new InvalidApproachException("일치하는 데이터가 없습니다.");
+        }
+        fileService.deleteFile(feedId);
+        fileService.fileUpload(files, userId, feedId);
+    }
 }
