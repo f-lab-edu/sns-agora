@@ -2,7 +2,6 @@ package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.enumeration.AlarmType;
 import com.ht.project.snsproject.enumeration.FriendStatus;
-import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.FriendMapper;
@@ -174,37 +173,5 @@ public class FriendServiceImpl implements FriendService {
     return friendMapper.getFriendRelationStatus(userId, targetId);
   }
 
-  @Override
-  public boolean isFeedReadableByFriendStatus(PublicScope publicScope, FriendStatus friendStatus) {
 
-    boolean isReadable = false;
-
-    switch (friendStatus) {
-
-      case ME:
-        if(publicScope == PublicScope.ALL ||
-                publicScope == PublicScope.FRIENDS ||
-                publicScope == PublicScope.ME) {
-          isReadable = true;
-        }
-        break;
-
-      case FRIEND:
-        if(publicScope == PublicScope.ALL ||
-                publicScope == PublicScope.FRIENDS) {
-          isReadable =true;
-        }
-        break;
-
-      case BLOCK:
-        break;
-
-      default:
-        if(publicScope == PublicScope.ALL) {
-          isReadable = true;
-        }
-    }
-
-    return isReadable;
-  }
 }

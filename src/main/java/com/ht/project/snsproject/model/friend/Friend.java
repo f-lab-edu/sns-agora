@@ -1,9 +1,12 @@
 package com.ht.project.snsproject.model.friend;
 
 import com.ht.project.snsproject.enumeration.FriendStatus;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class Friend {
-  FriendStatus friendStatus;
+
+  private FriendStatus friendStatus;
 }

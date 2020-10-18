@@ -24,13 +24,13 @@ public class FeedInsert {
 
   int good;
 
-  public static FeedInsert create(FeedVo feedVo, String userId, Timestamp date) {
+  public static FeedInsert create(FeedWriteDto feedWriteDto, String userId, Timestamp date) {
     return FeedInsert.builder()
             .userId(userId)
-            .title(feedVo.getTitle())
-            .content(feedVo.getContent())
+            .title(feedWriteDto.getTitle())
+            .content(feedWriteDto.getContent())
             .date(date)
-            .publicScope(feedVo.getPublicScope())
+            .publicScope(feedWriteDto.getPublicScope())
             .good(0)
             .build();
   }

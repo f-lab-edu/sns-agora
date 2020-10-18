@@ -14,6 +14,4 @@ public interface GoodMapper {
 
   List<GoodUser> getGoodList(GoodListParam goodListParam);
 
-  List<Good> getGoods(List<Integer> feedIds);
-
 }

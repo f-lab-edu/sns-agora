@@ -1,17 +1,15 @@
 package com.ht.project.snsproject.service;
 
-import com.ht.project.snsproject.enumeration.FriendStatus;
+import com.ht.project.snsproject.model.feed.Feed;
 import com.ht.project.snsproject.model.feed.FeedInfo;
-import com.ht.project.snsproject.model.feed.FeedInfoCache;
 
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 public interface FeedCacheService {
 
-  FeedInfo getFeedInfoFromCache(int feedId, String userId, FriendStatus friendStatus);
+  void setFeedInfoCache(List<FeedInfo> feedInfoList, long expire);
 
-  FeedInfoCache convertJsonStrToFeedInfoCache(String jsonStr);
+  List<FeedInfo> getLatestALLFeedList();
 
-  void addFeedInfoToCache(FeedInfoCache feedInfoCache, long time, TimeUnit timeUnit);
-
+  void setFeedListCache(List<Feed> feedList, String userId, long expire);
 }

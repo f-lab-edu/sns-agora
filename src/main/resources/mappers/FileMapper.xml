@@ -17,7 +17,12 @@
     <select id="getFilePath" parameterType="int" resultType="String">
         SELECT filePath From images
         WHERE feedId = #{feedId}
-        LIMIT 1
+        GROUP BY filePath
+    </select>
+
+    <select id="getFileNames" parameterType="int" resultType="String">
+        SELECT fileName FROM images
+        WHERE feedId = #{feedId}
     </select>
 
     <select id="getFiles" parameterType="int" resultType="com.ht.project.snsproject.model.feed.FileVo">
@@ -63,8 +68,4 @@
         fileIndex=VALUES(fileIndex)
     </insert>
 
-    <select id="getFileNames" parameterType="int" resultType="String">
-        SELECT fileName FROM images
-        WHERE feedId = #{feedId}
-    </select>
 </mapper>

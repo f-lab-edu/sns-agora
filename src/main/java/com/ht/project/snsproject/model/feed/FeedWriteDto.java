@@ -5,7 +5,7 @@ import com.ht.project.snsproject.enumeration.PublicScope;
 import lombok.Value;
 
 @Value
-public class FeedVo {
+public class FeedWriteDto {
 
   @NotNull
   String title;

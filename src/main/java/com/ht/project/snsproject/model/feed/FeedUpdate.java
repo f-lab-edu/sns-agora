@@ -22,7 +22,7 @@ public class FeedUpdate {
 
   PublicScope publicScope;
 
-  public static FeedUpdate create (int feedId, String userId, FeedUpdateParam feedUpdateParam, Timestamp date) {
+  public static FeedUpdate create (int feedId, String userId, FeedWriteDto feedUpdateParam, Timestamp date) {
 
     return FeedUpdate.builder()
             .id(feedId)

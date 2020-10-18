@@ -8,7 +8,7 @@
         VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope})
     </insert>
 
-    <resultMap id="feed" type="com.ht.project.snsproject.model.feed.FeedsDto">
+    <resultMap id="feed" type="com.ht.project.snsproject.model.feed.Feed">
         <id property="id" column="id"/>
         <result property="userId" column="userId"/>
         <result property="title" column="title"/>
@@ -21,7 +21,7 @@
         <collection property="files" resultMap="file"/>
     </resultMap>
 
-    <resultMap id="feedInfo" type="com.ht.project.snsproject.model.feed.FeedsInfo">
+    <resultMap id="feedInfo" type="com.ht.project.snsproject.model.feed.FeedInfo">
         <id property="id" column="id"/>
         <result property="userId" column="userId"/>
         <result property="title" column="title"/>
@@ -33,13 +33,19 @@
         <collection property="files" resultMap="file"/>
     </resultMap>
 
-    <resultMap id="file" type="com.ht.project.snsproject.model.feed.Files">
+    <resultMap id="file" type="com.ht.project.snsproject.model.feed.FileVo">
         <result property="fileIndex" column="fileIndex"/>
         <result property="filePath" column="filePath"/>
         <result property="fileName" column="fileName"/>
     </resultMap>
 
-    <select id="findFriendsFeedListByUserId" parameterType="com.ht.project.snsproject.model.feed.FeedsParam"
+    <!--LEFT JOIN 사용 이유
+    - 피드를 가져오기 위해서는 피드 정보와 파일정보를 동시에 가져와야하기 때문에
+      JOIN 을 사용하여 feeds 테이블과 images 테이블의 정보들을 조회하고자 하였습니다.
+    - INNER JOIN 을 사용하지 않고, LEFT JOIN 을 사용한 이유는
+      모든 피드가 파일 정보를 포함하지 않기 때문에 피드 정보만을 조회할 수 있도록 하기 위해서는
+      LEFT JOIN 을 통해 조회해야겠다고 생각하여 사용하게 되었습니다.-->
+    <select id="findFriendsFeedListByUserId" parameterType="com.ht.project.snsproject.model.feed.FeedInfoParam"
             resultMap="feed">
         SELECT x.id AS id,
         x.userId AS userId,
@@ -197,7 +203,7 @@
         ORDER BY x.id DESC
     </select>
 
-    <select id="findAllFeedByFeedId" parameterType="com.ht.project.snsproject.model.feed.FeedDtoParam"
+    <select id="findAllFeedByFeedId" parameterType="com.ht.project.snsproject.model.feed.FeedParam"
             resultMap="feedInfo">
 
         SELECT x.id AS id,
@@ -226,7 +232,7 @@
         LEFT OUTER JOIN images b ON x.id = b.feedId
     </select>
 
-    <select id="findFriendsFeedByFeedId" parameterType="com.ht.project.snsproject.model.feed.FeedDtoParam"
+    <select id="findFriendsFeedByFeedId" parameterType="com.ht.project.snsproject.model.feed.FeedParam"
             resultMap="feedInfo">
 
         SELECT x.id AS id,
@@ -256,7 +262,7 @@
         LEFT OUTER JOIN images b ON x.id = b.feedId
     </select>
 
-    <select id="findMyFeedByFeedId" parameterType="com.ht.project.snsproject.model.feed.FeedDtoParam"
+    <select id="findMyFeedByFeedId" parameterType="com.ht.project.snsproject.model.feed.FeedParam"
             resultMap="feedInfo">
 
         SELECT x.id AS id,
@@ -287,91 +293,34 @@
         LEFT OUTER JOIN images b ON x.id = b.feedId
     </select>
 
-    <select id="getFeed" parameterType="com.ht.project.snsproject.model.feed.FeedParam"
-            resultType="com.ht.project.snsproject.model.feed.FeedInfo">
-        SELECT a.id, a.userId,
-        a.title, a.content,
-        a.date, a.publicScope,
-        b.filePath, GROUP_CONCAT(DISTINCT b.fileName ORDER BY b.fileIndex) AS fileNames,
-        COUNT(DISTINCT c.userId) AS goodPushed
-        FROM feeds a
-        LEFT JOIN images b
-        ON (a.id = b.feedId)
-        LEFT JOIN goods c
-        ON (a.id = c.feedId AND c.userId = #{userId})
-        WHERE a.id = #{id}
-        AND (a.publicScope = 'ALL'
-        <if test="friendStatus.name() == 'ME'">
-            OR a.publicScope = 'FRIENDS'
-            OR a.publicScope = 'ME'
-        </if>
-        <if test="friendStatus.name() == 'FRIEND'">
-            OR a.publicScope = 'FRIENDS'
-        </if>
-        )
-    </select>
-
-    <!--LEFT JOIN 사용 이유
-        - 피드를 가져오기 위해서는 피드 정보와 파일정보를 동시에 가져와야하기 때문에
-          JOIN 을 사용하여 feeds 테이블과 images 테이블의 정보들을 조회하고자 하였습니다.
-        - INNER JOIN 을 사용하지 않고, LEFT JOIN 을 사용한 이유는
-          모든 피드가 파일 정보를 포함하지 않기 때문에 피드 정보만을 조회할 수 있도록 하기 위해서는
-          LEFT JOIN 을 통해 조회해야겠다고 생각하여 사용하게 되었습니다.-->
-    <select id="getFeedList" parameterType="com.ht.project.snsproject.model.feed.FeedListParam"
-            resultType="com.ht.project.snsproject.model.feed.FeedInfo">
-        SELECT a.id, a.userId,
-        a.title, a.content,
-        a.date, a.publicScope,
-        b.filePath,
-        GROUP_CONCAT(DISTINCT b.fileName ORDER BY b.fileIndex) AS fileNames,
-        COUNT(DISTINCT c.userId) AS goodPushed
-        FROM feeds a
-        LEFT JOIN images b
-        ON (a.id = b.feedId)
-        LEFT JOIN goods c
-        ON (a.id = c.feedId AND c.userId = #{userId})
-        WHERE a.userId = #{targetId}
-        AND (a.publicScope = 'ALL'
-        <if test="publicScope.name() == 'FRIENDS' or publicScope.name() == 'ME'">
-            OR a.publicScope = 'FRIENDS'
-        </if>
-        <if test="publicScope.name() == 'ME'">
-            OR a.publicScope = 'ME'
-        </if>
-        )
-        <if test="pagination.cursor != null">
-            AND a.id<![CDATA[<]]>#{pagination.cursor}
-        </if>
-        GROUP BY a.id
-        ORDER BY a.id DESC
-        LIMIT #{pagination.listSize}
-    </select>
-
-    <select id="getFriendsFeedList"
-            parameterType="com.ht.project.snsproject.model.feed.FriendsFeedList"
-            resultType="com.ht.project.snsproject.model.feed.FeedInfo">
-
-        SELECT a.id, a.userId,
-        a.title, a.content,
-        a.date, a.publicScope,
-        b.filePath,
-        GROUP_CONCAT(DISTINCT b.fileName ORDER BY b.fileIndex) AS fileNames,
-        COUNT(DISTINCT d.userId) AS goodPushed
-        FROM feeds a INNER JOIN images b
-        ON (a.id = b.feedId)
-        LEFT JOIN friends c
-        ON(a.userId = c.userId)
-        LEFT JOIN goods d
-        ON (a.id = d.feedId AND d.userId = #{userId})
-        WHERE (a.publicScope = 'ALL'
-        OR a.publicScope = 'FRIENDS')
-        AND (c.targetId = #{userId})
-        <if test="pagination.cursor != null">
-            AND a.id<![CDATA[<]]>#{pagination.cursor}
-        </if>
-        GROUP BY a.id
-        ORDER BY a.id DESC
-        LIMIT #{pagination.listSize}
+    <select id="findFeedListByFeedIdList" parameterType="java.util.List" resultMap="feedInfo">
+        SELECT x.id AS id,
+            x.userId AS userId,
+            x.title AS title,
+            x.content AS content,
+            x.date AS date,
+            x.publicScope AS publicScope,
+            x.goodCount AS goodCount,
+            x.commentCount AS commentCount,
+            b.fileIndex AS fileIndex,
+            b.filePath AS filePath,
+            b.fileName AS fileName
+        FROM
+            (SELECT a.id, a.userId,
+                a.title, a.content,
+                a.date, a.publicScope,
+                COUNT(DISTINCT d.id) AS goodCount,
+                COUNT(DISTINCT e.id) AS commentCount
+            FROM feeds a
+            LEFT OUTER JOIN goods d ON a.id = d.feedId
+            LEFT OUTER JOIN comments e ON a.id = e.feedId
+            WHERE
+            <foreach collection="list" item="item" separator="OR">
+                a.id = #{item}
+            </foreach>
+            GROUP BY a.id
+        ) x
+        LEFT OUTER JOIN images b ON x.id = b.feedId
     </select>
 
     <delete id="deleteFeed" parameterType="com.ht.project.snsproject.model.feed.FeedDeleteParam">

@@ -1,20 +1,14 @@
 package com.ht.project.snsproject.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.exception.InvalidApproachException;
-import com.ht.project.snsproject.model.comment.CommentCount;
-import com.ht.project.snsproject.model.feed.FeedInfoCache;
 import com.ht.project.snsproject.model.feed.MultiSetTarget;
-import com.ht.project.snsproject.model.good.Good;
-import com.ht.project.snsproject.model.good.GoodPushedStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.StringRedisConnection;
 import org.springframework.data.redis.core.*;
-import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,7 +17,12 @@ import java.util.List;
 @Service
 public class RedisCacheService {
 
-  private final String SPRING_CACHE_PREFIX = "spring:";
+  public static final String SPRING_CACHE_PREFIX = "spring:";
+  public static final String FEED_INFO_CACHE_PREFIX = "feedInfo:";
+  public static final String GOOD_COUNT_CACHE_PREFIX = "good:";
+  public static final String GOOD_PUSHED_CACHE_PREFIX = "goodPushed:";
+  public static final String COMMENT_COUNT_PREFIX = "commentComments:";
+  public static final String USER_INFO_CACHE_PREFIX = "userInfo:";
 
   @Autowired
   @Qualifier("cacheRedisTemplate")
@@ -42,11 +41,11 @@ public class RedisCacheService {
 
     switch (cacheKeyPrefix) {
       case GOOD_PUSHED:
-        key = SPRING_CACHE_PREFIX + "goodPushed:" + suffix;
+        key = SPRING_CACHE_PREFIX + GOOD_PUSHED_CACHE_PREFIX + suffix;
         break;
 
       case USER_INFO:
-        key = "userInfo:" + suffix;
+        key = USER_INFO_CACHE_PREFIX + suffix;
         break;
 
       default:
@@ -62,7 +61,7 @@ public class RedisCacheService {
       throw new InvalidApproachException("유효하지 않은 키입니다.");
     }
 
-    return SPRING_CACHE_PREFIX + "goodPushed:" + feedId + ":" + userId;
+    return SPRING_CACHE_PREFIX + GOOD_PUSHED_CACHE_PREFIX + feedId + ":" + userId;
   }
 
   public String makeCacheKey(CacheKeyPrefix cacheKeyPrefix, int feedId) {
@@ -71,15 +70,15 @@ public class RedisCacheService {
 
     switch (cacheKeyPrefix) {
       case FEED:
-        key = SPRING_CACHE_PREFIX + "feedInfo:" + feedId;
+        key = SPRING_CACHE_PREFIX + FEED_INFO_CACHE_PREFIX + feedId;
         break;
 
       case GOOD:
-        key = SPRING_CACHE_PREFIX + "good:" + feedId;
+        key = SPRING_CACHE_PREFIX + GOOD_COUNT_CACHE_PREFIX + feedId;
         break;
 
       case COMMENT_COUNT:
-        key = SPRING_CACHE_PREFIX + "commentCount:" + feedId;
+        key = SPRING_CACHE_PREFIX + COMMENT_COUNT_PREFIX + feedId;
         break;
 
       default:
@@ -88,21 +87,6 @@ public class RedisCacheService {
     return key;
   }
 
-  public List<String> makeMultiKeyList(CacheKeyPrefix cacheKeyPrefix, List<Integer> feedIds, String userId) {
-
-    if (cacheKeyPrefix != CacheKeyPrefix.GOOD_PUSHED) {
-      throw new IllegalArgumentException("유효하지 않은 키입니다.");
-    }
-
-    List<String> keys = new ArrayList<>();
-
-    for(Integer feedId : feedIds) {
-
-      keys.add(makeCacheKey(cacheKeyPrefix, feedId, userId));
-    }
-
-    return keys;
-  }
 
   public List<String> makeMultiKeyList(CacheKeyPrefix cacheKeyPrefix, List<Integer> feedIds) {
 
@@ -153,7 +137,7 @@ public class RedisCacheService {
   spring-redis-data API가 제공하는 파이프라인 사용하였습니다.
   해당 document 참고하여 해당 콜백 메소드 주석 추가 예정.
    */
-  private void multiSet(List<MultiSetTarget> multiSetTargetList) {
+  public void multiSet(List<MultiSetTarget> multiSetTargetList) {
 
     cacheStrRedisTemplate.executePipelined(
             (RedisCallback<Object>) connection -> {
@@ -170,90 +154,5 @@ public class RedisCacheService {
               }
               return null;
             });
-  }
-
-  public void multiSetFeedInfoCache(List<FeedInfoCache> feedInfoCacheList, long expire) {
-
-    List<MultiSetTarget> multiSetTargetList = new ArrayList<>();
-
-    for (FeedInfoCache feedInfoCache : feedInfoCacheList) {
-
-      String feedInfoToJson;
-
-      try {
-        feedInfoToJson = objectMapper.writeValueAsString(feedInfoCache);
-      } catch (JsonProcessingException e) {
-        throw new SerializationException("변환에 실패하였습니다.", e);
-      }
-
-      int feedId = Integer.parseInt(feedInfoCache.getId());
-      String key = makeCacheKey(CacheKeyPrefix.FEED, feedId);
-
-      multiSetTargetList.add(MultiSetTarget.builder()
-              .key(key)
-              .target(feedInfoToJson)
-              .expire(expire)
-              .build());
-    }
-
-    multiSet(multiSetTargetList);
-  }
-
-  public void multiSetGood(List<Good> goods, long expire) {
-
-    List<MultiSetTarget> multiSetTargetList = new ArrayList<>();
-
-    for (Good good : goods) {
-
-      int feedId = good.getFeedId();
-      String key = makeCacheKey(CacheKeyPrefix.GOOD, feedId);
-
-      multiSetTargetList.add(MultiSetTarget.builder()
-              .key(key)
-              .target(String.valueOf(good.getGood()))
-              .expire(expire)
-              .build());
-    }
-
-    multiSet(multiSetTargetList);
-  }
-
-  public void multiSetGoodPushedStatus(List<GoodPushedStatus> goodPushedStatusList,
-                                       String userId, long expire) {
-
-    List<MultiSetTarget> multiSetTargetList = new ArrayList<>();
-
-    for (GoodPushedStatus goodPushedStatus :  goodPushedStatusList) {
-
-      int feedId = goodPushedStatus.getFeedId();
-      String key = makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
-
-      multiSetTargetList.add(MultiSetTarget.builder()
-              .key(key)
-              .target(String.valueOf(goodPushedStatus.getPushedStatus()))
-              .expire(expire)
-              .build());
-    }
-
-    multiSet(multiSetTargetList);
-  }
-
-  public void multiSetCommentCount(List<CommentCount> commentCountList, long expire) {
-
-    List<MultiSetTarget> multiSetTargetList = new ArrayList<>();
-
-    for(CommentCount commentCount : commentCountList) {
-
-      int feedId = commentCount.getFeedId();
-      String key = SPRING_CACHE_PREFIX + "commentCounts:" + feedId;
-
-      multiSetTargetList.add(MultiSetTarget.builder()
-              .key(key)
-              .target(String.valueOf(commentCount.getCommentCount()))
-              .expire(expire)
-              .build());
-    }
-
-    multiSet(multiSetTargetList);
   }
 }

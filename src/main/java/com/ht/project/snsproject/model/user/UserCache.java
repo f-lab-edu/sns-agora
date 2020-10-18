@@ -1,31 +1,29 @@
 package com.ht.project.snsproject.model.user;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserCache {
 
-  String id;
+  private String id;
 
-  String userId;
+  private String userId;
 
-  String email;
+  private String email;
 
-  String name;
+  private String name;
 
-  String nickname;
+  private String nickname;
 
-  String birth;
+  private String birth;
 
-  String filePath;
+  private String filePath;
 
-  String fileName;
+  private String fileName;
 
   public static UserCache from(User user) {
 

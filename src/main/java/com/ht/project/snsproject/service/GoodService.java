@@ -3,17 +3,12 @@ package com.ht.project.snsproject.service;
 import com.ht.project.snsproject.model.good.GoodUser;
 
 import java.util.List;
-import java.util.Map;
 
 public interface GoodService {
 
-  Integer getGood(int feedId);
-
-  Map<Integer, Integer> getGoods(List<Integer> feedIds);
-
-  Map<Integer, Boolean> getGoodPushedStatusesFromCache(List<Integer> feedIds, String userId);
-
   List<GoodUser> getGoodList(int feedId, Integer cursor);
+
+  int getGood(int feedId);
 
   void addGood(int feedId, String userId);
 

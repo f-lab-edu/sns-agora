@@ -13,16 +13,6 @@
         (SELECT userId FROM goods WHERE feedId = #{feedId} AND userId = #{userId})
     </select>
 
-    <select id="getGoods" parameterType="java.util.List" resultType="com.ht.project.snsproject.model.good.Good">
-
-        SELECT feedId, COUNT(*) AS good FROM goods
-        WHERE
-        <foreach item="item" collection="list" index="index" open="(" close=")" separator="OR">
-            feedId = #{item}
-        </foreach>
-        GROUP BY feedId;
-    </select>
-
     <select id="getGoodList" parameterType="com.ht.project.snsproject.model.good.GoodListParam"
             resultType="com.ht.project.snsproject.model.good.GoodUser">
         SELECT id, userId From goods

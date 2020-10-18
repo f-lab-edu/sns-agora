@@ -36,7 +36,7 @@ public class User {
             .email(userCache.getEmail())
             .name(userCache.getName())
             .nickname(userCache.getNickname())
-            .birth(Date.valueOf(userCache.birth))
+            .birth(Date.valueOf(userCache.getBirth()))
             .filePath(userCache.getFilePath())
             .fileName(userCache.getFileName())
             .build();
