@@ -7,34 +7,13 @@
 
 ## 사용 기술 및 개발환경
 
-Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ , Jenkins, Naver Cloud Platform
+Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ, Jenkins, Naver Cloud Platform
 
 
 ## 주요 기능
 
-### User
-
-1. 회원 가입, 탈퇴 요청
-2. 로그인 
-3. 피드 작성, 조회, 수정, 삭제
-4. 친구 추가, 삭제, 차단
-5. 피드 목록 조회
-6. 피드 좋아요 
-7. 댓글 작성, 수정, 삭제
-8. 피드 신고(예정)
-9. 댓글 신고(예정)
-
-### Administrator(예정)
-
-1. 회원 목록 조회
-2. 회원 정지
-3. 댓글 삭제
-
-### 그 외 기능
-
-1. 친구 요청 및 댓글 알림 기능
-
-2. 푸시 메시지 발송 기능
+* wiki에서 Use case를 참고 바랍니다.    
+https://github.com/f-lab-edu/sns-project/wiki/01.-Use-Case
 
 
 ## AGORA 구성도
