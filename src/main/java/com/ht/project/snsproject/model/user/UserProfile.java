@@ -1,17 +1,16 @@
 package com.ht.project.snsproject.model.user;
 
-import lombok.Value;
-
 import java.sql.Date;
+import lombok.Value;
 
 @Value
 public class UserProfile {
 
-    private int id;
+  int id;
 
-    private String nickname;
+  String nickname;
 
-    private String email;
+  String email;
 
-    private Date birth;
+  Date birth;
 }
