@@ -81,4 +81,4 @@ https://www.redhat.com/ko/topics/devops/what-is-ci-cd
 
 ## ngrinder 성능 테스트
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
-https://github.com/f-lab-edu/sns-project/wiki/07.-nGrinder-%ED%85%8C%EC%8A%A4%ED%8A%B8-%EC%8B%9C%EB%82%98%EB%A6%AC%EC%98%A4-&-%EB%B6%84%EC%84%9D
+https://github.com/f-lab-edu/sns-project/wiki/07.-nGrinder-Test-Scenario-&-Analysis
