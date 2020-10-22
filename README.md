@@ -82,3 +82,5 @@ https://www.redhat.com/ko/topics/devops/what-is-ci-cd
 ## ngrinder 성능 테스트
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
 https://github.com/f-lab-edu/sns-project/wiki/07.-nGrinder-Test-Scenario-&-Analysis
+
+## Docker 적용
