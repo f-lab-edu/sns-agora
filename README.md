@@ -84,3 +84,5 @@ https://www.redhat.com/ko/topics/devops/what-is-ci-cd
 https://github.com/f-lab-edu/sns-project/wiki/07.-nGrinder-Test-Scenario-&-Analysis
 
 ## Docker 적용
+* 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
+https://github.com/f-lab-edu/sns-project/wiki/14.-Docker-%EC%84%A4%EC%A0%95
