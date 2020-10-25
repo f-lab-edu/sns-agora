@@ -1,8 +1,6 @@
 package com.ht.project.snsproject.model.feed;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.ht.project.snsproject.enumeration.PublicScope;
-import com.ht.project.snsproject.json.LocalDateTimeCustomSerializer;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -23,7 +21,6 @@ public class FeedInfo {
 
   private String content;
 
-  @JsonSerialize(using = LocalDateTimeCustomSerializer.class)
   private LocalDateTime date;
 
   private PublicScope publicScope;

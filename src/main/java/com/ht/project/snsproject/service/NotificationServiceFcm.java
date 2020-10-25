@@ -4,7 +4,10 @@ import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.messaging.*;
+import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.AndroidNotification;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.Message;
 import com.ht.project.snsproject.exception.FcmInitializingException;
 import com.ht.project.snsproject.exception.NoSuchUserIdException;
 import com.ht.project.snsproject.mapper.NotificationMapper;
@@ -14,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -40,7 +42,6 @@ import java.util.concurrent.ExecutionException;
  */
 
 @Slf4j
-@PropertySource("application-fcm.properties")
 @Service
 public class NotificationServiceFcm implements NotificationService {
 

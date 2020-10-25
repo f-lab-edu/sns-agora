@@ -79,7 +79,7 @@ public class FeedRecommendCacheService {
         for (Integer feedId : feedIds) {
           connection.lPush(RECOMMEND_LIST.getBytes(), String.valueOf(feedId).getBytes());
         }
-        connection.expire(RECOMMEND_LIST.getBytes(), 60L);
+        connection.expire(RECOMMEND_LIST.getBytes(), RECOMMEND_EXPIRE);
         connection.exec();//트랙잭션 커밋
 
       } catch (Exception e) {
