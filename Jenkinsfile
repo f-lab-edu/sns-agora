@@ -29,7 +29,6 @@ pipeline {
                 script {
                     try {
                         sh 'mvn surefire:test'
-                        archive 'target/*.jar'
 
                         if (env.CHANGE_ID) {
                             pullRequest.createStatus(
@@ -56,9 +55,7 @@ pipeline {
             steps {
                 script {
                     try {
-
                         sh 'mvn failsafe:integration-test'
-                        archive 'target/*.jar'
 
                         if (env.CHANGE_ID) {
                             pullRequest.createStatus(
@@ -68,7 +65,7 @@ pipeline {
                                     targetUrl: "${currentBuild.absoluteUrl}testReport/")
                         }
                     } catch (exc){
-                    
+
                         if (env.CHANGE_ID) {
                             pullRequest.createStatus(
                                     status: 'failure',
