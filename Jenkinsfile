@@ -46,6 +46,7 @@ pipeline {
         stage('Remove image in jenkins server') {
             steps {
                 script {
+                    sh "docker rmi tax1116/agora:latest"
                     sh "docker rmi registry.hub.docker.com/tax1116/agora:$BUILD_NUMBER"
                     sh "docker rmi registry.hub.docker.com/tax1116/agora:latest"
                 }
@@ -86,9 +87,12 @@ pipeline {
         }
 
         failure {
-            mail to: 'tax941116@gmail.com',
-            subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-            body: "Something is wrong with ${env.BUILD_URL}"
+            emailext (
+                subject: "Failed Pipeline: '${currentBuild.fullDisplayName}''",
+                body: "Something is wrong with '${env.BUILD_URL}'",
+                to: "tax941116@gmail.com",
+                from: "tax941116@gmail.com"
+            )
         }
     }
 }
