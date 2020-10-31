@@ -144,10 +144,9 @@ pipeline {
         }
 
         failure {
-            mail (from: 'tax941116@gmail.com'
-                to: 'tax941116@gmail.com',
-                subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-                body: "Something is wrong with ${env.BUILD_URL}")
+            mail to: 'tax941116@gmail.com',
+            subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+            body: "Something is wrong with ${env.BUILD_URL}"
         }
     }
 }
