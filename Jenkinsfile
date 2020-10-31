@@ -131,23 +131,23 @@ pipeline {
                 )
             }
         }
+    }
 
-        post {
+    post {
 
-            always {
-                script {
-                    if(env.CHANGE_ID) {
-                        pullRequest.comment("Check build result: ${currentBuild.absoluteUrl}")
-                    }
+        always {
+            script {
+                if(env.CHANGE_ID) {
+                    pullRequest.comment("Check build result: ${currentBuild.absoluteUrl}")
                 }
-            }
-
-            failure {
-                mail to: 'tax941116@gmail.com',
-                subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-                body: "Something is wrong with ${env.BUILD_URL}"
             }
         }
 
+        failure {
+            mail (from: 'tax941116@gmail.com'
+                to: 'tax941116@gmail.com',
+                subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+                body: "Something is wrong with ${env.BUILD_URL}")
+        }
     }
 }
