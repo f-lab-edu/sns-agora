@@ -29,7 +29,7 @@ pipeline {
                 script {
                     try {
                         sh 'mvn surefire:test'
-                        junit '**/target/surefire-reports/TEST-*.xml'
+                        archive 'target/*.jar'
 
                         if (env.CHANGE_ID) {
                             pullRequest.createStatus(
@@ -39,7 +39,6 @@ pipeline {
                                     targetUrl: "${currentBuild.absoluteUrl}testReport/")
                         }
                     } catch (exc) {
-                        junit '**/target/surefire-reports/TEST-*.xml'
 
                         if (env.CHANGE_ID) {
                             pullRequest.createStatus(
@@ -59,7 +58,7 @@ pipeline {
                     try {
 
                         sh 'mvn failsafe:integration-test'
-                        junit '**/target/failsafe-reports/TEST-*.xml'
+                        archive 'target/*.jar'
 
                         if (env.CHANGE_ID) {
                             pullRequest.createStatus(
@@ -69,8 +68,7 @@ pipeline {
                                     targetUrl: "${currentBuild.absoluteUrl}testReport/")
                         }
                     } catch (exc){
-                        junit '**/target/failsafe-reports/TEST-*.xml'
-
+                    
                         if (env.CHANGE_ID) {
                             pullRequest.createStatus(
                                     status: 'failure',
