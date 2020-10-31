@@ -7,11 +7,17 @@ pipeline {
 
     stages {
         stage('Poll') {
-            checkout scm
+            steps {
+                checkout scm
+            }
         }
 
         stage('Build') {
-            sh 'mvn clean package -DskipTests=true'
+            steps{
+                script {
+                    sh 'mvn clean package -DskipTests=true'
+                }
+            }
         }
 
         stage('Unit Tests') {

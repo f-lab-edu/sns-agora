@@ -3,6 +3,7 @@ VOLUME /tmp
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
 
+ENV JAVA_OPTS=$JAVA_OPTS
 ENV MASTER_MYSQL_URL=$MASTER_MYSQL_URL
 ENV MASTER_MYSQL_USERNAME=$MASTER_MYSQL_USERNAME
 ENV MASTER_MYSQL_PASSWORD=$MASTER_MYSQL_PASSWORD
@@ -33,7 +34,8 @@ ENV AWS_S3_BUCKET_NAME=$AWS_S3_BUCKET_NAME
 ENV FCM_DATABASE_NAME=$FCM_DATABASE_NAME
 ENV FCM_SERVICE_ACCOUNT=$FCM_SERVICE_ACCOUNT
 
-ENTRYPOINT ["java","-Dspring.datasource.master.url=${MASTER_MYSQL_URL}", \
+ENTRYPOINT ["java", "${JAVA_OPTS}" \
+            "-Dspring.datasource.master.url=${MASTER_MYSQL_URL}", \
             "-Dspring.datasource.master.username=${MASTER_MYSQL_USERNAME}", \
             "-Dspring.datasource.master.password=${MASTER_MYSQL_PASSWORD}", \
             "-Dspring.datasource.master.driverName=${MASTER_MYSQL_DRIVER_NAME}", \
