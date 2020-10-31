@@ -46,8 +46,8 @@ pipeline {
         stage('Remove image in jenkins server') {
             steps {
                 script {
-                    sh "docker rmi tax1116/agora:$BUILD_NUMBER"
-                    sh "docker rmi tax1116/agora:latest"
+                    sh "docker rmi registry.hub.docker.com/tax1116/agora:$BUILD_NUMBER"
+                    sh "docker rmi registry.hub.docker.com/tax1116/agora:latest"
                 }
             }
         }
