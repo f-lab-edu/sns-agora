@@ -24,61 +24,6 @@ pipeline {
             }
         }
 
-        stage('Unit Tests') {
-            steps {
-                script {
-                    try {
-                        sh 'mvn surefire:test'
-
-                        if (env.CHANGE_ID) {
-                            pullRequest.createStatus(
-                                    status: 'success',
-                                    context: 'JUnit Test',
-                                    description: 'success',
-                                    targetUrl: "${currentBuild.absoluteUrl}testReport/")
-                        }
-                    } catch (exc) {
-
-                        if (env.CHANGE_ID) {
-                            pullRequest.createStatus(
-                                    status: 'failure',
-                                    context: 'JUnit Test',
-                                    description: 'Unit test failed.',
-                                    targetUrl: "${currentBuild.absoluteUrl}testReport/")
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Integration Tests') {
-            steps {
-                script {
-                    try {
-                        sh 'mvn failsafe:integration-test'
-
-                        if (env.CHANGE_ID) {
-                            pullRequest.createStatus(
-                                    status: 'success',
-                                    context: 'Integration Test',
-                                    description: 'success',
-                                    targetUrl: "${currentBuild.absoluteUrl}testReport/")
-                        }
-                    } catch (exc){
-
-                        if (env.CHANGE_ID) {
-                            pullRequest.createStatus(
-                                    status: 'failure',
-                                    context: 'JUnit Test',
-                                    description: 'Unit test failed.',
-                                    targetUrl: "${currentBuild.absoluteUrl}testReport/")
-                        }
-                    }
-
-                }
-            }
-        }
-
         stage('Build image') {
             steps {
                 script {
