@@ -74,7 +74,7 @@ Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/03.-ER-Diagram
 ### API에 대한 자세한 내용을 확인하시려면 Wiki를 참고해주세요.    
 https://github.com/f-lab-edu/sns-project/wiki
 
-## CD 적용
+## Jenkins CI/CD 적용
 ![cd](https://user-images.githubusercontent.com/54772162/91732703-8cc44d00-ebe3-11ea-9d04-009fce30bc72.png)
 * CD란 무엇인가?(참고 사이트)    
 https://www.redhat.com/ko/topics/devops/what-is-ci-cd    
