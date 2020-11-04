@@ -104,8 +104,9 @@ pipeline {
         }
 
         stage('Deploy') {
-            if(${params.RUN_DEPLOY}) {
-                steps([$class: 'BapSshPromotionPublisherPlugin']) {
+            steps([$class: 'BapSshPromotionPublisherPlugin']) {
+
+                if(${params.RUN_DEPLOY}) {
                     sshPublisher(
                             continueOnError: false, failOnError: true,
                             publishers: [
@@ -123,10 +124,10 @@ pipeline {
                                     )
                             ]
                     )
-                }
-            } else {
+                } else {
 
-                println "Deploy skipped!"
+                                 println "Deploy skipped!"
+                }
             }
         }
     }
