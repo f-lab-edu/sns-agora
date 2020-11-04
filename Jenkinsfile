@@ -1,13 +1,6 @@
 pipeline {
     agent any
 
-    parameters {
-        booleanParam (name: 'RUN_BUILD', defaultValue: true, description: 'Run build stage')
-        booleanParam (name: 'RUN_BUILD_IMAGE', defaultValue: false, description: 'Run docker image build stage')
-        booleanParam (name: 'RUN_PUSH_IMAGE', defaultValue: false, description: 'Run image push dockerhub stage')
-        booleanParam (name: 'RUN_DEPLOY', defaultValue: false, description: 'Run deploy stage')
-    }
-
     environment {
         dockerImage = ''
     }
@@ -17,13 +10,6 @@ pipeline {
     }
 
     stages {
-
-        stage('Parameter check') {
-            steps {
-                println "BRANCH_NAME = ${env.BRANCH_NAME}"
-                println "CHANGE_BRANCH = ${env.CHANGE_BRANCH}"
-            }
-        }
         stage('Poll') {
             steps {
                 checkout scm
@@ -34,15 +20,7 @@ pipeline {
             steps{
                 script {
 
-                    if(${params.RUN_BUILD}) {
-
-                        println "Build start!"
-                        sh 'mvn clean package -DskipTests=true'
-                        println "Build end!"
-                    } else {
-
-                        println "Build skipped!"
-                    }
+                    sh 'mvn clean package -DskipTests=true'
                 }
             }
         }
@@ -51,15 +29,7 @@ pipeline {
             steps {
                 script {
 
-                    if(${params.RUN_BUILD_IMAGE}) {
-
-                        println "Builds docker image start!"
-                        dockerImage = docker.build("tax1116/agora")
-                        println "Build end!"
-                    } else {
-
-                        println "Build skipped!"
-                    }
+                    dockerImage = docker.build("tax1116/agora")
                 }
             }
         }
@@ -67,18 +37,9 @@ pipeline {
         stage('Push image') {
             steps {
                 script {
-
-                    if(${params.RUN_PUSH_IMAGE}) {
-
-                        println "Push image to dockerhub start!"
-                        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-tax1116-credential') {
-                            dockerImage.push("${env.BUILD_NUMBER}")
-                            dockerImage.push("latest")
-                        }
-                        println "Push image end!"
-                    } else {
-
-                        println "Push image skipped!"
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-tax1116-credential') {
+                        dockerImage.push("${env.BUILD_NUMBER}")
+                        dockerImage.push("latest")
                     }
                 }
             }
@@ -87,18 +48,10 @@ pipeline {
         stage('Remove image in jenkins server') {
             steps {
                 script {
+                    sh "docker rmi tax1116/agora:latest"
+                    sh "docker rmi registry.hub.docker.com/tax1116/agora:$BUILD_NUMBER"
+                    sh "docker rmi registry.hub.docker.com/tax1116/agora:latest"
 
-                    if(${params.RUN_PUSH_IMAGE}) {
-
-                        println "Remove old images start!"
-                        sh "docker rmi tax1116/agora:latest"
-                        sh "docker rmi registry.hub.docker.com/tax1116/agora:$BUILD_NUMBER"
-                        sh "docker rmi registry.hub.docker.com/tax1116/agora:latest"
-                        println "Remove image end!"
-                    } else {
-
-                        println "Remove images skipped"
-                    }
                 }
             }
         }
@@ -134,15 +87,6 @@ pipeline {
                     pullRequest.comment("Check build result: ${currentBuild.absoluteUrl}")
                 }
             }
-        }
-
-        failure {
-            emailext (
-                subject: "Failed Pipeline: '${currentBuild.fullDisplayName}''",
-                body: "Something is wrong with '${env.BUILD_URL}'",
-                to: "tax941116@gmail.com",
-                from: "tax941116@gmail.com"
-            )
         }
     }
 }
