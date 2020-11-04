@@ -105,29 +105,23 @@ pipeline {
 
         stage('Deploy') {
             steps([$class: 'BapSshPromotionPublisherPlugin']) {
-
-                if(${params.RUN_DEPLOY}) {
-                    sshPublisher(
-                            continueOnError: false, failOnError: true,
-                            publishers: [
-                                    sshPublisherDesc(
-                                            configName: "agora-was",
-                                            verbose: true,
-                                            transfers: [
-                                                    sshTransfer(
-                                                            sourceFiles: "", // 전송파일
-                                                            removePrefix: "", //파일에서 삭제할 경로
-                                                            remoteDirectory: "", // 배포위치
-                                                            execCommand: "bash run.sh" //원격지 실행 커맨드
-                                                    )
-                                            ]
-                                    )
+                sshPublisher(
+                    continueOnError: false, failOnError: true,
+                    publishers: [
+                        sshPublisherDesc(
+                            configName: "agora-was",
+                            verbose: true,
+                            transfers: [
+                                sshTransfer(
+                                    sourceFiles: "", // 전송파일
+                                    removePrefix: "", //파일에서 삭제할 경로
+                                    remoteDirectory: "", // 배포위치
+                                    execCommand: "bash run.sh" //원격지 실행 커맨드
+                                )
                             ]
-                    )
-                } else {
-
-                                 println "Deploy skipped!"
-                }
+                        )
+                    ]
+                )
             }
         }
     }
