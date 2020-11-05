@@ -9,6 +9,14 @@ pipeline {
         maven 'mvn3.6.3'
     }
 
+    parameters {
+
+        booleanParam defaultValue: true, description: 'Parameter to check whether to run the build', name: 'RUN_BUILD'
+        booleanParam defaultValue: false, description: 'Parameter to check whether to run the build docker image', name: 'RUN_BUILD_IMAGE'
+        booleanParam defaultValue: false, description: 'Parameter to check whether to run the push image to dockerhub', name: 'RUN_PUSH_IMAGE'
+        booleanParam defaultValue: false, description: 'Parameter to check whether to run the deploy', name: 'RUN_DEPLOY'
+    }
+
     stages {
         stage('Poll') {
             steps {
@@ -17,6 +25,8 @@ pipeline {
         }
 
         stage('Build') {
+
+            when { expression { params.RUN_BUILD } }
             steps{
                 script {
 
@@ -26,6 +36,8 @@ pipeline {
         }
 
         stage('Build image') {
+
+            when { expression { params.RUN_BUILD_IMAGE } }
             steps {
                 script {
 
@@ -35,6 +47,8 @@ pipeline {
         }
 
         stage('Push image') {
+
+            when { expression { params.RUN_PUSH_IMAGE } }
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-tax1116-credential') {
@@ -46,6 +60,8 @@ pipeline {
         }
 
         stage('Remove image in jenkins server') {
+
+            when { expression { params.RUN_BUILD_IMAGE } }
             steps {
                 script {
                     sh "docker rmi tax1116/agora:latest"
@@ -57,6 +73,9 @@ pipeline {
         }
 
         stage('Deploy') {
+
+            when { expression { params.RUN_DEPLOY } }
+
             steps([$class: 'BapSshPromotionPublisherPlugin']) {
                 sshPublisher(
                     continueOnError: false, failOnError: true,
