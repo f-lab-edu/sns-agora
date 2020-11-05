@@ -56,4 +56,4 @@ ENTRYPOINT ["java","-Dspring.datasource.master.url=${MASTER_MYSQL_URL}", \
             "-Daws.s3.bucketName=${AWS_S3_BUCKET_NAME}", \
             "-Dfcm.database.name=${FCM_DATABASE_NAME}", \
             "-Dfcm.service.account=${FCM_SERVICE_ACCOUNT}", \
-            "${JAVA_OPTS}", "-jar", "/app.jar"]
+            "$JAVA_OPTS", "-jar", "/app.jar"]
