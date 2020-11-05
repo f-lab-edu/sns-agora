@@ -78,15 +78,4 @@ pipeline {
             }
         }
     }
-
-    post {
-
-        always {
-            script {
-                if(env.CHANGE_ID) {
-                    pullRequest.comment("Check build result: ${currentBuild.absoluteUrl}")
-                }
-            }
-        }
-    }
 }
