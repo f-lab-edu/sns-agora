@@ -39,35 +39,38 @@ public class GoodBatchJobService {
   @Transactional
   public void executeJob() {
 
-    log.info("The batch job has begun...");
-
     List<String> goodPushedKeys = redisCacheService.scanKeys(
             redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, "*"));
 
     List<Object> values = valueOps.multiGet(goodPushedKeys);
-    List<String> goodAddKeys = new ArrayList<>();
-    List<String> goodDeleteKeys = new ArrayList<>();
 
-    for (int i=0; i<values.size(); i++) {
+    if(values != null && !values.isEmpty()) {
+      log.info("The batch job has begun...");
 
-      Boolean goodPushed = (Boolean) values.get(i);
+      List<String> goodAddKeys = new ArrayList<>();
+      List<String> goodDeleteKeys = new ArrayList<>();
 
-      if(goodPushed != null) {
-        if(goodPushed) {
+      for (int i = 0; i < values.size(); i++) {
 
-          goodAddKeys.add(goodPushedKeys.get(i));
-        } else {
+        Boolean goodPushed = (Boolean) values.get(i);
 
-          goodDeleteKeys.add(goodPushedKeys.get(i));
+        if (goodPushed != null) {
+          if (goodPushed) {
+
+            goodAddKeys.add(goodPushedKeys.get(i));
+          } else {
+
+            goodDeleteKeys.add(goodPushedKeys.get(i));
+          }
         }
       }
+
+      batchInsertGoodPushedUser(goodAddKeys);
+      batchDeleteGoodPushedUser(goodDeleteKeys);
+
+      log.info("Batch job has finished...");
     }
-
-    batchInsertGoodPushedUser(goodAddKeys);
-    batchDeleteGoodPushedUser(goodDeleteKeys);
-
     count.incrementAndGet();
-    log.info("Batch job has finished...");
 
   }
 
@@ -115,10 +118,5 @@ public class GoodBatchJobService {
       goodBachJobMapper.batchDeleteGoodUserList(goodUserDeleteList);
     }
   }
-
-  public int getNumberOfInvocations() {
-    return count.get();
-  }
-
 
 }

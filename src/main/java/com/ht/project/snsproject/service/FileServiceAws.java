@@ -66,7 +66,7 @@ public class FileServiceAws implements FileService {
 
     @Override
     protected DateFormat initialValue() {
-      return new SimpleDateFormat("yyyyMMdd_HHmmSS");
+      return new SimpleDateFormat("yyyyMMdd_HHmmss");
     }
   };
 
@@ -176,67 +176,86 @@ public class FileServiceAws implements FileService {
   @Override
   public void updateFiles(List<MultipartFile> files, String userId, int feedId) {
 
-    List<String> originFiles = fileMapper.getFileNames(feedId);
-    String path = fileMapper.getFilePath(feedId);
-    List<FileAdd> uploadFiles = new ArrayList<>();
+    if(files.isEmpty()) {
+      fileServiceAws.deleteAllFiles(feedId);
+      return;
+    }
+
+    List<FileVo> originalFiles = fileMapper.getFiles(feedId);
+    String filePath = originalFiles.get(0).getFilePath();
+
+    if(originalFiles.isEmpty()) {
+      fileServiceAws.fileUpload(files, userId, feedId);
+      return;
+    }
+
     List<FileInfo> fileInfoList = new ArrayList<>();
+    classifyFiles(feedId, filePath, fileInfoList, files, originalFiles);
 
-    int fileIndex = 0;
-
-    if (originFiles.isEmpty()) {
-      fileServiceAws.fileUpload(files,userId,feedId);
-      return;
-    }
-
-    if (!files.isEmpty()) {
-      for (MultipartFile file : files) {
-        String fileName = file.getOriginalFilename();
-        ++fileIndex;
-        if (originFiles.contains(fileName)) {
-          fileInfoList.add(new FileInfo(path,fileName,fileIndex,feedId));
-          originFiles.remove(fileName);
-        } else {
-          uploadFiles.add(FileAdd.create(fileIndex, file));
-        }
-      }
-    } else {
-      deleteAllFiles(feedId);
-      return;
-    }
-
-    if (!uploadFiles.isEmpty()) {
-      fileInfoList.addAll(fileServiceAws.addFiles(feedId, path, uploadFiles));
-    }
-
-    if (!originFiles.isEmpty()) {
-      fileServiceAws.deleteFiles(feedId, path, originFiles);
+    if (!originalFiles.isEmpty()) {
+      fileServiceAws.deleteFiles(feedId, originalFiles);
     }
 
     fileMapper.upsertFiles(fileInfoList);
   }
 
   @Transactional
-  @Override
-  public void deleteFiles(int feedId, String path, List<String> fileNames) {
+  private void classifyFiles(int feedId, String filePath,
+                             List<FileInfo> fileInfoList,
+                             List<MultipartFile> files,
+                             List<FileVo> originalFiles) {
 
-    List<FileDelete> fileDeleteList = new ArrayList<>();
-    List<DeleteObjectsRequest.KeyVersion> keyVersionList = new ArrayList<>();
+    List<FileAdd> uploadFiles = new ArrayList<>();
+    int fileIndex = 0;
 
-    if (path != null) {
-      for (String fileName : fileNames) {
-        fileDeleteList.add(FileDelete.create(feedId,fileName));
-        keyVersionList.add(new DeleteObjectsRequest.KeyVersion(path + File.separator + fileName));
+    for (MultipartFile file : files) {
+
+      String fileName = file.getOriginalFilename();
+      ++fileIndex;
+
+      boolean isExist = false;
+      for(FileVo fileVo : originalFiles) {
+
+        if (fileVo.getFileName().equals(fileName)){
+          isExist = true;
+          originalFiles.remove(fileVo);
+        }
       }
-      fileMapper.deleteFiles(fileDeleteList);
-      DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName)
-              .withKeys(keyVersionList);
-      s3Client.deleteObjects(deleteObjectsRequest);
+
+      if(!isExist){
+        uploadFiles.add(new FileAdd(fileIndex, file));
+      }
+      fileInfoList.add(new FileInfo(filePath, fileName, fileIndex, feedId));
+    }
+
+    if (!uploadFiles.isEmpty()) {
+
+      fileInfoList.addAll(fileServiceAws.addFiles(feedId, filePath, uploadFiles));
     }
   }
 
   @Transactional
-  @Override
-  public List<FileInfo> addFiles(int feedId, String path, List<FileAdd> fileAddList) {
+  public void deleteFiles(int feedId, List<FileVo> fileList) {
+
+    List<FileDelete> fileDeleteList = new ArrayList<>();
+    List<DeleteObjectsRequest.KeyVersion> keyVersionList = new ArrayList<>();
+
+    for (FileVo fileVo : fileList) {
+      String fileName = fileVo.getFileName();
+      fileDeleteList.add(FileDelete.create(feedId, fileName));
+      keyVersionList.add(new DeleteObjectsRequest
+              .KeyVersion(fileVo.getFilePath()
+              + File.separator + fileName));
+    }
+
+    fileMapper.deleteFiles(fileDeleteList);
+    DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName)
+            .withKeys(keyVersionList);
+    s3Client.deleteObjects(deleteObjectsRequest);
+  }
+
+  @Transactional
+  public List<FileInfo> addFiles(int feedId, String filePath, List<FileAdd> fileAddList) {
 
     List<FileInfo> fileInfoList = new ArrayList<>();
     ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -248,10 +267,10 @@ public class FileServiceAws implements FileService {
         String originalFileName = file.getOriginalFilename();
         objectMetadata.setContentType(MediaType.IMAGE_JPEG_VALUE);
         objectMetadata.setContentLength(file.getSize());
-        String keyName = path + File.separator + originalFileName;
+        String keyName = filePath + File.separator + originalFileName;
         int fileIndex = fileAdd.getFileIndex();
 
-        fileInfoList.add(new FileInfo(path, originalFileName, fileIndex, feedId));
+        fileInfoList.add(new FileInfo(filePath, originalFileName, fileIndex, feedId));
         s3Client.putObject(bucketName, keyName, file.getInputStream(), objectMetadata);
       }
 

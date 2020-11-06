@@ -122,7 +122,6 @@ public class FileServiceLocal implements FileService {
   }
 
   @Transactional
-  @Override
   public void deleteFiles(int feedId, String path, List<String> fileNames) {
 
     List<FileDelete> fileDeleteList = new ArrayList<>();
@@ -152,7 +151,6 @@ public class FileServiceLocal implements FileService {
 
 
   @Transactional
-  @Override
   public List<FileInfo> addFiles(int feedId, String path, List<FileAdd> fileAddList) {
 
     List<FileInfo> fileInfoList = new ArrayList<>();
@@ -220,7 +218,7 @@ public class FileServiceLocal implements FileService {
           fileInfoList.add(new FileInfo(path,fileName,fileIndex,feedId));
           originFiles.remove(fileName);
         } else {
-          uploadFiles.add(FileAdd.create(fileIndex, file));
+          uploadFiles.add(new FileAdd(fileIndex, file));
         }
       }
     } else {

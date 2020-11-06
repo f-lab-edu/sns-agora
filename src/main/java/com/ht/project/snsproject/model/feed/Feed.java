@@ -1,52 +1,51 @@
 package com.ht.project.snsproject.model.feed;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
-
+@Getter
+@Setter
 @Builder
-@Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Feed {
 
-  int id;
+  private Integer id;
 
-  String userId;
+  private String userId;
 
-  String title;
+  private String title;
 
-  String content;
+  private String content;
 
-  Timestamp date;
+  private LocalDateTime date;
 
-  PublicScope publicScope;
+  private PublicScope publicScope;
 
-  int good;
+  private boolean goodPushed;
 
-  int commentCount;
+  private int goodCount;
 
-  boolean goodPushed;
+  private int commentCount;
 
-  List<FileVo> files;
+  private List<FileVo> files;
 
-  public static Feed create(FeedInfo feedInfo, int good, int commentCount, boolean goodPushed, List<FileVo> files) {
+  public static Feed create(FeedInfo feedInfo, boolean goodPushed) {
 
-    return Feed.builder().id(feedInfo.getId())
+    return Feed.builder()
+            .id(feedInfo.getId())
             .userId(feedInfo.getUserId())
             .title(feedInfo.getTitle())
             .content(feedInfo.getContent())
             .date(feedInfo.getDate())
             .publicScope(feedInfo.getPublicScope())
-            .good(good)
-            .commentCount(commentCount)
             .goodPushed(goodPushed)
-            .files(files).build();
+            .goodCount(feedInfo.getGoodCount())
+            .commentCount(feedInfo.getCommentCount())
+            .files(feedInfo.getFiles())
+            .build();
   }
 }

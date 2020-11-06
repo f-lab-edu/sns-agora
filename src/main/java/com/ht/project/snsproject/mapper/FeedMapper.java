@@ -10,27 +10,23 @@ public interface FeedMapper {
 
   void feedUpload(FeedInsert feedInsert);
 
-  FeedInfo getFeed(FeedParam feedParam);
-
-  List<FeedInfo> getFeedList(FeedListParam feedListParam);
-
-  List<FeedInfo> getFriendsFeedList(FriendsFeedList friendsFeedList);
-
   boolean deleteFeed(FeedDeleteParam feedDeleteParam);
 
   boolean updateFeed(FeedUpdate feedUpdate);
 
-  List<FeedsDto> findFriendsFeedListByUserId(FeedsParam feedsParam);
+  List<Feed> findFriendsFeedListByUserId(FeedInfoParam feedInfoParam);
 
-  FeedsInfo findMyFeedByFeedId(FeedDtoParam feedDtoParam);
+  FeedInfo findMyFeedByFeedId(FeedParam feedParam);
 
-  FeedsInfo findFriendsFeedByFeedId(FeedDtoParam feedDtoParam);
+  FeedInfo findFriendsFeedByFeedId(FeedParam feedParam);
 
-  FeedsInfo findAllFeedByFeedId(FeedDtoParam feedDtoParam);
+  FeedInfo findAllFeedByFeedId(FeedParam feedParam);
 
-  List<FeedsDto> findAllFeedListByUserId(TargetFeedsParam targetFeedsParam);
+  List<Feed> findAllFeedListByUserId(TargetFeedsParam targetFeedsParam);
 
-  List<FeedsDto> findFriendFeedListByUserId(TargetFeedsParam targetFeedsParam);
+  List<Feed> findFriendFeedListByUserId(TargetFeedsParam targetFeedsParam);
 
-  List<FeedsDto> findMyFeedListByUserId(TargetFeedsParam targetFeedsParam);
+  List<Feed> findMyFeedListByUserId(TargetFeedsParam targetFeedsParam);
+
+  List<FeedInfo> findFeedListByFeedIdList(List<Integer> recommendIdx);
 }

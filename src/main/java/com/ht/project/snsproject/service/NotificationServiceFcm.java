@@ -113,7 +113,7 @@ public class NotificationServiceFcm implements NotificationService {
     try {
       logger.info("Successfully sent message: " + response.get());
     } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException();
+      throw new IllegalStateException("Transfer failed", e);
     }
   }
 }

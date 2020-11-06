@@ -1,46 +1,52 @@
 package com.ht.project.snsproject.model.feed;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.ht.project.snsproject.enumeration.PublicScope;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Value;
+import com.ht.project.snsproject.json.LocalDateTimeCustomSerializer;
+import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
 
+@Getter
+@Setter
 @Builder
-@Value
+@NoArgsConstructor
 @AllArgsConstructor
 public class FeedInfo {
 
-  Integer id;
+  private Integer id;
 
-  String userId;
+  private String userId;
 
-  String title;
+  private String title;
 
-  String content;
+  private String content;
 
-  Timestamp date;
+  @JsonSerialize(using = LocalDateTimeCustomSerializer.class)
+  private LocalDateTime date;
 
-  PublicScope publicScope;
+  private PublicScope publicScope;
 
-  String filePath;
+  private int goodCount;
 
-  String fileNames;
+  private int commentCount;
 
-  boolean goodPushed;
+  private List<FileVo> files;
 
-  public static FeedInfo from(FeedInfoCache feedInfoCache, boolean goodPushed){
 
-    return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
-            .userId(feedInfoCache.getUserId())
-            .title(feedInfoCache.getTitle())
-            .content(feedInfoCache.getContent())
-            .date(Timestamp.valueOf(feedInfoCache.getDate()))
-            .publicScope(PublicScope.valueOf(feedInfoCache.getPublicScope()))
-            .filePath(feedInfoCache.getFilePath())
-            .fileNames(feedInfoCache.getFileNames())
-            .goodPushed(goodPushed)
+  public static FeedInfo from(Feed feed) {
+
+    return FeedInfo.builder()
+            .id(feed.getId())
+            .userId(feed.getUserId())
+            .title(feed.getTitle())
+            .content(feed.getContent())
+            .date(feed.getDate())
+            .publicScope(feed.getPublicScope())
+            .goodCount(feed.getGoodCount())
+            .commentCount(feed.getCommentCount())
+            .files(feed.getFiles())
             .build();
   }
 }

@@ -67,15 +67,7 @@ public class RedisSessionConfig extends AbstractHttpSessionApplicationInitialize
             new RedisStandaloneConfiguration(host, port);
     redisStandaloneConfiguration.setPassword(password);
 
-    LettuceConnectionFactory lettuceConnectionFactory =
-            new LettuceConnectionFactory(redisStandaloneConfiguration);
-
-    /*개발의 편의성을 위해 레디스의 논리적으로 database 를 분할하였습니다.
-      실제 서비스 시에는 properties 에서 호스트를 변경해야만 합니다.
-    */
-    lettuceConnectionFactory.setDatabase(2);
-
-    return lettuceConnectionFactory;
+    return new LettuceConnectionFactory(redisStandaloneConfiguration);
   }
 
   @Bean("sessionRedisTemplate")

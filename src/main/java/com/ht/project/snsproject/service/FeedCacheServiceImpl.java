@@ -3,20 +3,27 @@ package com.ht.project.snsproject.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
-import com.ht.project.snsproject.enumeration.FriendStatus;
-import com.ht.project.snsproject.enumeration.PublicScope;
-import com.ht.project.snsproject.exception.InvalidApproachException;
+import com.ht.project.snsproject.model.feed.Feed;
 import com.ht.project.snsproject.model.feed.FeedInfo;
-import com.ht.project.snsproject.model.feed.FeedInfoCache;
+import com.ht.project.snsproject.model.feed.MultiSetTarget;
+import com.ht.project.snsproject.model.good.GoodPushedStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static com.ht.project.snsproject.quartz.FeedRecommendCacheService.RECOMMEND_LIST;
+import static com.ht.project.snsproject.service.RedisCacheService.FEED_INFO_CACHE_PREFIX;
+import static com.ht.project.snsproject.service.RedisCacheService.SPRING_CACHE_PREFIX;
 
 /**
  * FeedCacheService 를 인터페이스를 구현하여 전략 패턴으로 디자인한 이유
@@ -40,69 +47,141 @@ public class FeedCacheServiceImpl implements FeedCacheService{
     @Autowired 가 훨씬 직관적이고 깔끔하다.
   - 아래와 같이 선언시, cacheRedisTemplate 이라는 한정자 값을 가진 빈으로 자동와이어링 대상을 제한할 수 있다.
    */
-  @Autowired
-  @Qualifier("cacheStrRedisTemplate")
-  private StringRedisTemplate cacheStrRedisTemplate;
+  @Resource(name = "cacheRedisTemplate")
+  private ListOperations<String, Object> listOps;
 
   @Resource(name = "cacheRedisTemplate")
   private ValueOperations<String, Object> valueOps;
 
   @Autowired
-  private GoodService goodService;
-
-  @Autowired
   private RedisCacheService redisCacheService;
 
   @Autowired
+  private FeedService feedService;
+
+  @Autowired
+  @Qualifier("cacheObjectMapper")
   private ObjectMapper objectMapper;
 
   @Override
-  public FeedInfo getFeedInfoFromCache(int feedId, String userId, FriendStatus friendStatus) {
+  public void setFeedInfoCache(List<FeedInfo> feedInfoList, long expire) {
 
-    String feedInfoKey = redisCacheService.makeCacheKey(CacheKeyPrefix.FEED, feedId);
+    List<MultiSetTarget> multiSetTargetList = new ArrayList<>();
 
-    String feedInfoStrCache = cacheStrRedisTemplate.boundValueOps(feedInfoKey).get();
+    for (FeedInfo feedInfo : feedInfoList) {
 
-    if (feedInfoStrCache == null) {
-      return null;
-    } else {
+      int feedId = feedInfo.getId();
+      String key = SPRING_CACHE_PREFIX + FEED_INFO_CACHE_PREFIX + feedId;
 
-      FeedInfoCache feedInfoCache = convertJsonStrToFeedInfoCache(feedInfoStrCache);
+      try {
 
-      PublicScope publicScope = PublicScope.valueOf(feedInfoCache.getPublicScope());
+        multiSetTargetList.add(MultiSetTarget.builder()
+                .key(key)
+                .target(objectMapper.writeValueAsString(feedInfo))
+                .expire(expire)
+                .build());
 
-      if (!friendService.isFeedReadableByFriendStatus(publicScope, friendStatus)) {
-        throw new InvalidApproachException("유효하지 않은 요청입니다.");
+      } catch (JsonProcessingException e) {
+        throw new SerializationException("변환에 실패하였습니다.", e);
       }
-
-      boolean goodPushed = goodService.isGoodPushed(feedId, userId);
-
-      return FeedInfo.from(feedInfoCache, goodPushed);
-
-    }
-  }
-
-  @Override
-  public FeedInfoCache convertJsonStrToFeedInfoCache(String jsonStr) {
-
-    FeedInfoCache feedInfoCache;
-
-    try {
-      feedInfoCache = objectMapper.readValue(jsonStr, FeedInfoCache.class);
-    } catch (JsonProcessingException e) {
-      throw new SerializationException("변환에 실패하였습니다.", e);
     }
 
-    return feedInfoCache;
+    redisCacheService.multiSet(multiSetTargetList);
   }
 
+  @Transactional
   @Override
-  public void addFeedInfoToCache(FeedInfoCache feedInfoCache, long time, TimeUnit timeUnit) {
+  public List<FeedInfo> getLatestALLFeedList() {
 
-    String feedInfoKey = redisCacheService.makeCacheKey(CacheKeyPrefix.FEED,
-            Integer.parseInt(feedInfoCache.getId()));
+    List<Integer> recommendIdx =
+            Objects.requireNonNull(
+                    listOps.range(RECOMMEND_LIST, 0, -1),
+                    "추천 목록이 존재하지 않습니다.")
+                    .stream()
+                    .map(s->(Integer) s)
+                    .collect(Collectors.toList());
 
-    valueOps.set(feedInfoKey, feedInfoCache, time, timeUnit);
+    List<String> feedKeyList = redisCacheService.makeMultiKeyList(CacheKeyPrefix.FEED, recommendIdx);
+    List<FeedInfo> feedInfoList = findRecommendFeedListInCache(
+            valueOps.multiGet(feedKeyList),
+            recommendIdx);
+
+
+    if(!recommendIdx.isEmpty()) {
+
+      feedInfoList.addAll(feedService.findFeedListByFeedIdList(recommendIdx));
+    }
+
+    return feedInfoList;
+  }
+
+  /**
+   * 캐시에서 가져온 추천목록을 통해
+   * 캐시에서 추천 피드를 조회합니다.
+   * 피드를 가져올 때마다 추천목록에서 해당 피드의 번호를 제거합니다.
+   * ※ Integer 데이터지만 Integer로 감싼 이유는
+   * 인덱스 조회가 아닌 value 조회를 위해서 입니다.
+   * @param cacheList
+   * @param recommendIdx
+   * @return
+   */
+  private List<FeedInfo> findRecommendFeedListInCache(List<Object> cacheList,
+                                                      List<Integer> recommendIdx) {
+
+    List<FeedInfo> feedInfoList = new ArrayList<>();
+
+    if(cacheList!=null) {
+
+      for (Object cache : cacheList) {
+
+        if (cache != null) {
+          FeedInfo feedInfo = objectMapper.convertValue(cache, FeedInfo.class);
+          feedInfoList.add(feedInfo);
+          recommendIdx.remove(Integer.valueOf(feedInfo.getId()));
+        }
+      }
+    }
+
+    return feedInfoList;
+  }
+
+  @Transactional
+  @Override
+  public void setFeedListCache(List<Feed> feedList, String userId, long expire) {
+
+    List<FeedInfo> feedInfoList = new ArrayList<>();
+    List<GoodPushedStatus> goodPushedStatusList = new ArrayList<>();
+
+    for(Feed feedDto : feedList) {
+
+      feedInfoList.add(FeedInfo.from(feedDto));
+      goodPushedStatusList.add(new GoodPushedStatus(feedDto.getId(),feedDto.isGoodPushed()));
+    }
+
+    setFeedInfoCache(feedInfoList, expire);
+    multiSetGoodPushedStatus(goodPushedStatusList, userId, expire);
+  }
+
+  @Transactional
+  private void multiSetGoodPushedStatus(List<GoodPushedStatus> goodPushedStatusList,
+                                       String userId,
+                                        long expire) {
+
+    List<MultiSetTarget> multiSetTargetList = new ArrayList<>();
+
+    for (GoodPushedStatus goodPushedStatus :  goodPushedStatusList) {
+
+      int feedId = goodPushedStatus.getFeedId();
+      String key = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
+
+      multiSetTargetList.add(MultiSetTarget.builder()
+              .key(key)
+              .target(String.valueOf(goodPushedStatus.getPushedStatus()))
+              .expire(expire)
+              .build());
+    }
+
+    redisCacheService.multiSet(multiSetTargetList);
   }
 
 }

@@ -9,8 +9,4 @@ public class FileAdd {
   int fileIndex;
 
   MultipartFile file;
-
-  public static FileAdd create(int fileIndex, MultipartFile file) {
-    return new FileAdd(fileIndex, file);
-  }
 }

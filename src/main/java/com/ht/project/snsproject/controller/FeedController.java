@@ -28,16 +28,16 @@ public class FeedController {
   @LoginCheck
   @PostMapping
   public HttpStatus feedUpload(@RequestParam("file") List<MultipartFile> files,
-                               FeedVo feedVo, @UserInfo User user) {
+                               FeedWriteDto feedWriteDto, @UserInfo User user) {
 
-    feedService.feedUpload(files, feedVo, user.getUserId());
+    feedService.feedUpload(files, feedWriteDto, user.getUserId());
 
     return HttpStatus.OK;
   }
 
   @LoginCheck
-  @GetMapping("users/{targetId}")
-  public ResponseEntity<List<FeedsDto>> getFeedList(@PathVariable String targetId,
+  @GetMapping("/{targetId}")
+  public ResponseEntity<List<Feed>> getFeedList(@PathVariable String targetId,
                                                 @RequestParam(required = false) Integer cursor,
                                                 @UserInfo User user) {
 
@@ -46,16 +46,16 @@ public class FeedController {
 
   @LoginCheck
   @GetMapping
-  public ResponseEntity<List<FeedsDto>> getFriendsFeedList(@RequestParam(required = false) Integer cursor,
-                                                        @UserInfo User user) {
+  public ResponseEntity<List<Feed>> getFriendsFeedList(@RequestParam(required = false) Integer cursor,
+                                                       @UserInfo User user) {
 
     return ResponseEntity.ok(feedService.findFriendsFeedListByUserId(user.getUserId(), new Pagination(cursor)));
   }
 
   @LoginCheck
-  @GetMapping("/users/{targetId}/{feedId}")
-  public ResponseEntity<FeedsVo> getFeed(@PathVariable String targetId,
-                                          @PathVariable int feedId, @UserInfo User user) {
+  @GetMapping("/{targetId}/{feedId}")
+  public ResponseEntity<Feed> getFeed(@PathVariable String targetId,
+                                        @PathVariable int feedId, @UserInfo User user) {
 
     return ResponseEntity.ok(feedService.findFeedByFeedId(user.getUserId(), targetId, feedId));
   }
@@ -73,7 +73,7 @@ public class FeedController {
   @PutMapping("/{feedId}")
   public HttpStatus updateFeed(@PathVariable int feedId,
                                @RequestParam("file") List<MultipartFile> files,
-                               FeedUpdateParam feedUpdateParam,
+                               FeedWriteDto feedUpdateParam,
                                @UserInfo User user) {
 
     feedService.updateFeed(files, feedUpdateParam, feedId, user.getUserId());
@@ -83,7 +83,7 @@ public class FeedController {
 
   @LoginCheck
   @GetMapping("/recommends")
-  public ResponseEntity<List<FeedsInfo>> getFeedRecommendList(
+  public ResponseEntity<List<FeedInfo>> getFeedRecommendList(
           @RequestParam(required = false) Integer cursor,
           @UserInfo User user) {
 
