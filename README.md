@@ -7,7 +7,7 @@
 
 ## 사용 기술 및 개발환경
 
-Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ, Jenkins, Naver Cloud Platform
+Spring Boot, Maven, MyBatis, Redis, MySQL, Java, IntelliJ, Jenkins, Docker, Naver Cloud Platform
 
 
 ## 주요 기능
