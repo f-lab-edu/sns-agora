@@ -23,11 +23,5 @@ public interface FeedService {
 
   List<Feed> findFriendsFeedListByUserId(String userId, Pagination pagination);
 
-  Object findMyFeedByFeedId(int feedId, String targetId, String userId);
-
-  Object findFriendsFeedFeedId(int feedId, String targetId, String userId);
-
-  Object findAllFeedByFeedId(int feedId, String targetId, String userId);
-
   List<FeedInfo> findFeedListByFeedIdList(List<Integer> recommendIdx);
 }

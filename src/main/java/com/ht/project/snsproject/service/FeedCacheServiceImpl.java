@@ -3,12 +3,13 @@ package com.ht.project.snsproject.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
-import com.ht.project.snsproject.model.feed.Feed;
-import com.ht.project.snsproject.model.feed.FeedInfo;
-import com.ht.project.snsproject.model.feed.MultiSetTarget;
+import com.ht.project.snsproject.mapper.FeedMapper;
+import com.ht.project.snsproject.model.feed.*;
 import com.ht.project.snsproject.model.good.GoodPushedStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.serializer.SerializationException;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -58,6 +60,9 @@ public class FeedCacheServiceImpl implements FeedCacheService{
 
   @Autowired
   private FeedService feedService;
+
+  @Autowired
+  private FeedMapper feedMapper;
 
   @Autowired
   @Qualifier("cacheObjectMapper")
@@ -184,4 +189,64 @@ public class FeedCacheServiceImpl implements FeedCacheService{
     redisCacheService.multiSet(multiSetTargetList);
   }
 
+  @Override
+  @Transactional(readOnly = true)
+  @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
+  public Object findMyFeedByFeedId(int feedId, String targetId, String userId) {
+
+    FeedInfo feed = feedMapper.findMyFeedByFeedId(new FeedParam(feedId, targetId, userId));
+
+    if(feed.getId() == null) {
+
+      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
+    }
+
+    return feed;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
+  public Object findFriendsFeedByFeedId(int feedId, String targetId, String userId) {
+
+    FeedInfo feed = feedMapper.findFriendsFeedByFeedId(new FeedParam(feedId, targetId, userId));
+
+    if(feed.getId() == null) {
+
+      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
+    }
+
+    return feed;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
+  public Object findAllFeedByFeedId(int feedId, String targetId, String userId) {
+
+    FeedInfo feed = feedMapper.findAllFeedByFeedId(new FeedParam(feedId, targetId, userId));
+
+    if(feed.getId() == null) {
+
+      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
+    }
+
+    return feed;
+  }
+
+  @Override
+  @Transactional
+  @CacheEvict(value = "feedInfo", key = "'feedInfo:' + #feedId")
+  public boolean deleteFeed(int feedId, String userId) {
+
+    return feedMapper.deleteFeed(new FeedDeleteParam(feedId, userId));
+  }
+
+  @Override
+  @Transactional
+  @CacheEvict(value = "feedInfo", key = "'feedInfo:' + #feedId")
+  public boolean updateFeed(int feedId, String userId, FeedWriteDto feedWriteDto) {
+
+    return feedMapper.updateFeed(FeedUpdate.create(feedId, userId, feedWriteDto, LocalDateTime.now()));
+  }
 }

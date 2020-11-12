@@ -7,12 +7,10 @@ import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,9 +35,6 @@ public class FeedServiceImpl implements FeedService {
   private FriendService friendService;
 
   @Autowired
-  private FeedService feedService;
-
-  @Autowired
   @Qualifier("cacheObjectMapper")
   private ObjectMapper cacheObjectMapper;
 
@@ -47,8 +42,7 @@ public class FeedServiceImpl implements FeedService {
   @Override
   public void feedUpload(List<MultipartFile> files, FeedWriteDto feedWriteDto, String userId) {
 
-    Timestamp date = Timestamp.valueOf(LocalDateTime.now());
-    FeedInsert feedInsert = FeedInsert.create(feedWriteDto, userId, date);
+    FeedInsert feedInsert = FeedInsert.create(feedWriteDto, userId, LocalDateTime.now());
 
     feedMapper.feedUpload(feedInsert);
 
@@ -124,64 +118,22 @@ public class FeedServiceImpl implements FeedService {
 
       case ME:
 
-        feed = feedService.findMyFeedByFeedId(feedId, targetId, userId);
+        feed = feedCacheService.findMyFeedByFeedId(feedId, targetId, userId);
         break;
 
       case FRIEND:
 
-        feed = feedService.findFriendsFeedFeedId(feedId, targetId, userId);
+        feed = feedCacheService.findFriendsFeedByFeedId(feedId, targetId, userId);
         break;
 
       default:
 
-        feed = feedService.findAllFeedByFeedId(feedId, targetId, userId);
+        feed = feedCacheService.findAllFeedByFeedId(feedId, targetId, userId);
     }
 
     boolean goodPushedStatus = goodService.isGoodPushed(feedId, userId);
 
     return Feed.create(cacheObjectMapper.convertValue(feed, FeedInfo.class), goodPushedStatus);
-  }
-
-  @Transactional(readOnly = true)
-  @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
-  public Object findMyFeedByFeedId(int feedId, String targetId, String userId) {
-
-    FeedInfo feed = feedMapper.findMyFeedByFeedId(new FeedParam(feedId, targetId, userId));
-
-    if(feed.getId() == null) {
-
-      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
-    }
-
-    return feed;
-  }
-
-  @Transactional(readOnly = true)
-  @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
-  public Object findFriendsFeedFeedId(int feedId, String targetId, String userId) {
-
-    FeedInfo feed = feedMapper.findFriendsFeedByFeedId(new FeedParam(feedId, targetId, userId));
-
-    if(feed.getId() == null) {
-
-      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
-    }
-
-    return feed;
-  }
-
-  @Transactional(readOnly = true)
-  @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
-  public Object findAllFeedByFeedId(int feedId, String targetId, String userId) {
-
-    FeedInfo feed = feedMapper.findAllFeedByFeedId(new FeedParam(feedId, targetId, userId));
-
-    if(feed.getId() == null) {
-
-      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
-    }
-
-    return feed;
   }
 
   @Override
@@ -192,25 +144,26 @@ public class FeedServiceImpl implements FeedService {
   @Transactional
   @Override
   public void deleteFeed(int id, String userId) {
-    boolean result = feedMapper.deleteFeed(new FeedDeleteParam(id, userId));
+    boolean result = feedCacheService.deleteFeed(id, userId);
 
     if (!result) {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
+
     fileService.deleteAllFiles(id);
   }
 
   @Transactional
   @Override
   public void updateFeed(List<MultipartFile> files,
-                         FeedWriteDto feedUpdateParam, int feedId, String userId) {
+                         FeedWriteDto feedWriteDto, int feedId, String userId) {
 
-    Timestamp date = Timestamp.valueOf(LocalDateTime.now());
+    boolean result = feedCacheService.updateFeed(feedId, userId, feedWriteDto);
 
-    boolean result = feedMapper.updateFeed(FeedUpdate.create(feedId, userId, feedUpdateParam, date));
     if (!result) {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
+
     fileService.updateFiles(files,userId,feedId);
   }
 
