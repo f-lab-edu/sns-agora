@@ -73,10 +73,10 @@ public class FeedController {
   @PutMapping("/{feedId}")
   public HttpStatus updateFeed(@PathVariable int feedId,
                                @RequestParam("file") List<MultipartFile> files,
-                               FeedWriteDto feedUpdateParam,
+                               FeedWriteDto feedWriteDto,
                                @UserInfo User user) {
 
-    feedService.updateFeed(files, feedUpdateParam, feedId, user.getUserId());
+    feedService.updateFeed(files, feedWriteDto, feedId, user.getUserId());
 
     return HttpStatus.OK;
   }

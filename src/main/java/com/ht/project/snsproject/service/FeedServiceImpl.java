@@ -1,6 +1,8 @@
 package com.ht.project.snsproject.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ht.project.snsproject.enumeration.FriendStatus;
+import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.model.Pagination;
@@ -56,7 +58,12 @@ public class FeedServiceImpl implements FeedService {
   public List<Feed> findFriendsFeedListByUserId(String userId, Pagination pagination) {
 
     List<Feed> feeds = feedMapper.findFriendsFeedListByUserId(new FeedInfoParam(userId, pagination));
-    feedCacheService.setFeedListCache(feeds, userId, 60L);
+
+    if (!feeds.isEmpty()) {
+
+      feedCacheService.setFeedListCache(feeds, userId, 60L);
+    }
+
     return feeds;
   }
 
@@ -113,8 +120,9 @@ public class FeedServiceImpl implements FeedService {
   public Feed findFeedByFeedId(String userId, String targetId, int feedId) {
 
     Object feed;
+    FriendStatus friendStatus = friendService.getFriendStatus(userId, targetId);
 
-    switch(friendService.getFriendStatus(userId, targetId)) {
+    switch(friendStatus) {
 
       case ME:
 
@@ -131,9 +139,29 @@ public class FeedServiceImpl implements FeedService {
         feed = feedCacheService.findAllFeedByFeedId(feedId, targetId, userId);
     }
 
-    boolean goodPushedStatus = goodService.isGoodPushed(feedId, userId);
+    FeedInfo feedInfo = cacheObjectMapper.convertValue(feed, FeedInfo.class);
 
-    return Feed.create(cacheObjectMapper.convertValue(feed, FeedInfo.class), goodPushedStatus);
+    if(!isValidatedFeedInfo(feedInfo.getPublicScope(), friendStatus)) {
+
+      throw new IllegalArgumentException("일치하는 피드가 존재하지 않습니다.");
+    }
+
+    return Feed.create(feedInfo, goodService.isGoodPushed(feedId, userId));
+  }
+
+  private boolean isValidatedFeedInfo(PublicScope publicScope, FriendStatus friendStatus) {
+
+    switch (publicScope) {
+
+      case ME:
+        return friendStatus == FriendStatus.ME;
+
+      case FRIENDS:
+        return friendStatus == FriendStatus.ME || friendStatus == FriendStatus.FRIEND;
+
+      default:
+        return true;
+    }
   }
 
   @Override

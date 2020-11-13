@@ -22,8 +22,6 @@ public class FeedInsert {
 
   PublicScope publicScope;
 
-  int good;
-
   public static FeedInsert create(FeedWriteDto feedWriteDto, String userId, LocalDateTime date) {
     return FeedInsert.builder()
             .userId(userId)
@@ -31,7 +29,6 @@ public class FeedInsert {
             .content(feedWriteDto.getContent())
             .date(date)
             .publicScope(feedWriteDto.getPublicScope())
-            .good(0)
             .build();
   }
 }
