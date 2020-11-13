@@ -56,7 +56,7 @@ pipeline {
                     try {
 
                         sh 'mvn failsafe:integration-test'
-                        junit '**/target/failsafe-reports/TEST-*.xml'
+                        junit allowEmptyResults: true, testResults: '**/target/failsafe-reports/TEST-*.xml'
 
                         if (env.CHANGE_ID) {
                             pullRequest.createStatus(
