@@ -24,28 +24,8 @@ pipeline {
         stage('Unit Tests') {
             steps {
                 script {
-                    try {
                         sh 'mvn surefire:test'
                         junit '**/target/surefire-reports/TEST-*.xml'
-
-                        if (env.CHANGE_ID) {
-                            pullRequest.createStatus(
-                                    status: 'success',
-                                    context: 'JUnit Test',
-                                    description: 'success',
-                                    targetUrl: "${currentBuild.absoluteUrl}testReport/")
-                        }
-                    } catch (exc) {
-                        junit '**/target/surefire-reports/TEST-*.xml'
-
-                        if (env.CHANGE_ID) {
-                            pullRequest.createStatus(
-                                    status: 'failure',
-                                    context: 'JUnit Test',
-                                    description: 'Unit test failed.',
-                                    targetUrl: "${currentBuild.absoluteUrl}testReport/")
-                        }
-                    }
                 }
             }
         }
@@ -53,30 +33,9 @@ pipeline {
         stage('Integration Tests') {
             steps {
                 script {
-                    try {
 
-                        sh 'mvn failsafe:integration-test'
-                        junit allowEmptyResults: true, testResults: '**/target/failsafe-reports/TEST-*.xml'
-
-                        if (env.CHANGE_ID) {
-                            pullRequest.createStatus(
-                                    status: 'success',
-                                    context: 'Integration Test',
-                                    description: 'success',
-                                    targetUrl: "${currentBuild.absoluteUrl}testReport/")
-                        }
-                    } catch (exc){
-                        junit '**/target/failsafe-reports/TEST-*.xml'
-
-                        if (env.CHANGE_ID) {
-                            pullRequest.createStatus(
-                                    status: 'failure',
-                                    context: 'JUnit Test',
-                                    description: 'Unit test failed.',
-                                    targetUrl: "${currentBuild.absoluteUrl}testReport/")
-                        }
-                    }
-
+                    sh 'mvn failsafe:integration-test'
+                    junit allowEmptyResults: true, testResults: '**/target/failsafe-reports/TEST-*.xml'
                 }
             }
         }
