@@ -1,12 +1,14 @@
 package com.ht.project.snsproject.config;
 
+import com.ht.project.snsproject.properites.datasource.MasterDatasourceProperty;
+import com.ht.project.snsproject.properites.datasource.SlaveDatasourceProperty;
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +43,7 @@ import java.util.Map;
  */
 @Configuration
 @MapperScan(basePackages = "com.ht.project.snsproject.mapper")
+@RequiredArgsConstructor
 @EnableTransactionManagement
 public class DatabaseConfig {
 
@@ -52,40 +55,21 @@ public class DatabaseConfig {
   이로 인해 datasource 빈의 이름을 분리하여 주입하게 되었습니다.
   주로 사용하는 mybatis 에 필요한 datasource 의 빈을 primary로 선언하여 주입되게 하였습니다.
    */
-  @Value("${spring.datasource.master.url}")
-  String masterDbUrl;
 
-  @Value("${spring.datasource.master.username}")
-  String masterDbUsername;
+  private final MasterDatasourceProperty masterDatasourceProperty;
 
-  @Value("${spring.datasource.master.password}")
-  String masterDbPassword;
-
-  @Value("${spring.datasource.master.driverName}")
-  String masterDbDriverName;
-
-  @Value("${spring.datasource.slave.url}")
-  String slaveDbUrl;
-
-  @Value("${spring.datasource.slave.username}")
-  String slaveDbUsername;
-
-  @Value("${spring.datasource.slave.password}")
-  String slaveDbPassword;
-
-  @Value("${spring.datasource.slave.driverName}")
-  String slaveDbDriverName;
+  private final SlaveDatasourceProperty slaveDatasourceProperty;
 
   @Primary
   @Bean(name = "masterDataSource")
   public DataSource masterDataSource() {
 
     return DataSourceBuilder.create()
-            .url(masterDbUrl)
-            .username(masterDbUsername)
-            .password(masterDbPassword)
+            .url(masterDatasourceProperty.getUrl())
+            .username(masterDatasourceProperty.getUsername())
+            .password(masterDatasourceProperty.getPassword())
             .type(HikariDataSource.class)
-            .driverClassName(masterDbDriverName)
+            .driverClassName(masterDatasourceProperty.getDriverName())
             .build();
   }
 
@@ -98,11 +82,11 @@ public class DatabaseConfig {
   public DataSource slaveDataSource() {
 
     return DataSourceBuilder.create()
-            .url(slaveDbUrl)
-            .username(slaveDbUsername)
-            .password(slaveDbPassword)
+            .url(slaveDatasourceProperty.getUrl())
+            .username(slaveDatasourceProperty.getUsername())
+            .password(slaveDatasourceProperty.getPassword())
             .type(HikariDataSource.class)
-            .driverClassName(slaveDbDriverName)
+            .driverClassName(slaveDatasourceProperty.getDriverName())
             .build();
 
   }

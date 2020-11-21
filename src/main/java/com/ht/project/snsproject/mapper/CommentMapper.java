@@ -25,4 +25,6 @@ public interface CommentMapper {
   boolean deleteCommentOnFeed(CommentDeleteParam commentDeleteParam);
 
   boolean deleteReplyOnComment(ReplyDeleteParam replyDeleteParam);
+
+  List<CommentCount> findCommentCountList(List<Integer> feedIdCopyList);
 }

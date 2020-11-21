@@ -7,38 +7,56 @@ import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ht.project.snsproject.repository.comment.CommentRepository;
+import com.ht.project.snsproject.repository.feed.FeedRepository;
+import com.ht.project.snsproject.repository.good.GoodRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
 public class FeedServiceImpl implements FeedService {
 
-  @Autowired
-  private FeedMapper feedMapper;
+  private final FeedMapper feedMapper;
 
-  @Autowired
-  @Qualifier("awsFileService")
-  private FileService fileService;
+  private final FileService fileService;
 
-  @Autowired
-  private GoodService goodService;
+  private final GoodRepository goodRepository;
 
-  @Autowired
-  private FeedCacheService feedCacheService;
+  private final FriendService friendService;
 
-  @Autowired
-  private FriendService friendService;
+  private final ObjectMapper cacheObjectMapper;
 
-  @Autowired
-  @Qualifier("cacheObjectMapper")
-  private ObjectMapper cacheObjectMapper;
+  private final FeedRepository feedRepository;
+
+  private final CommentRepository commentRepository;
+
+  private final RedisCacheService redisCacheService;
+
+  public FeedServiceImpl(FeedMapper feedMapper,
+                         @Qualifier("awsFileService") FileService fileService,
+                         GoodRepository goodRepository,
+                         FriendService friendService,
+                         @Qualifier("cacheObjectMapper") ObjectMapper cacheObjectMapper,
+                         FeedRepository feedRepository,
+                         CommentRepository commentRepository,
+                         RedisCacheService redisCacheService) {
+    this.feedMapper = feedMapper;
+    this.fileService = fileService;
+    this.goodRepository = goodRepository;
+    this.friendService = friendService;
+    this.cacheObjectMapper = cacheObjectMapper;
+    this.feedRepository = feedRepository;
+    this.commentRepository = commentRepository;
+    this.redisCacheService = redisCacheService;
+  }
 
   @Transactional
   @Override
@@ -57,86 +75,80 @@ public class FeedServiceImpl implements FeedService {
   @Override
   public List<Feed> findFriendsFeedListByUserId(String userId, Pagination pagination) {
 
-    List<Feed> feeds = feedMapper.findFriendsFeedListByUserId(new FeedInfoParam(userId, pagination));
-
-    if (!feeds.isEmpty()) {
-
-      feedCacheService.setFeedListCache(feeds, userId, 60L);
-    }
-
-    return feeds;
+    return findFeedList(userId, feedRepository.findFriendsFeedIdList(userId, pagination));
   }
 
   @Transactional
   @Override
   public List<Feed> findFeedListByUserId(String userId, String targetId, Pagination pagination) {
 
-    List<Feed> feedList;
+    List<Integer> feedIdList;
 
     switch (friendService.getFriendStatus(userId, targetId)) {
 
       case ME:
-        feedList = findMyFeedListByUserId(userId, targetId, pagination);
+        feedIdList = feedRepository.findMyFeedIdListByUserId(targetId, pagination);
         break;
 
       case FRIEND:
-        feedList = findFriendFeedListByUserId(userId, targetId, pagination);
+        feedIdList = feedRepository.findFriendFeedIdListByUserId(targetId, pagination);
         break;
 
       case BLOCK:
         throw new InvalidApproachException("유효 하지 않은 접근입니다.");
 
       default:
-        feedList = findAllFeedListByUserId(userId, targetId, pagination);
+        feedIdList = feedRepository.findALLFeedIdListByUserId(targetId, pagination);
     }
 
-    feedCacheService.setFeedListCache(feedList, userId, 60L);
+    return findFeedList(userId, feedIdList);
+  }
+
+  private List<Feed> findFeedList(String userId, List<Integer> feedIdList) {
+
+    List<Feed> feedList = new ArrayList<>();
+    List<MultiSetTarget> multiSetTargetList = new ArrayList<>();
+    List<FeedInfo> feedInfoList = feedRepository.findFeedInfoList(feedIdList, multiSetTargetList);
+    Map<Integer, Boolean> goodPushedStatusMap =
+            goodRepository.findGoodPushedStatusMap(userId, feedIdList, multiSetTargetList);
+
+    Map<Integer, Integer> goodCountMap = goodRepository.findGoodCountMap(feedIdList, multiSetTargetList);
+    Map<Integer, Integer> commentCountMap = commentRepository.findCommentCountMap(feedIdList, multiSetTargetList);
+
+    feedInfoList.forEach(feedInfo -> {
+
+      int feedId = feedInfo.getId();
+      feedList.add(Feed.create(feedInfo, goodCountMap.get(feedId),
+              commentCountMap.get(feedId), goodPushedStatusMap.get(feedId)));
+    });
+
+    redisCacheService.multiSet(multiSetTargetList);
 
     return feedList;
   }
 
-  @Transactional(readOnly = true)
-  private List<Feed> findMyFeedListByUserId(String userId, String targetId, Pagination pagination) {
-
-    return feedMapper.findMyFeedListByUserId(new TargetFeedsParam(userId, targetId, pagination));
-  }
-
-  @Transactional(readOnly = true)
-  private List<Feed> findAllFeedListByUserId(String userId, String targetId, Pagination pagination) {
-
-    return feedMapper.findAllFeedListByUserId(new TargetFeedsParam(userId, targetId, pagination));
-  }
-
-
-  @Transactional(readOnly = true)
-  private List<Feed> findFriendFeedListByUserId(String userId, String targetId, Pagination pagination) {
-
-    return feedMapper.findFriendFeedListByUserId(new TargetFeedsParam(userId, targetId, pagination));
-  }
-
-
   @Transactional
   @Override
-  public Feed findFeedByFeedId(String userId, String targetId, int feedId) {
+  public Feed findFeedByFeedId(String userId, int feedId) {
 
     Object feed;
-    FriendStatus friendStatus = friendService.getFriendStatus(userId, targetId);
+    FriendStatus friendStatus = friendService.findFriendStatus(feedId, userId);
 
     switch(friendStatus) {
 
       case ME:
 
-        feed = feedCacheService.findMyFeedByFeedId(feedId, targetId, userId);
+        feed = feedRepository.findMyFeedByFeedId(feedId);
         break;
 
       case FRIEND:
 
-        feed = feedCacheService.findFriendsFeedByFeedId(feedId, targetId, userId);
+        feed = feedRepository.findFriendsFeedByFeedId(feedId);
         break;
 
       default:
 
-        feed = feedCacheService.findAllFeedByFeedId(feedId, targetId, userId);
+        feed = feedRepository.findAllFeedByFeedId(feedId);
     }
 
     FeedInfo feedInfo = cacheObjectMapper.convertValue(feed, FeedInfo.class);
@@ -146,7 +158,8 @@ public class FeedServiceImpl implements FeedService {
       throw new IllegalArgumentException("일치하는 피드가 존재하지 않습니다.");
     }
 
-    return Feed.create(feedInfo, goodService.isGoodPushed(feedId, userId));
+    return Feed.create(feedInfo, goodRepository.getGood(feedId),
+            commentRepository.getCommentCount(feedId), goodRepository.isGoodPushed(feedId, userId));
   }
 
   private boolean isValidatedFeedInfo(PublicScope publicScope, FriendStatus friendStatus) {
@@ -164,15 +177,11 @@ public class FeedServiceImpl implements FeedService {
     }
   }
 
-  @Override
-  public List<FeedInfo> findFeedListByFeedIdList(List<Integer> recommendIdx) {
-    return feedMapper.findFeedListByFeedIdList(recommendIdx);
-  }
-
   @Transactional
   @Override
   public void deleteFeed(int id, String userId) {
-    boolean result = feedCacheService.deleteFeed(id, userId);
+
+    boolean result = feedRepository.deleteFeed(id, userId);
 
     if (!result) {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
@@ -186,7 +195,7 @@ public class FeedServiceImpl implements FeedService {
   public void updateFeed(List<MultipartFile> files,
                          FeedWriteDto feedWriteDto, int feedId, String userId) {
 
-    boolean result = feedCacheService.updateFeed(feedId, userId, feedWriteDto);
+    boolean result = feedRepository.updateFeed(feedId, userId, feedWriteDto);
 
     if (!result) {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");

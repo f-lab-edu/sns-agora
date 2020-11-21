@@ -14,19 +14,19 @@ public interface FeedMapper {
 
   boolean updateFeed(FeedUpdate feedUpdate);
 
-  List<Feed> findFriendsFeedListByUserId(FeedInfoParam feedInfoParam);
+  FeedInfo findMyFeedByFeedId(int feedId);
 
-  FeedInfo findMyFeedByFeedId(FeedParam feedParam);
+  FeedInfo findFriendsFeedByFeedId(int feedId);
 
-  FeedInfo findFriendsFeedByFeedId(FeedParam feedParam);
+  FeedInfo findAllFeedByFeedId(int feedId);
 
-  FeedInfo findAllFeedByFeedId(FeedParam feedParam);
+  List<Integer> findMyFeedIdListByUserId(FeedIdListParam feedIdListParam);
 
-  List<Feed> findAllFeedListByUserId(TargetFeedsParam targetFeedsParam);
+  List<Integer> findFriendFeedIdListByUserId(FeedIdListParam feedIdListParam);
 
-  List<Feed> findFriendFeedListByUserId(TargetFeedsParam targetFeedsParam);
+  List<Integer> findAllFeedIdListByUserId(FeedIdListParam feedIdListParam);
 
-  List<Feed> findMyFeedListByUserId(TargetFeedsParam targetFeedsParam);
+  List<FeedInfo> findFeedInfoListByFeedIdList(List<Integer> feedIdList);
 
-  List<FeedInfo> findFeedListByFeedIdList(List<Integer> recommendIdx);
+  List<Integer> findFriendsFeedIdList(FriendsFeedIdParam friendsFeedIdParam);
 }

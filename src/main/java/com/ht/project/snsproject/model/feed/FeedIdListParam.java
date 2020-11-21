@@ -4,9 +4,9 @@ import com.ht.project.snsproject.model.Pagination;
 import lombok.Value;
 
 @Value
-public class FeedInfoParam {
+public class FeedIdListParam {
 
-  String userId;
+  String targetId;
 
   Pagination pagination;
 }

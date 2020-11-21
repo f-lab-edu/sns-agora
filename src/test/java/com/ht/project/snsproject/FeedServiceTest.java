@@ -7,40 +7,50 @@ import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.*;
-import com.ht.project.snsproject.service.FeedCacheService;
+import com.ht.project.snsproject.repository.comment.CommentRepository;
+import com.ht.project.snsproject.repository.feed.FeedRepository;
+import com.ht.project.snsproject.repository.good.GoodRepository;
 import com.ht.project.snsproject.service.FeedServiceImpl;
 import com.ht.project.snsproject.service.FriendService;
-import com.ht.project.snsproject.service.GoodService;
+import com.ht.project.snsproject.service.RedisCacheService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class FeedServiceTest {
 
   @Mock
-  private FeedCacheService feedCacheService;
+  private FeedRepository feedRepository;
 
   @Mock
   private FeedMapper feedMapper;
 
   @Mock
+  private RedisCacheService redisCacheService;
+
+  @Mock
   private FriendService friendService;
 
   @Mock
-  private GoodService goodService;
+  private GoodRepository goodRepository;
+
+  @Mock
+  private CommentRepository commentRepository;
 
   @Mock
   private ObjectMapper cacheObjectMapper;
@@ -63,24 +73,23 @@ public class FeedServiceTest {
             .userId(targetId)
             .title("test title")
             .content("test content")
-            .goodCount(0)
-            .commentCount(0)
             .date(LocalDateTime.of(2020, 11, 13, 0, 0))
             .publicScope(PublicScope.ALL)
             .files(files).build();
 
-    when(friendService.getFriendStatus(userId, targetId))
+    when(friendService.findFriendStatus(feedId, userId))
             .thenReturn(FriendStatus.FRIEND);
 
-    when(feedCacheService.findFriendsFeedByFeedId(feedId, targetId, userId))
+    when(feedRepository.findFriendsFeedByFeedId(feedId))
             .thenReturn(feedInfo);
 
-    when(goodService.isGoodPushed(feedId, userId)).thenReturn(false);
-
+    when(goodRepository.getGood(feedId)).thenReturn(0);
+    when(commentRepository.getCommentCount(feedId)).thenReturn(0);
+    when(goodRepository.isGoodPushed(feedId, userId)).thenReturn(false);
     when(cacheObjectMapper.convertValue(feedInfo, FeedInfo.class))
             .thenReturn(feedInfo);
 
-    Feed feed = feedService.findFeedByFeedId(userId, targetId, feedId);
+    Feed feed = feedService.findFeedByFeedId(userId, feedId);
 
     assertEquals(1, feed.getId());
     assertEquals(targetId, feed.getUserId());
@@ -107,24 +116,24 @@ public class FeedServiceTest {
             .userId(targetId)
             .title("test title")
             .content("test content")
-            .goodCount(0)
-            .commentCount(0)
             .date(LocalDateTime.of(2020, 11, 13, 0, 0))
             .publicScope(PublicScope.ALL)
             .files(files).build();
 
-    when(friendService.getFriendStatus(userId, targetId))
+    when(friendService.findFriendStatus(feedId, userId))
             .thenReturn(FriendStatus.ME);
 
-    when(feedCacheService.findMyFeedByFeedId(feedId, targetId, userId))
+    when(feedRepository.findMyFeedByFeedId(feedId))
             .thenReturn(feedInfo);
 
-    when(goodService.isGoodPushed(feedId, userId)).thenReturn(false);
+    when(goodRepository.getGood(feedId)).thenReturn(0);
+    when(commentRepository.getCommentCount(feedId)).thenReturn(0);
+    when(goodRepository.isGoodPushed(feedId, userId)).thenReturn(false);
 
     when(cacheObjectMapper.convertValue(feedInfo, FeedInfo.class))
             .thenReturn(feedInfo);
 
-    Feed feed = feedService.findFeedByFeedId(userId, targetId, feedId);
+    Feed feed = feedService.findFeedByFeedId(userId, feedId);
 
     assertEquals(1, feed.getId());
     assertEquals(targetId, feed.getUserId());
@@ -151,24 +160,24 @@ public class FeedServiceTest {
             .userId(targetId)
             .title("test title")
             .content("test content")
-            .goodCount(0)
-            .commentCount(0)
             .date(LocalDateTime.of(2020, 11, 13, 0, 0))
             .publicScope(PublicScope.ALL)
             .files(files).build();
 
-    when(friendService.getFriendStatus(userId, targetId))
+    when(friendService.findFriendStatus(feedId, userId))
             .thenReturn(FriendStatus.NONE);
 
-    when(feedCacheService.findAllFeedByFeedId(feedId, targetId, userId))
+    when(feedRepository.findAllFeedByFeedId(feedId))
             .thenReturn(feedInfo);
 
-    when(goodService.isGoodPushed(feedId, userId)).thenReturn(false);
+    when(goodRepository.getGood(feedId)).thenReturn(0);
+    when(commentRepository.getCommentCount(feedId)).thenReturn(0);
+    when(goodRepository.isGoodPushed(feedId, userId)).thenReturn(false);
 
     when(cacheObjectMapper.convertValue(feedInfo, FeedInfo.class))
             .thenReturn(feedInfo);
 
-    Feed feed = feedService.findFeedByFeedId(userId, targetId, feedId);
+    Feed feed = feedService.findFeedByFeedId(userId, feedId);
 
     assertEquals(1, feed.getId());
     assertEquals(targetId, feed.getUserId());
@@ -195,16 +204,14 @@ public class FeedServiceTest {
             .userId(targetId)
             .title("test title")
             .content("test content")
-            .goodCount(0)
-            .commentCount(0)
             .date(LocalDateTime.of(2020, 11, 13, 0, 0))
             .publicScope(PublicScope.FRIENDS)
             .files(files).build();
 
-    when(friendService.getFriendStatus(userId, targetId))
+    when(friendService.findFriendStatus(feedId, userId))
             .thenReturn(FriendStatus.NONE);
 
-    when(feedCacheService.findAllFeedByFeedId(feedId, targetId, userId))
+    when(feedRepository.findAllFeedByFeedId(feedId))
             .thenReturn(feedInfo);
 
     when(cacheObjectMapper.convertValue(feedInfo, FeedInfo.class))
@@ -213,7 +220,7 @@ public class FeedServiceTest {
     assertThrows(IllegalArgumentException.class,
             () -> ReflectionTestUtils.invokeMethod(feedService,
                     "findFeedByFeedId",
-                    userId, targetId, feedId));
+                    userId, feedId));
 
   }
 
@@ -222,25 +229,31 @@ public class FeedServiceTest {
   public void findFeedListByUserIdShouldPass() {
 
     Pagination pagination = new Pagination(null);
-    List<Feed> feedList = new ArrayList<>();
-    feedList.add(Feed.builder().id(1)
+    List<MultiSetTarget> multiSetTargetList = new ArrayList<>();
+    List<FeedInfo> feedInfoList = new ArrayList<>();
+    List<Integer> feedIdList = new ArrayList<>();
+    Map<Integer, Boolean> goodPushedStatusMap = new HashMap<>();
+    goodPushedStatusMap.put(1, false);
+    Map<Integer, Integer> goodCountMap = new HashMap<>();
+    goodCountMap.put(1, 0);
+    Map<Integer, Integer> commentCountMap = new HashMap<>();
+    commentCountMap.put(1, 0);
+
+    feedInfoList.add(FeedInfo.builder().id(1)
             .userId(targetId)
             .title("test title")
             .content("test content")
-            .goodCount(0)
-            .commentCount(0)
             .date(LocalDateTime.of(2020, 11, 13, 0, 0))
             .publicScope(PublicScope.FRIENDS)
-            .goodPushed(false)
             .files(new ArrayList<>()).build());
-    feedList.add(new Feed());
-    feedList.add(new Feed());
 
     when(friendService.getFriendStatus(userId, targetId)).thenReturn(FriendStatus.FRIEND);
-    when(feedMapper.findFriendFeedListByUserId(new TargetFeedsParam(userId, targetId, pagination)))
-            .thenReturn(feedList);
-
-    doNothing().when(feedCacheService).setFeedListCache(feedList, userId, 60L);
+    when(feedRepository.findFriendFeedIdListByUserId(targetId, pagination)).thenReturn(feedIdList);
+    when(feedRepository.findFeedInfoList(feedIdList, multiSetTargetList)).thenReturn(feedInfoList);
+    when(goodRepository.findGoodPushedStatusMap(userId, feedIdList, multiSetTargetList))
+            .thenReturn(goodPushedStatusMap);
+    when(goodRepository.findGoodCountMap(feedIdList, multiSetTargetList)).thenReturn(goodCountMap);
+    when(commentRepository.findCommentCountMap(feedIdList, multiSetTargetList)).thenReturn(commentCountMap);
 
     List<Feed> result = feedService.findFeedListByUserId(userId, targetId, pagination);
 
@@ -277,22 +290,32 @@ public class FeedServiceTest {
   public void findFriendsFeedListByUserIdShouldPass() {
 
     Pagination pagination = new Pagination(null);
-    List<Feed> feedList = new ArrayList<>();
-    feedList.add(Feed.builder().id(1)
+    List<Integer> feedIdList = new ArrayList<>();
+    List<FeedInfo> feedInfoList = new ArrayList<>();
+    List<MultiSetTarget> multiSetTargetList = new ArrayList<>();
+    Map<Integer, Boolean> goodPushedStatusMap = new HashMap<>();
+    goodPushedStatusMap.put(1, false);
+    Map<Integer, Integer> goodCountMap = new HashMap<>();
+    goodCountMap.put(1, 0);
+    Map<Integer, Integer> commentCountMap = new HashMap<>();
+    commentCountMap.put(1, 0);
+
+    feedInfoList.add(FeedInfo.builder().id(1)
             .userId(targetId)
             .title("test title")
             .content("test content")
-            .goodCount(0)
-            .commentCount(0)
             .date(LocalDateTime.of(2020, 11, 13, 0, 0))
             .publicScope(PublicScope.FRIENDS)
-            .goodPushed(false)
             .files(new ArrayList<>()).build());
-    feedList.add(new Feed());
-    feedList.add(new Feed());
 
-    when(feedMapper.findFriendsFeedListByUserId(new FeedInfoParam(userId, pagination)))
-            .thenReturn(feedList);
+    when(feedRepository.findFriendsFeedIdList(userId, pagination))
+            .thenReturn(feedIdList);
+    when(feedRepository.findFeedInfoList(feedIdList, multiSetTargetList)).thenReturn(feedInfoList);
+    when(goodRepository.findGoodPushedStatusMap(userId, feedIdList, multiSetTargetList))
+            .thenReturn(goodPushedStatusMap);
+    when(goodRepository.findGoodCountMap(feedIdList, multiSetTargetList)).thenReturn(goodCountMap);
+    when(commentRepository.findCommentCountMap(feedIdList, multiSetTargetList)).thenReturn(commentCountMap);
+    Mockito.doNothing().when(redisCacheService).multiSet(multiSetTargetList);
 
     List<Feed> result = feedService.findFriendsFeedListByUserId(userId, pagination);
 

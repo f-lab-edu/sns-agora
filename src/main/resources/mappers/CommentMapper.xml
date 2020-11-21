@@ -55,22 +55,24 @@
         WHERE feedId = #{feedId}
     </select>
 
-    <select id="getCommentCounts" parameterType="java.util.List"
-            resultType="com.ht.project.snsproject.model.comment.CommentCount">
-
-        SELECT feedId, COUNT(*) AS commentCount FROM comments
+    <select id="findCommentCountList" parameterType="java.util.List" resultType="com.ht.project.snsproject.model.comment.CommentCount">
+        SELECT a.id,
+        COUNT(b.feedId) AS goodCount
+        FROM feeds a
+        LEFT OUTER JOIN comments b ON a.id = b.feedId
         WHERE
-        <foreach item="item" collection="list" index="index" open="(" close=")" separator="OR">
-            feedId = #{item}
+        <foreach collection="list" item="item" separator="OR">
+            a.id = #{item}
         </foreach>
-        GROUP BY feedId;
+        GROUP BY a.id
+        ORDER BY a.id DESC
     </select>
 
     <update id="updateCommentOnFeed" parameterType="com.ht.project.snsproject.model.comment.CommentUpdateParam">
         Update comments
-        set content = #{content},
+        SET content = #{content},
         writeTime = #{updateTime}
-        where id = #{commentId}
+        WHERE id = #{commentId}
         AND userId = #{userId}
     </update>
 
@@ -90,9 +92,9 @@
 
     <update id="updateReplyOnComment" parameterType="com.ht.project.snsproject.model.comment.ReplyUpdateParam">
         Update replies
-        set content = #{content},
+        SET content = #{content},
         writeTime = #{updateTime}
-        where id = #{replyId}
+        WHERE id = #{replyId}
         AND userId = #{userId}
     </update>
 

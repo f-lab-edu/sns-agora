@@ -7,7 +7,7 @@ import com.ht.project.snsproject.model.alarm.Alarm;
 import com.ht.project.snsproject.model.alarm.AlarmDelete;
 import com.ht.project.snsproject.model.alarm.AlarmInsert;
 import com.ht.project.snsproject.model.alarm.AlarmRead;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +16,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class AlarmServiceImpl implements AlarmService {
 
-  @Autowired
-  private AlarmMapper alarmMapper;
+  private final AlarmMapper alarmMapper;
 
   @Override
   public void insertAlarm(String userId, String targetId, AlarmType alarmType) {

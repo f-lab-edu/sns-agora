@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.springframework.beans.factory.annotation.Value;
+import com.ht.project.snsproject.properites.redis.CacheRedisProperty;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
@@ -48,24 +49,18 @@ import java.time.Duration;
 
 @EnableCaching
 @Configuration
+@RequiredArgsConstructor
 public class RedisCacheConfig extends CachingConfigurerSupport {
 
-
-  @Value("${redis.cache.host}")
-  private String host;
-
-  @Value("${redis.cache.password:@null}")
-  private String password;
-
-  @Value("${redis.cache.port}")
-  private int port;
+  private final CacheRedisProperty cacheRedisProperty;
 
   @Bean("cacheRedisConnectionFactory")
   public RedisConnectionFactory cacheRedisConnectionFactory() {
 
     RedisStandaloneConfiguration redisStandaloneConfiguration =
-            new RedisStandaloneConfiguration(host, port);
-    redisStandaloneConfiguration.setPassword(password);
+            new RedisStandaloneConfiguration(cacheRedisProperty.getHost(),
+                    cacheRedisProperty.getPort());
+    redisStandaloneConfiguration.setPassword(cacheRedisProperty.getPassword());
 
     return new LettuceConnectionFactory(redisStandaloneConfiguration);
   }

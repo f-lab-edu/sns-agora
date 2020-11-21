@@ -5,47 +5,37 @@ import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.GoodMapper;
 import com.ht.project.snsproject.model.good.GoodListParam;
-import com.ht.project.snsproject.model.good.GoodStatusParam;
 import com.ht.project.snsproject.model.good.GoodUser;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ht.project.snsproject.repository.good.GoodRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
 public class GoodServiceImpl implements GoodService {
 
-
-  @Resource(name = "cacheRedisTemplate")
-  private ValueOperations<String, Object> valueOps;
-
-  @Autowired
-  private GoodMapper goodMapper;
-
-  @Autowired
-  private RedisCacheService redisCacheService;
-
-  @Autowired
-  @Qualifier("cacheRedisTemplate")
-  private RedisTemplate<String, Object> redisTemplate;
-
-  @Autowired
-  private GoodService goodService;
-
-  @Transactional(readOnly = true)
-  @Cacheable(value = "goodPushed", key = "'goodPushed:' + #feedId + ':' + #userId")
-  @Override
-  public boolean isGoodPushed(int feedId, String userId) {
-
-    return goodMapper.getGoodPushedStatus(new GoodStatusParam(feedId, userId));
+  public GoodServiceImpl(GoodMapper goodMapper,
+                         RedisCacheService redisCacheService,
+                         @Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> redisTemplate,
+                         GoodRepository goodRepository) {
+    this.goodMapper = goodMapper;
+    this.redisCacheService = redisCacheService;
+    this.redisTemplate = redisTemplate;
+    this.goodRepository = goodRepository;
   }
+
+  private final GoodMapper goodMapper;
+
+  private final RedisCacheService redisCacheService;
+
+  private final RedisTemplate<String, Object> redisTemplate;
+
+  private final GoodRepository goodRepository;
+
 
   @Override
   public List<GoodUser> getGoodList(int feedId, Integer cursor) {
@@ -56,21 +46,14 @@ public class GoodServiceImpl implements GoodService {
             .build());
   }
 
-  @Transactional(readOnly = true)
-  @Cacheable(value = "good", key = "'good:' + #feedId")
-  @Override
-  public int getGood(int feedId) {
-
-    return goodMapper.getGood(feedId);
-  }
 
   @Transactional
   @Override
   public void addGood(int feedId, String userId) {
 
-    goodService.getGood(feedId);
+    goodRepository.getGood(feedId);
 
-    addGoodToCache(feedId, userId, goodService.isGoodPushed(feedId, userId));
+    addGoodToCache(feedId, userId, goodRepository.isGoodPushed(feedId, userId));
     increaseGoodCount(feedId);
   }
 
@@ -80,7 +63,7 @@ public class GoodServiceImpl implements GoodService {
     String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
 
     if (!goodPushed) {
-      valueOps.set(goodPushedKey, true, 60L, TimeUnit.SECONDS);
+      redisTemplate.opsForValue().set(goodPushedKey, true, 60L, TimeUnit.SECONDS);
 
     } else {
       throw new DuplicateRequestException("중복된 요청입니다.");
@@ -93,16 +76,16 @@ public class GoodServiceImpl implements GoodService {
 
     String goodKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
-    valueOps.increment(goodKey);
+    redisTemplate.opsForValue().increment(goodKey);
   }
 
   @Transactional
   @Override
   public void cancelGood(int feedId, String userId) {
 
-    goodService.getGood(feedId);
+    goodRepository.getGood(feedId);
 
-    cancelGoodInCache(feedId, userId, goodService.isGoodPushed(feedId, userId));
+    cancelGoodInCache(feedId, userId, goodRepository.isGoodPushed(feedId, userId));
     decreaseGoodCount(feedId);
   }
 
@@ -114,7 +97,7 @@ public class GoodServiceImpl implements GoodService {
     if (!goodPushed) {
       throw new InvalidApproachException("비정상적인 요청입니다.");
     } else {
-      valueOps.set(goodPushedKey, false, 60L, TimeUnit.SECONDS);
+      redisTemplate.opsForValue().set(goodPushedKey, false, 60L, TimeUnit.SECONDS);
     }
   }
 
@@ -123,6 +106,6 @@ public class GoodServiceImpl implements GoodService {
 
     String goodKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
-    valueOps.decrement(goodKey);
+    redisTemplate.opsForValue().decrement(goodKey);
   }
 }

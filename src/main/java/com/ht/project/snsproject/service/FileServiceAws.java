@@ -8,12 +8,12 @@ import com.ht.project.snsproject.enumeration.ErrorCode;
 import com.ht.project.snsproject.exception.FileUploadException;
 import com.ht.project.snsproject.mapper.FileMapper;
 import com.ht.project.snsproject.model.feed.*;
+import com.ht.project.snsproject.properites.aws.AwsS3Property;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,21 +32,16 @@ import java.util.List;
 @Slf4j
 @Service
 @Qualifier("awsFileService")
+@RequiredArgsConstructor
 public class FileServiceAws implements FileService {
 
-  @Autowired
-  private AmazonS3 s3Client;
+  private final AmazonS3 s3Client;
 
-  @Value("${aws.s3.bucketName}")
-  private String bucketName;
-
-  @Autowired
-  private FileServiceAws fileServiceAws;
+  private final AwsS3Property awsS3Property;
 
   private static final Logger logger = LoggerFactory.getLogger(FileServiceAws.class);
 
-  @Autowired
-  private FileMapper fileMapper;
+  private final FileMapper fileMapper;
 
   /** ThreadLocal 객체를 사용하면 SimpleDateFormat 의 Thread Safety 를 보장할 수 있다.
    * ThreadLocal 은 한 쓰레드에서 실행되는 코드가 동일한 객체를 사용할 수 있도록 해 주기 때문에
@@ -86,7 +81,7 @@ public class FileServiceAws implements FileService {
         String keyName = dirPath + File.separator + file.getOriginalFilename();
 
         fileInfoList.add(new FileInfo(dirPath, file.getOriginalFilename(), fileIndex, feedId));
-        s3Client.putObject(bucketName, keyName, file.getInputStream(), metadata);
+        s3Client.putObject(awsS3Property.getBucketName(), keyName, file.getInputStream(), metadata);
 
         fileIndex++;
       }
@@ -110,7 +105,7 @@ public class FileServiceAws implements FileService {
       metadata.setContentLength(file.getSize());
       String keyName = dirPath + File.separator + file.getOriginalFilename();
 
-      s3Client.putObject(bucketName, keyName, file.getInputStream(), metadata);
+      s3Client.putObject(awsS3Property.getBucketName(), keyName, file.getInputStream(), metadata);
 
     } catch (IOException ioe) {
       throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
@@ -151,7 +146,7 @@ public class FileServiceAws implements FileService {
                 + File.separator + file.getFileName()));
       }
 
-      DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName)
+      DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(awsS3Property.getBucketName())
               .withKeys(keyVersions);
       s3Client.deleteObjects(deleteObjectsRequest);
     }
@@ -163,7 +158,8 @@ public class FileServiceAws implements FileService {
 
     try {
 
-      s3Client.deleteObject(new DeleteObjectRequest(bucketName, filePath + File.separator + fileName));
+      s3Client.deleteObject(new DeleteObjectRequest(awsS3Property.getBucketName(),
+              filePath + File.separator + fileName));
     } catch (Exception e) {
       throw new FileUploadException("파일 업로드에 실패하였습니다.", e, ErrorCode.UPLOAD_ERROR);
     }
@@ -175,7 +171,7 @@ public class FileServiceAws implements FileService {
   public void updateFiles(List<MultipartFile> files, String userId, int feedId) {
 
     if(files.isEmpty()) {
-      fileServiceAws.deleteAllFiles(feedId);
+      deleteAllFiles(feedId);
       return;
     }
 
@@ -183,7 +179,7 @@ public class FileServiceAws implements FileService {
     String filePath = originalFiles.get(0).getFilePath();
 
     if(originalFiles.isEmpty()) {
-      fileServiceAws.fileUpload(files, userId, feedId);
+      fileUpload(files, userId, feedId);
       return;
     }
 
@@ -191,7 +187,7 @@ public class FileServiceAws implements FileService {
     classifyFiles(feedId, filePath, fileInfoList, files, originalFiles);
 
     if (!originalFiles.isEmpty()) {
-      fileServiceAws.deleteFiles(feedId, originalFiles);
+      deleteFiles(feedId, originalFiles);
     }
 
     fileMapper.upsertFiles(fileInfoList);
@@ -228,7 +224,7 @@ public class FileServiceAws implements FileService {
 
     if (!uploadFiles.isEmpty()) {
 
-      fileInfoList.addAll(fileServiceAws.addFiles(feedId, filePath, uploadFiles));
+      fileInfoList.addAll(addFiles(feedId, filePath, uploadFiles));
     }
   }
 
@@ -247,7 +243,7 @@ public class FileServiceAws implements FileService {
     }
 
     fileMapper.deleteFiles(fileDeleteList);
-    DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(bucketName)
+    DeleteObjectsRequest deleteObjectsRequest = new DeleteObjectsRequest(awsS3Property.getBucketName())
             .withKeys(keyVersionList);
     s3Client.deleteObjects(deleteObjectsRequest);
   }
@@ -269,7 +265,7 @@ public class FileServiceAws implements FileService {
         int fileIndex = fileAdd.getFileIndex();
 
         fileInfoList.add(new FileInfo(filePath, originalFileName, fileIndex, feedId));
-        s3Client.putObject(bucketName, keyName, file.getInputStream(), objectMetadata);
+        s3Client.putObject(awsS3Property.getBucketName(), keyName, file.getInputStream(), objectMetadata);
       }
 
       return fileInfoList;

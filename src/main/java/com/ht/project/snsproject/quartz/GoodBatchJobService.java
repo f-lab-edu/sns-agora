@@ -5,12 +5,11 @@ import com.ht.project.snsproject.mapper.GoodBachJobMapper;
 import com.ht.project.snsproject.model.good.GoodUser;
 import com.ht.project.snsproject.service.RedisCacheService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,15 +23,19 @@ public class GoodBatchJobService {
   private final int FEED_ID = 2;
   private final int USER_ID = 3;
 
+  private final RedisCacheService redisCacheService;
 
-  @Autowired
-  private RedisCacheService redisCacheService;
+  private final GoodBachJobMapper goodBachJobMapper;
 
-  @Autowired
-  private GoodBachJobMapper goodBachJobMapper;
+  private final StringRedisTemplate stringRedisTemplate;
 
-  @Resource(name = "cacheRedisTemplate")
-  private ValueOperations<String, Object> valueOps;
+  public GoodBatchJobService(RedisCacheService redisCacheService,
+                             GoodBachJobMapper goodBachJobMapper,
+                             @Qualifier("cacheStrRedisTemplate") StringRedisTemplate stringRedisTemplate) {
+    this.redisCacheService = redisCacheService;
+    this.goodBachJobMapper = goodBachJobMapper;
+    this.stringRedisTemplate = stringRedisTemplate;
+  }
 
   @Transactional
   public void executeJob() {
@@ -40,7 +43,7 @@ public class GoodBatchJobService {
     List<String> goodPushedKeys = redisCacheService.scanKeys(
             redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, "*"));
 
-    List<Object> values = valueOps.multiGet(goodPushedKeys);
+    List<String> values = stringRedisTemplate.opsForValue().multiGet(goodPushedKeys);
 
     if(values != null && !values.isEmpty()) {
       log.info("The batch job has begun...");
@@ -50,10 +53,10 @@ public class GoodBatchJobService {
 
       for (int i = 0; i < values.size(); i++) {
 
-        Boolean goodPushed = (Boolean) values.get(i);
+        String goodPushed = values.get(i);
 
         if (goodPushed != null) {
-          if (goodPushed) {
+          if (Boolean.parseBoolean(goodPushed)) {
 
             goodAddKeys.add(goodPushedKeys.get(i));
           } else {

@@ -1,15 +1,21 @@
 package com.ht.project.snsproject.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.exception.InvalidApproachException;
+import com.ht.project.snsproject.model.comment.CommentCount;
+import com.ht.project.snsproject.model.feed.FeedInfo;
 import com.ht.project.snsproject.model.feed.MultiSetTarget;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ht.project.snsproject.model.good.GoodCount;
+import com.ht.project.snsproject.model.good.GoodPushedStatus;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.StringRedisConnection;
 import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,17 +29,21 @@ public class RedisCacheService {
   public static final String GOOD_PUSHED_CACHE_PREFIX = "goodPushed:";
   public static final String COMMENT_COUNT_PREFIX = "commentComments:";
   public static final String USER_INFO_CACHE_PREFIX = "userInfo:";
+  public static final long CACHE_EXPIRE = 30L;
 
-  @Autowired
-  @Qualifier("cacheRedisTemplate")
-  private RedisTemplate<String, Object> cacheRedisTemplate;
+  private final RedisTemplate<String, Object> cacheRedisTemplate;
 
-  @Autowired
-  @Qualifier("cacheStrRedisTemplate")
-  private StringRedisTemplate cacheStrRedisTemplate;
+  private final StringRedisTemplate cacheStrRedisTemplate;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
+
+  public RedisCacheService(@Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> cacheRedisTemplate,
+                           @Qualifier("cacheStrRedisTemplate") StringRedisTemplate cacheStrRedisTemplate,
+                           ObjectMapper objectMapper) {
+    this.cacheRedisTemplate = cacheRedisTemplate;
+    this.cacheStrRedisTemplate = cacheStrRedisTemplate;
+    this.objectMapper = objectMapper;
+  }
 
   public String makeCacheKey(CacheKeyPrefix cacheKeyPrefix, String suffix) {
 
@@ -100,6 +110,18 @@ public class RedisCacheService {
     return  keys;
   }
 
+  public List<String> makeMultiKeyList(CacheKeyPrefix cacheKeyPrefix, String userId, List<Integer> feedIds) {
+
+    List<String> keys = new ArrayList<>();
+
+    for (Integer feedId : feedIds) {
+
+      keys.add(makeCacheKey(cacheKeyPrefix, feedId, userId));
+    }
+
+    return  keys;
+  }
+
   public List<String> scanKeys(String prefix) {
 
     List<String> keys = new ArrayList<>();
@@ -113,6 +135,77 @@ public class RedisCacheService {
     }
 
     return keys;
+  }
+
+  @Transactional
+  public void addGoodCountInCacheList(List<GoodCount> goodCountList, List<MultiSetTarget> multiSetTargetList) {
+
+    goodCountList.forEach(goodCount -> {
+
+      try {
+        multiSetTargetList.add(MultiSetTarget.builder()
+                .key(makeCacheKey(CacheKeyPrefix.GOOD, goodCount.getFeedId()))
+                .target(objectMapper.writeValueAsString(goodCount.getGoodCount()))
+                .expire(RedisCacheService.CACHE_EXPIRE)
+                .build());
+
+      } catch (JsonProcessingException e) {
+        throw new SerializationException("변환에 실패하였습니다.", e);
+      }});
+  }
+
+  @Transactional
+  public void addCommentCountListInCacheList(List<CommentCount> commentCountList,
+                                              List<MultiSetTarget> multiSetTargetList) {
+
+    commentCountList.forEach(commentCount -> {
+
+      try {
+        multiSetTargetList.add(MultiSetTarget.builder()
+                .key(makeCacheKey(CacheKeyPrefix.COMMENT_COUNT, commentCount.getFeedId()))
+                .target(objectMapper.writeValueAsString(commentCount.getCommentCount()))
+                .expire(RedisCacheService.CACHE_EXPIRE)
+                .build());
+
+      } catch (JsonProcessingException e) {
+        throw new SerializationException("변환에 실패하였습니다.", e);
+      }});
+  }
+
+  @Transactional
+  public void addGoodPushedStatusInCacheList(String userId, List<GoodPushedStatus> goodPushedStatusList,
+                                     List<MultiSetTarget> multiSetTargetList) {
+
+    goodPushedStatusList.forEach(goodPushedStatus -> {
+
+      try {
+        multiSetTargetList.add(MultiSetTarget.builder()
+                .key(makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, goodPushedStatus.getFeedId(), userId))
+                .target(objectMapper.writeValueAsString(goodPushedStatus))
+                .expire(RedisCacheService.CACHE_EXPIRE)
+                .build());
+      } catch (JsonProcessingException e) {
+        throw new SerializationException("변환에 실패하였습니다.", e);
+      }
+    });
+  }
+
+  @Transactional
+  public void addFeedInfoInCacheList(List<FeedInfo> feedInfoList,
+                                     List<MultiSetTarget> multiSetTargetList) {
+
+    feedInfoList.forEach(feedInfo -> {
+
+      try {
+        multiSetTargetList.add(MultiSetTarget.builder()
+                .key(makeCacheKey(CacheKeyPrefix.FEED, feedInfo.getId()))
+                .target(objectMapper.writeValueAsString(feedInfo))
+                .expire(RedisCacheService.CACHE_EXPIRE)
+                .build());
+      } catch (JsonProcessingException e) {
+        throw new SerializationException("변환에 실패하였습니다.", e);
+      }
+    });
   }
 
   /*
@@ -137,6 +230,7 @@ public class RedisCacheService {
   spring-redis-data API가 제공하는 파이프라인 사용하였습니다.
   해당 document 참고하여 해당 콜백 메소드 주석 추가 예정.
    */
+  @Transactional
   public void multiSet(List<MultiSetTarget> multiSetTargetList) {
 
     cacheStrRedisTemplate.executePipelined(

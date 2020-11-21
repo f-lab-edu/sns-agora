@@ -7,7 +7,6 @@ import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.mapper.UserMapper;
 import com.ht.project.snsproject.model.feed.FileForProfile;
 import com.ht.project.snsproject.model.user.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -22,26 +21,31 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl implements UserService {
 
 
-  @Autowired
-  @Qualifier("cacheRedisTemplate")
-  private RedisTemplate<String, Object> cacheRedisTemplate;
+  private final RedisTemplate<String, Object> cacheRedisTemplate;
 
-  @Autowired
-  private UserMapper userMapper;
+  private final UserMapper userMapper;
 
-  @Autowired
-  @Qualifier("awsFileService")
-  private FileService fileService;
+  private final FileService fileService;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
 
-  @Autowired
-  private RedisCacheService redisCacheService;
+  private final RedisCacheService redisCacheService;
 
-  @Autowired
-  @Qualifier("cacheStrRedisTemplate")
-  private StringRedisTemplate cacheStrRedisTemplate;
+  private final StringRedisTemplate cacheStrRedisTemplate;
+
+  public UserServiceImpl(@Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> cacheRedisTemplate,
+                         UserMapper userMapper,
+                         @Qualifier("awsFileService") FileService fileService,
+                         ObjectMapper objectMapper,
+                         RedisCacheService redisCacheService,
+                         @Qualifier("cacheStrRedisTemplate") StringRedisTemplate cacheStrRedisTemplate) {
+    this.cacheRedisTemplate = cacheRedisTemplate;
+    this.userMapper = userMapper;
+    this.fileService = fileService;
+    this.objectMapper = objectMapper;
+    this.redisCacheService = redisCacheService;
+    this.cacheStrRedisTemplate = cacheStrRedisTemplate;
+  }
 
   @Override
   public void joinUser(UserJoinRequest userJoinRequest) {

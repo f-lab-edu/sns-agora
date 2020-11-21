@@ -4,13 +4,13 @@ import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.exception.UnauthorizedException;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -21,10 +21,10 @@ import java.lang.reflect.Method;
 
 @Aspect
 @Component
+@RequiredArgsConstructor
 public class UserAspect {
 
-  @Autowired
-  private UserService userService;
+  private final UserService userService;
 
   /**
    * 로그인 정보를 확인하고,

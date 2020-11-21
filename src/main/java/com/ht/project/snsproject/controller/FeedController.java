@@ -3,11 +3,13 @@ package com.ht.project.snsproject.controller;
 import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.Pagination;
-import com.ht.project.snsproject.model.feed.*;
+import com.ht.project.snsproject.model.feed.Feed;
+import com.ht.project.snsproject.model.feed.FeedInfo;
+import com.ht.project.snsproject.model.feed.FeedWriteDto;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.FeedRecommendService;
 import com.ht.project.snsproject.service.FeedService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +19,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/feeds")
+@RequiredArgsConstructor
 public class FeedController {
 
-  @Autowired
-  FeedService feedService;
+  private final FeedService feedService;
 
-  @Autowired
-  FeedRecommendService feedRecommendService;
+  private final FeedRecommendService feedRecommendService;
 
   @LoginCheck
   @PostMapping
@@ -36,8 +37,8 @@ public class FeedController {
   }
 
   @LoginCheck
-  @GetMapping("/{targetId}")
-  public ResponseEntity<List<Feed>> getFeedList(@PathVariable String targetId,
+  @GetMapping
+  public ResponseEntity<List<Feed>> getFeedList(@RequestParam String targetId,
                                                 @RequestParam(required = false) Integer cursor,
                                                 @UserInfo User user) {
 
@@ -45,7 +46,7 @@ public class FeedController {
   }
 
   @LoginCheck
-  @GetMapping
+  @GetMapping("/friends")
   public ResponseEntity<List<Feed>> getFriendsFeedList(@RequestParam(required = false) Integer cursor,
                                                        @UserInfo User user) {
 
@@ -53,11 +54,10 @@ public class FeedController {
   }
 
   @LoginCheck
-  @GetMapping("/{targetId}/{feedId}")
-  public ResponseEntity<Feed> getFeed(@PathVariable String targetId,
-                                        @PathVariable int feedId, @UserInfo User user) {
+  @GetMapping("/{feedId}")
+  public ResponseEntity<Feed> getFeed(@PathVariable int feedId, @UserInfo User user) {
 
-    return ResponseEntity.ok(feedService.findFeedByFeedId(user.getUserId(), targetId, feedId));
+    return ResponseEntity.ok(feedService.findFeedByFeedId(user.getUserId(), feedId));
   }
 
   @LoginCheck
@@ -84,9 +84,8 @@ public class FeedController {
   @LoginCheck
   @GetMapping("/recommends")
   public ResponseEntity<List<FeedInfo>> getFeedRecommendList(
-          @RequestParam(required = false) Integer cursor,
-          @UserInfo User user) {
+          @RequestParam(required = false) Integer cursor) {
 
-    return ResponseEntity.ok(feedRecommendService.findLatestAllFeedList(user.getUserId(), new Pagination(cursor)));
+    return ResponseEntity.ok(feedRecommendService.findLatestAllFeedList(new Pagination(cursor)));
   }
 }

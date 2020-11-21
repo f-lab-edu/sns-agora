@@ -8,19 +8,6 @@
         VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope})
     </insert>
 
-    <resultMap id="feed" type="com.ht.project.snsproject.model.feed.Feed">
-        <id property="id" column="id"/>
-        <result property="userId" column="userId"/>
-        <result property="title" column="title"/>
-        <result property="content" column="content"/>
-        <result property="date" column="date"/>
-        <result property="publicScope" column="publicScope"/>
-        <result property="goodPushed" column="goodPushed"/>
-        <result property="goodCount" column="goodCount"/>
-        <result property="commentCount" column="commentCount"/>
-        <collection property="files" resultMap="file"/>
-    </resultMap>
-
     <resultMap id="feedInfo" type="com.ht.project.snsproject.model.feed.FeedInfo">
         <id property="id" column="id"/>
         <result property="userId" column="userId"/>
@@ -28,8 +15,6 @@
         <result property="content" column="content"/>
         <result property="date" column="date"/>
         <result property="publicScope" column="publicScope"/>
-        <result property="goodCount" column="goodCount"/>
-        <result property="commentCount" column="commentCount"/>
         <collection property="files" resultMap="file"/>
     </resultMap>
 
@@ -45,283 +30,89 @@
     - INNER JOIN 을 사용하지 않고, LEFT JOIN 을 사용한 이유는
       모든 피드가 파일 정보를 포함하지 않기 때문에 피드 정보만을 조회할 수 있도록 하기 위해서는
       LEFT JOIN 을 통해 조회해야겠다고 생각하여 사용하게 되었습니다.-->
-    <select id="findFriendsFeedListByUserId" parameterType="com.ht.project.snsproject.model.feed.FeedInfoParam"
-            resultMap="feed">
-        SELECT x.id AS id,
-        x.userId AS userId,
-        x.title AS title,
-        x.content AS content,
-        x.date AS date,
-        x.publicScope AS publicScope,
-        x.goodPushed AS goodPushed,
-        x.goodCount AS goodCount,
-        x.commentCount AS commentCount,
+    <select id="findFeedInfoListByFeedIdList" parameterType="java.util.List"
+            resultMap="feedInfo">
+
+        SELECT a.id AS id,
+        a.userId AS userId,
+        a.title AS title,
+        a.content AS content,
+        a.date AS date,
+        a.publicScope AS publicScope,
         b.fileIndex AS fileIndex,
         b.filePath AS filePath,
         b.fileName AS fileName
-        FROM
-        (SELECT a.id, a.userId,
-            a.title, a.content,
-            a.date, a.publicScope,
-            NOT(isnull(c.userId)) AS goodPushed,
-            COUNT(DISTINCT d.id) AS goodCount,
-            COUNT(DISTINCT e.id) AS commentCount
-            FROM feeds a
-            INNER JOIN friends f ON a.userId = f.userId
-                AND f.targetId = #{userId}
-                AND f.friendStatus = 'FRIEND'
-            LEFT OUTER JOIN goods c ON a.id = c.feedId AND c.userId = #{userId}
-            LEFT OUTER JOIN goods d ON a.id = d.feedId
-            LEFT OUTER JOIN comments e ON a.id = e.feedId
-            WHERE (a.publicScope = 'ALL'
-                OR a.publicScope = 'FRIENDS')
-            <if test="pagination.cursor != null">
-                AND a.id<![CDATA[<]]>#{pagination.cursor}
-            </if>
-            GROUP BY a.id
-            ORDER BY a.id DESC
-            LIMIT #{pagination.listSize}
-        ) x
-        LEFT OUTER JOIN images b ON x.id = b.feedId
-        ORDER BY x.id DESC
+        FROM feeds a
+        LEFT OUTER JOIN images b ON a.id = b.feedId
+        WHERE
+        <foreach collection="list" item="item" separator="OR">
+            a.id = #{item}
+        </foreach>
+        ORDER BY a.id DESC
     </select>
 
-    <select id="findMyFeedListByUserId" parameterType="com.ht.project.snsproject.model.feed.TargetFeedsParam"
-            resultMap="feed">
-        SELECT x.id AS id,
-            x.userId AS userId,
-            x.title AS title,
-            x.content AS content,
-            x.date AS date,
-            x.publicScope AS publicScope,
-            x.goodPushed AS goodPushed,
-            x.goodCount AS goodCount,
-            x.commentCount AS commentCount,
-            b.fileIndex AS fileIndex,
-            b.filePath AS filePath,
-            b.fileName AS fileName
-        FROM
-            (SELECT a.id, a.userId,
-            a.title, a.content,
-            a.date, a.publicScope,
-            NOT(isnull(c.userId)) AS goodPushed,
-            COUNT(DISTINCT d.id) AS goodCount,
-            COUNT(DISTINCT e.id) AS commentCount
-            FROM feeds a
-            LEFT OUTER JOIN goods c ON a.id = c.feedId AND c.userId = #{userId}
-            LEFT OUTER JOIN goods d ON a.id = d.feedId
-            LEFT OUTER JOIN comments e ON a.id = e.feedId
-            WHERE a.userId = #{targetId}
-                AND (a.publicScope = 'ALL'
-                OR a.publicScope = 'FRIENDS'
-                OR a.publicScope = 'ME')
-            <if test="pagination.cursor != null">
-                AND a.id<![CDATA[<]]>#{pagination.cursor}
-            </if>
-            GROUP BY a.id
-            ORDER BY a.id DESC
-            LIMIT #{pagination.listSize}
-            ) x
-            LEFT OUTER JOIN images b ON x.id = b.feedId
-            ORDER BY x.id DESC
-    </select>
 
-    <select id="findFriendFeedListByUserId" parameterType="com.ht.project.snsproject.model.feed.TargetFeedsParam"
-            resultMap="feed">
-        SELECT x.id AS id,
-            x.userId AS userId,
-            x.title AS title,
-            x.content AS content,
-            x.date AS date,
-            x.publicScope AS publicScope,
-            x.goodPushed AS goodPushed,
-            x.goodCount AS goodCount,
-            x.commentCount AS commentCount,
-            b.fileIndex AS fileIndex,
-            b.filePath AS filePath,
-            b.fileName AS fileName
-        FROM
-            (SELECT a.id, a.userId,
-                a.title, a.content,
-                a.date, a.publicScope,
-                NOT(isnull(c.userId)) AS goodPushed,
-                COUNT(DISTINCT d.id) AS goodCount,
-                COUNT(DISTINCT e.id) AS commentCount
-            FROM feeds a
-            LEFT OUTER JOIN goods c ON a.id = c.feedId AND c.userId = #{userId}
-            LEFT OUTER JOIN goods d ON a.id = d.feedId
-            LEFT OUTER JOIN comments e ON a.id = e.feedId
-            WHERE a.userId = #{targetId}
-            AND (a.publicScope = 'ALL'
-                OR a.publicScope = 'FRIENDS')
-            <if test="pagination.cursor != null">
-                AND a.id<![CDATA[<]]>#{pagination.cursor}
-            </if>
-            GROUP BY a.id
-            ORDER BY a.id DESC
-            LIMIT #{pagination.listSize}
-            ) x
-        LEFT OUTER JOIN images b ON x.id = b.feedId
-        ORDER BY x.id DESC
-    </select>
-
-    <select id="findAllFeedListByUserId" parameterType="com.ht.project.snsproject.model.feed.TargetFeedsParam"
-            resultMap="feed">
-        SELECT x.id AS id,
-            x.userId AS userId,
-            x.title AS title,
-            x.content AS content,
-            x.date AS date,
-            x.publicScope AS publicScope,
-            x.goodPushed AS goodPushed,
-            x.goodCount AS goodCount,
-            x.commentCount AS commentCount,
-            b.fileIndex AS fileIndex,
-            b.filePath AS filePath,
-            b.fileName AS fileName
-        FROM
-            (SELECT a.id, a.userId,
-                a.title, a.content,
-                a.date, a.publicScope,
-                NOT(isnull(c.userId)) AS goodPushed,
-                COUNT(DISTINCT d.id) AS goodCount,
-                COUNT(DISTINCT e.id) AS commentCount
-            FROM feeds a
-            LEFT OUTER JOIN goods c ON a.id = c.feedId AND c.userId = #{userId}
-            LEFT OUTER JOIN goods d ON a.id = d.feedId
-            LEFT OUTER JOIN comments e ON a.id = e.feedId
-            WHERE a.userId = #{targetId}
-                AND a.publicScope = 'ALL'
-            <if test="pagination.cursor != null">
-                AND a.id<![CDATA[<]]>#{pagination.cursor}
-            </if>
-            GROUP BY a.id
-            ORDER BY a.id DESC
-            LIMIT #{pagination.listSize}
-            ) x
-        LEFT OUTER JOIN images b ON x.id = b.feedId
-        ORDER BY x.id DESC
-    </select>
-
-    <select id="findAllFeedByFeedId" parameterType="com.ht.project.snsproject.model.feed.FeedParam"
+    <select id="findAllFeedByFeedId" parameterType="int"
             resultMap="feedInfo">
 
-        SELECT x.id AS id,
-            x.userId AS userId,
-            x.title AS title,
-            x.content AS content,
-            x.date AS date,
-            x.publicScope AS publicScope,
-            x.goodCount AS goodCount,
-            x.commentCount AS commentCount,
-            b.fileIndex AS fileIndex,
-            b.filePath AS filePath,
-            b.fileName AS fileName
-        FROM
-            (SELECT a.id, a.userId,
-                a.title, a.content,
-                a.date, a.publicScope,
-                COUNT(DISTINCT d.id) AS goodCount,
-                COUNT(DISTINCT e.id) AS commentCount
-            FROM feeds a
-            LEFT OUTER JOIN goods d ON a.id = d.feedId
-            LEFT OUTER JOIN comments e ON a.id = e.feedId
-            WHERE a.id = #{feedId}
-            AND a.userId = #{targetId}
-            AND a.publicScope = 'ALL' ) x
-        LEFT OUTER JOIN images b ON x.id = b.feedId
+        SELECT a.id AS id,
+        a.userId AS userId,
+        a.title AS title,
+        a.content AS content,
+        a.date AS date,
+        a.publicScope AS publicScope,
+        b.fileIndex AS fileIndex,
+        b.filePath AS filePath,
+        b.fileName AS fileName
+        FROM feeds a
+        LEFT OUTER JOIN images b ON a.id = b.feedId
+        WHERE
+        a.id = #{feedId}
+        AND a.publicScope = 'ALL'
+        ORDER BY a.id DESC
     </select>
 
-    <select id="findFriendsFeedByFeedId" parameterType="com.ht.project.snsproject.model.feed.FeedParam"
+    <select id="findFriendsFeedByFeedId" parameterType="int"
             resultMap="feedInfo">
 
-        SELECT x.id AS id,
-            x.userId AS userId,
-            x.title AS title,
-            x.content AS content,
-            x.date AS date,
-            x.publicScope AS publicScope,
-            x.goodCount AS goodCount,
-            x.commentCount AS commentCount,
-            b.fileIndex AS fileIndex,
-            b.filePath AS filePath,
-            b.fileName AS fileName
-        FROM
-            (SELECT a.id, a.userId,
-                a.title, a.content,
-                a.date, a.publicScope,
-                COUNT(DISTINCT d.id) AS goodCount,
-                COUNT(DISTINCT e.id) AS commentCount
-            FROM feeds a
-            LEFT OUTER JOIN goods d ON a.id = d.feedId
-            LEFT OUTER JOIN comments e ON a.id = e.feedId
-            WHERE a.id = #{feedId}
-            AND a.userId = #{targetId}
-            AND (a.publicScope = 'ALL'
-                OR a.publicScope = 'FRIENDS')) x
-        LEFT OUTER JOIN images b ON x.id = b.feedId
+        SELECT a.id AS id,
+        a.userId AS userId,
+        a.title AS title,
+        a.content AS content,
+        a.date AS date,
+        a.publicScope AS publicScope,
+        b.fileIndex AS fileIndex,
+        b.filePath AS filePath,
+        b.fileName AS fileName
+        FROM feeds a
+        LEFT OUTER JOIN images b ON a.id = b.feedId
+        WHERE a.id = #{feedId}
+        AND (a.publicScope = 'ALL'
+        OR a.publicScope = 'FRIENDS')
+        ORDER BY a.id DESC
     </select>
 
-    <select id="findMyFeedByFeedId" parameterType="com.ht.project.snsproject.model.feed.FeedParam"
+    <select id="findMyFeedByFeedId" parameterType="int"
             resultMap="feedInfo">
 
-        SELECT x.id AS id,
-            x.userId AS userId,
-            x.title AS title,
-            x.content AS content,
-            x.date AS date,
-            x.publicScope AS publicScope,
-            x.goodCount AS goodCount,
-            x.commentCount AS commentCount,
-            b.fileIndex AS fileIndex,
-            b.filePath AS filePath,
-            b.fileName AS fileName
-        FROM
-            (SELECT a.id, a.userId,
-                a.title, a.content,
-                a.date, a.publicScope,
-                COUNT(DISTINCT d.id) AS goodCount,
-                COUNT(DISTINCT e.id) AS commentCount
-            FROM feeds a
-            LEFT OUTER JOIN goods d ON a.id = d.feedId
-            LEFT OUTER JOIN comments e ON a.id = e.feedId
-            WHERE a.id = #{feedId}
-            AND a.userId = #{targetId}
-            AND (a.publicScope = 'ALL'
-                OR a.publicScope = 'FRIENDS'
-                OR a.publicScope = 'ME')) x
-        LEFT OUTER JOIN images b ON x.id = b.feedId
+        SELECT a.id AS id,
+        a.userId AS userId,
+        a.title AS title,
+        a.content AS content,
+        a.date AS date,
+        a.publicScope AS publicScope,
+        b.fileIndex AS fileIndex,
+        b.filePath AS filePath,
+        b.fileName AS fileName
+        FROM feeds a
+        LEFT OUTER JOIN images b ON a.id = b.feedId
+        WHERE a.id = #{feedId}
+        AND (a.publicScope = 'ALL'
+        OR a.publicScope = 'FRIENDS'
+        OR a.publicScope = 'ME')
+        ORDER BY a.id DESC
     </select>
 
-    <select id="findFeedListByFeedIdList" parameterType="java.util.List" resultMap="feedInfo">
-        SELECT x.id AS id,
-            x.userId AS userId,
-            x.title AS title,
-            x.content AS content,
-            x.date AS date,
-            x.publicScope AS publicScope,
-            x.goodCount AS goodCount,
-            x.commentCount AS commentCount,
-            b.fileIndex AS fileIndex,
-            b.filePath AS filePath,
-            b.fileName AS fileName
-        FROM
-            (SELECT a.id, a.userId,
-                a.title, a.content,
-                a.date, a.publicScope,
-                COUNT(DISTINCT d.id) AS goodCount,
-                COUNT(DISTINCT e.id) AS commentCount
-            FROM feeds a
-            LEFT OUTER JOIN goods d ON a.id = d.feedId
-            LEFT OUTER JOIN comments e ON a.id = e.feedId
-            WHERE
-            <foreach collection="list" item="item" separator="OR">
-                a.id = #{item}
-            </foreach>
-            GROUP BY a.id
-        ) x
-        LEFT OUTER JOIN images b ON x.id = b.feedId
-    </select>
 
     <delete id="deleteFeed" parameterType="com.ht.project.snsproject.model.feed.FeedDeleteParam">
         DELETE FROM feeds
@@ -336,4 +127,62 @@
         publicScope = #{publicScope}
         WHERE id = #{id} AND userId=#{userId}
     </update>
+
+    <select id="findMyFeedIdListByUserId" parameterType="com.ht.project.snsproject.model.feed.FeedIdListParam"
+            resultType="int">
+
+        SELECT id FROM feeds
+        WHERE userId = #{targetId}
+        AND (publicScope = 'ALL'
+        OR publicScope = 'FRIENDS'
+        OR publicScope = 'ME')
+        <if test="pagination.cursor != null">
+            AND id<![CDATA[<]]>#{pagination.cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize};
+    </select>
+
+    <select id="findFriendFeedIdListByUserId" parameterType="com.ht.project.snsproject.model.feed.FeedIdListParam"
+            resultType="int">
+
+        SELECT id FROM feeds
+        WHERE userId = #{targetId}
+        AND (publicScope = 'ALL'
+        OR publicScope = 'FRIENDS')
+        <if test="pagination.cursor != null">
+            AND id<![CDATA[<]]>#{pagination.cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize};
+    </select>
+
+    <select id="findAllFeedIdListByUserId" parameterType="com.ht.project.snsproject.model.feed.FeedIdListParam"
+            resultType="int">
+
+        SELECT id FROM feeds
+        WHERE userId = #{targetId}
+        AND publicScope = 'ALL'
+        <if test="pagination.cursor != null">
+            AND id<![CDATA[<]]>#{pagination.cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize};
+    </select>
+
+    <select id="findFriendsFeedIdList" parameterType="com.ht.project.snsproject.model.feed.FriendsFeedIdParam"
+            resultType="int">
+
+        SELECT a.id
+        FROM feeds a
+        WHERE
+        (SELECT b.friendStatus FROM friends b WHERE b.userId = #{userId} AND b.targetId = a.userId) = 'FRIEND'
+        AND (a.publicScope = 'ALL'
+        OR a.publicScope = 'FRIENDS')
+        <if test="pagination.cursor != null">
+            AND a.id<![CDATA[<]]>#{pagination.cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize};
+    </select>
 </mapper>

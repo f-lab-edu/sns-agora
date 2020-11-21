@@ -6,34 +6,32 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter
-@Setter
+@Value
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class Feed {
 
-  private Integer id;
+  Integer id;
 
-  private String userId;
+  String userId;
 
-  private String title;
+  String title;
 
-  private String content;
+  String content;
 
-  private LocalDateTime date;
+  LocalDateTime date;
 
-  private PublicScope publicScope;
+  PublicScope publicScope;
 
-  private boolean goodPushed;
+  boolean goodPushed;
 
-  private int goodCount;
+  int goodCount;
 
-  private int commentCount;
+  int commentCount;
 
-  private List<FileVo> files;
+  List<FileVo> files;
 
-  public static Feed create(FeedInfo feedInfo, boolean goodPushed) {
+
+  public static Feed create(FeedInfo feedInfo, int goodCount, int commentCount, boolean goodPushed) {
 
     return Feed.builder()
             .id(feedInfo.getId())
@@ -43,8 +41,8 @@ public class Feed {
             .date(feedInfo.getDate())
             .publicScope(feedInfo.getPublicScope())
             .goodPushed(goodPushed)
-            .goodCount(feedInfo.getGoodCount())
-            .commentCount(feedInfo.getCommentCount())
+            .goodCount(goodCount)
+            .commentCount(commentCount)
             .files(feedInfo.getFiles())
             .build();
   }
