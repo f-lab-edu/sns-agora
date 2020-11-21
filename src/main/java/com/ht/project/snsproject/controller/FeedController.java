@@ -9,6 +9,7 @@ import com.ht.project.snsproject.model.feed.FeedWriteDto;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.FeedRecommendService;
 import com.ht.project.snsproject.service.FeedService;
+import com.ht.project.snsproject.service.TestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,8 @@ public class FeedController {
   private final FeedService feedService;
 
   private final FeedRecommendService feedRecommendService;
+
+  private final TestService testService;
 
   @LoginCheck
   @PostMapping
@@ -87,5 +90,13 @@ public class FeedController {
           @RequestParam(required = false) Integer cursor) {
 
     return ResponseEntity.ok(feedRecommendService.findLatestAllFeedList(new Pagination(cursor)));
+  }
+
+  @LoginCheck
+  @GetMapping("/test")
+  public ResponseEntity<Feed> getFeedTest(@UserInfo User user) {
+
+    int feedId = (int) (Math.random() * 10_000_000) + 1;
+    return ResponseEntity.ok(testService.findFeedByFeedId(user.getUserId(), feedId));
   }
 }
