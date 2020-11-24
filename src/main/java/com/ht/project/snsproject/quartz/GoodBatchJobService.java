@@ -13,13 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
 public class GoodBatchJobService {
 
-  private AtomicInteger count = new AtomicInteger();
   /*
    배열의 인덱스값은 상수로 정의해놓고 사용하는게 유지보수성에 유리.
    */
@@ -70,7 +68,6 @@ public class GoodBatchJobService {
 
       log.info("Batch job has finished...");
     }
-    count.incrementAndGet();
 
   }
 

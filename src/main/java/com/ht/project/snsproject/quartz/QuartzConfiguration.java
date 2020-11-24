@@ -1,13 +1,14 @@
 package com.ht.project.snsproject.quartz;
 
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobDetail;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.quartz.QuartzDataSource;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +31,18 @@ public class QuartzConfiguration {
 
   @Autowired
   private ApplicationContext applicationContext;
+
+  @Value("${spring.datasource.quartz.url}")
+  String quartzDbUrl;
+
+  @Value("${spring.datasource.quartz.username}")
+  String quartzDbUsername;
+
+  @Value("${spring.datasource.quartz.password}")
+  String quartzDbPassword;
+
+  @Value("${spring.datasource.quartz.driverName}")
+  String quartzDbDriverName;
 
   @PostConstruct
   public void init() {
@@ -213,10 +226,15 @@ public class QuartzConfiguration {
    */
   @Bean(name = "quartzDb")
   @QuartzDataSource
-  @ConfigurationProperties(prefix = "spring.quartz.datasource.hikari")
   public DataSource quartzDataSource() {
 
-    return DataSourceBuilder.create().build();
+    return DataSourceBuilder.create()
+            .url(quartzDbUrl)
+            .username(quartzDbUsername)
+            .password(quartzDbPassword)
+            .type(HikariDataSource.class)
+            .driverClassName(quartzDbDriverName)
+            .build();
 
   }
 }
