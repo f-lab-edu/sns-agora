@@ -9,6 +9,7 @@ import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,6 +63,7 @@ public class DatabaseConfig {
 
   @Primary
   @Bean(name = "masterDataSource")
+  @ConfigurationProperties("spring.datasource.hikari")
   public DataSource masterDataSource() {
 
     return DataSourceBuilder.create()
@@ -79,6 +81,7 @@ public class DatabaseConfig {
   default 는 false 이다.
    */
   @Bean(name = "slaveDataSource")
+  @ConfigurationProperties("spring.datasource.hikari")
   public DataSource slaveDataSource() {
 
     return DataSourceBuilder.create()
