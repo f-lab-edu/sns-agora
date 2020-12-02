@@ -75,9 +75,8 @@ Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/03.-ER-Diagram
 https://github.com/f-lab-edu/sns-project/wiki
 
 ## Jenkins CI/CD 적용
-![cd](https://user-images.githubusercontent.com/54772162/91732703-8cc44d00-ebe3-11ea-9d04-009fce30bc72.png)
-* CI/CD란 무엇인가?(참고 사이트)    
-https://www.redhat.com/ko/topics/devops/what-is-ci-cd    
+* 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
+https://github.com/f-lab-edu/sns-agora/wiki/15.-CI-CD-%EC%84%A4%EC%A0%95
 
 ## nGrinder 성능 테스트
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
