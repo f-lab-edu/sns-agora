@@ -74,11 +74,26 @@ Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/03.-ER-Diagram
 * API에 대한 자세한 내용을 확인하시려면 Wiki를 참고해주세요.    
 https://github.com/f-lab-edu/sns-project/wiki
 
-## Jenkins와 Docker를 활용한 CI & CD
-![ci_cd](https://user-images.githubusercontent.com/54772162/101174417-36a1f280-3687-11eb-9de5-bfa1306cf183.PNG)
+## CI 프로세스
+![ci_process](https://user-images.githubusercontent.com/54772162/101181687-8802af80-3690-11eb-9021-a00ad12c05bf.PNG)
+1. Commit을 하고 원격 레포지토리에 Push를 합니다.    
+2. GitHub API을 통해 Webhook을 발생하도록 설정합니다.    
+3. Jenkins가 Polling을 하면서 Webhook을 인지하면 빌드를 시작합니다.    
+4. 빌드 성공여부
+    * 빌드 성공: Unit Test를 진행합니다.   
+    * 빌드 실패: 통합을 할 수 없으므로 기능을 수정합니다.    
+5. 단위 테스트 성공여부
+    * 단위 테스트 성공: 통합을 성공합니다.    
+    * 단위 테스트 실패: 통합을 할 수 없으므로 기능을 수정합니다.    
 
-* 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
-https://github.com/f-lab-edu/sns-project/wiki/14.-Docker-%EC%84%A4%EC%A0%95
+## CD 프로세스
+![cd_process](https://user-images.githubusercontent.com/54772162/101178161-01e46a00-368c-11eb-844c-9572a2e23f35.PNG)
+
+1. Jenkins 서버에서 Git Parameter를 입력합니다.
+2. 입력한 브랜치를 Checkout 합니다.
+3. 브랜치를 빌드한 뒤, 레포지토리에 Dockerfile을 읽어서 Docker Image 생성
+4. Docker Hub에 업로드
+5. SSH 명령을 통해 배포 서버에서 Docker Hub에 저장된 Image를 Pull하고 컨테이너를 실행하도록 함
 
 ## nGrinder 성능 테스트
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
