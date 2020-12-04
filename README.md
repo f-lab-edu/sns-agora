@@ -59,17 +59,7 @@ Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/04.-Large-Traffic-Ha
 
 Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/05.-Refactoring-Task
 
-## 프로젝트 디자인 설계
-
-* Wiki를 참고하여 주시기 바랍니다.  
-Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/02.-Front-Design
-
-## ERD
-
-* Wiki를 참고하여 주시기 바랍니다.  
-Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/03.-ER-Diagram
-
-## API
+## API Reference
 
 * API에 대한 자세한 내용을 확인하시려면 Wiki를 참고해주세요.    
 https://github.com/f-lab-edu/sns-project/wiki
@@ -91,9 +81,19 @@ https://github.com/f-lab-edu/sns-project/wiki
 
 1. Jenkins 서버에서 Git Parameter를 입력합니다.
 2. 입력한 브랜치를 Checkout 합니다.
-3. 브랜치를 빌드한 뒤, 레포지토리에 Dockerfile을 읽어서 Docker Image 생성
-4. Docker Hub에 업로드
-5. SSH 명령을 통해 배포 서버에서 Docker Hub에 저장된 Image를 Pull하고 컨테이너를 실행하도록 함
+3. 브랜치를 빌드한 뒤, 레포지토리에 Dockerfile을 읽어서 Docker Image 생성합니다.
+4. Docker Hub에 업로드합니다.
+5. SSH 명령을 통해 배포 서버에서 Docker Hub에 저장된 Image를 Pull하고 컨테이너를 실행하도록 합니다.
+
+## 프로젝트 디자인 설계
+
+* Wiki를 참고하여 주시기 바랍니다.  
+Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/02.-Front-Design
+
+## ERD
+
+* Wiki를 참고하여 주시기 바랍니다.  
+Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/03.-ER-Diagram
 
 ## nGrinder 성능 테스트
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
