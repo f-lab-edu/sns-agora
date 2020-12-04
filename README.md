@@ -74,15 +74,8 @@ Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/03.-ER-Diagram
 * API에 대한 자세한 내용을 확인하시려면 Wiki를 참고해주세요.    
 https://github.com/f-lab-edu/sns-project/wiki
 
-## Jenkins CI
-![jenkins_ci_process3](https://user-images.githubusercontent.com/54772162/101033001-671d5a00-35bd-11eb-86e2-b8f6e42c8d6a.jpg)
-
-* 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
-https://github.com/f-lab-edu/sns-agora/wiki/15.-CI-CD-%EC%84%A4%EC%A0%95
-
-## Jenkins와 Docker를 활용한 CD
-
-![docker-logo](https://user-images.githubusercontent.com/54772162/97317539-3fe0b800-18ae-11eb-9620-c8e0edc0e346.png)
+## Jenkins와 Docker를 활용한 CI & CD
+![ci_cd](https://user-images.githubusercontent.com/54772162/101174417-36a1f280-3687-11eb-9de5-bfa1306cf183.PNG)
 
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
 https://github.com/f-lab-edu/sns-project/wiki/14.-Docker-%EC%84%A4%EC%A0%95
