@@ -31,7 +31,7 @@ https://github.com/f-lab-edu/sns-project/wiki/01.-Use-Case
 
 * AGORA는 Git-Flow 를 이용하여 브랜치를 관리하였습니다.
 
-<img src="https://user-images.githubusercontent.com/54772162/84594283-2a816900-ae8c-11ea-9e88-0c1c7e4709a4.png" alt="git_flow" style="zoom:50%;" />
+![git_flow](https://user-images.githubusercontent.com/54772162/101170794-45d27180-3682-11eb-8c42-6f4bf8ec73c9.PNG)
 
 * master : 배포시 사용할 브랜치. 초기 시행착오에 의하여 몇몇 기능이 merge 되어 있으나, 
            원래 사용 용도는 완벽히 배포가 가능한 상태에만 merge가 되어야만 합니다.
