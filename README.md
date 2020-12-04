@@ -17,8 +17,7 @@ https://github.com/f-lab-edu/sns-project/wiki/01.-Use-Case
 
 
 ## AGORA 구성도
-
-![agora_system_structure2](https://user-images.githubusercontent.com/54772162/84670161-b5cc2e80-af60-11ea-9fc6-90f23a61f676.PNG)
+![agora_archetecture_resize](https://user-images.githubusercontent.com/54772162/101143570-6b4b8500-365a-11eb-8b8e-64c5c756aaef.PNG)
 
 
 ## 코딩 컨벤션
