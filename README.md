@@ -11,13 +11,18 @@
 [![framework](https://img.shields.io/badge/spring%20boot-2.2.2-yellowgreen)](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.2-Release-Notes) [![build tool](https://img.shields.io/badge/maven-2.5.3-orange)](https://maven.apache.org/) [![mybatis](https://img.shields.io/badge/MyBatis-3.5.4-blue)](https://mybatis.org/mybatis-3/ko/index.html) [![lettuce](https://img.shields.io/badge/lettuce-5.2.1-brightgreen)](https://lettuce.io/) [![mysql](https://img.shields.io/badge/MySQL-8.0-blue)](https://dev.mysql.com/doc/refman/8.0/en/) ![java](https://img.shields.io/badge/open--jdk-8-brightgreen) ![intellij](https://img.shields.io/badge/IntelliJ-3.0-orange) [![checkstyle](https://img.shields.io/badge/codestyle-Google%20CheckStyle-yellow)](https://checkstyle.sourceforge.io/google_style.html) [![Build Status](https://img.shields.io/badge/build-passing-green)](http://27.96.135.12:8080/job/agora-ci/job/issue%252F87/) [![image](https://img.shields.io/badge/docker-latest-lightgrey)](https://hub.docker.com/r/tax1116/agora) ![OS](https://img.shields.io/badge/ubuntu-16.04-red)    
 
 ## :pushpin: AGORA 구성도
-![agora_archetecture_resize](https://user-images.githubusercontent.com/54772162/101143570-6b4b8500-365a-11eb-8b8e-64c5c756aaef.PNG)
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/54772162/101143570-6b4b8500-365a-11eb-8b8e-64c5c756aaef.PNG?raw=true" alt="Sublime's custom image"/>
+</p>
 
 ## :pushpin: 브랜치 관리 전략
 
 * AGORA는 Git-Flow 를 이용하여 브랜치를 관리하였습니다.
 
-![git_flow](https://user-images.githubusercontent.com/54772162/101170794-45d27180-3682-11eb-8c42-6f4bf8ec73c9.PNG)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/54772162/101170794-45d27180-3682-11eb-8c42-6f4bf8ec73c9.PNG?raw=true" alt="Sublime's custom image"/>
+</p>
 
 :heavy_check_mark: master : 배포시 사용할 브랜치. 초기 시행착오에 의하여 몇몇 기능이 merge 되어 있으나, 원래 사용 용도는 완벽히 배포가 가능한 상태에만 merge가 되어야만 합니다.        
 :heavy_check_mark: develop : 다음 버전을 개발하는 브랜치, 완전히 배포가 가능하다고 생각되면 master 브랜치에 merge 합니다.    
@@ -57,7 +62,11 @@
 :bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki
 
 ## :pushpin: CI 프로세스
-![ci_process](https://user-images.githubusercontent.com/54772162/101181687-8802af80-3690-11eb-9021-a00ad12c05bf.PNG)
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/54772162/101181687-8802af80-3690-11eb-9021-a00ad12c05bf.PNG?raw=true" alt="Sublime's custom image"/>
+</p>
+
 1. Commit을 하고 원격 레포지토리에 Push를 합니다.    
 2. GitHub API을 통해 Webhook을 발생하도록 설정합니다.    
 3. Jenkins가 Polling을 하면서 Webhook을 인지하면 빌드를 시작합니다.    
@@ -69,7 +78,10 @@
     * 단위 테스트 실패: 통합을 할 수 없으므로 기능을 수정합니다.    
 
 ## :pushpin: CD 프로세스
-![cd_process](https://user-images.githubusercontent.com/54772162/101178161-01e46a00-368c-11eb-844c-9572a2e23f35.PNG)
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/54772162/101178161-01e46a00-368c-11eb-844c-9572a2e23f35.PNG?raw=true" alt="Sublime's custom image"/>
+</p>
 
 1. Jenkins 서버에서 Git Parameter를 입력합니다.
 2. 입력한 브랜치를 Checkout 합니다.
