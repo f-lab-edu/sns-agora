@@ -1,31 +1,17 @@
-# Social Network Service Project
+# AGORA
+
+## 개요
 
 * Instagram, Facebook 과 같이 평소 사용하던 SNS를 직접 제작하여보기
 * 실행만 되는 서비스가 아닌 대규모 트래픽을 처리할 수 있는 성능적으로 우수한 서비스 제작하기
 * 프로젝트 진행에 따라 ReadMe 업데이트 예정  
 
-
 ## 사용 기술 및 개발환경
 
 [![framework](https://img.shields.io/badge/spring%20boot-2.2.2-yellowgreen)](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.2-Release-Notes) [![build tool](https://img.shields.io/badge/maven-2.5.3-orange)](https://maven.apache.org/) [![mybatis](https://img.shields.io/badge/MyBatis-3.5.4-blue)](https://mybatis.org/mybatis-3/ko/index.html) [![lettuce](https://img.shields.io/badge/lettuce-5.2.1-brightgreen)](https://lettuce.io/) [![mysql](https://img.shields.io/badge/MySQL-8.0-blue)](https://dev.mysql.com/doc/refman/8.0/en/) ![java](https://img.shields.io/badge/open--jdk-8-brightgreen) ![intellij](https://img.shields.io/badge/IntelliJ-3.0-orange) [![checkstyle](https://img.shields.io/badge/codestyle-Google%20CheckStyle-yellow)](https://checkstyle.sourceforge.io/google_style.html) [![Build Status](https://img.shields.io/badge/build-passing-green)](http://27.96.135.12:8080/job/agora-ci/job/issue%252F87/) [![image](https://img.shields.io/badge/docker-latest-lightgrey)](https://hub.docker.com/r/tax1116/agora) ![OS](https://img.shields.io/badge/ubuntu-16.04-red)
 
-
-## 주요 기능
-
-* wiki에서 Use case를 참고 바랍니다.    
-https://github.com/f-lab-edu/sns-project/wiki/01.-Use-Case
-
-
 ## AGORA 구성도
 ![agora_archetecture_resize](https://user-images.githubusercontent.com/54772162/101143570-6b4b8500-365a-11eb-8b8e-64c5c756aaef.PNG)
-
-
-## 코딩 컨벤션
-
-* 코딩 컨벤션은 예쁜 코드를 위해서도 필요하지만, 협업시, 장기 프로젝트를 운영할 때 등 유용합니다.
-
-* 해당 프로젝트에서는 **Google CheckStyle**을 적용하였습니다. (최대한 코딩 컨벤션을 신경쓰려하였으나, 수정 중에 일부 적용이 누락된 부분이 있을 수 있습니다.)
-
 
 ## 브랜치 관리 전략
 
@@ -45,13 +31,17 @@ https://github.com/f-lab-edu/sns-project/wiki/01.-Use-Case
 * 우린 Git-flow를 사용하고 있어요, 우아한 형제들 기술 블로그, Oct 30, 2017, 나동호  
   https://woowabros.github.io/experience/2017/10/30/baemin-mobile-git-branch-strategy.html
 
-
 ## 프로젝트 중점사항
 
 자세한 내용을 확인하시려면 Wiki에서 확인하실 수 있습니다.
 현재는 작업 중으로 일부 내용이 누락되어 있을 수 있습니다.
 
 ### 대규모 트래픽을 고려한 설계 및 성능 튜닝 작업
+
+* 세션 서버와 캐시 서버를 분리하여 서버의 부하를 분산하고자 노력하였습니다.
+* 캐싱을 활용하여 DB Connection을 줄이고자 노력하였습니다.
+* 쿼리 튜닝을 통해 Full-Table Scan이 발생하는 상황을 줄이고자 노력하였습니다.
+* 스케줄러를 활용하여 Batch Insert를 구현함으로써 DB Connection을 줄이고자 노력하였습니다.
 
 Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/04.-Large-Traffic-Handling-Task
 
