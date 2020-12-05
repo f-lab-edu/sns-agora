@@ -28,7 +28,10 @@
 #### 참고 사이트
 
 * 우린 Git-flow를 사용하고 있어요, 우아한 형제들 기술 블로그, Oct 30, 2017, 나동호  
-  https://woowabros.github.io/experience/2017/10/30/baemin-mobile-git-branch-strategy.html
+:bookmark_tabs: https://woowabros.github.io/experience/2017/10/30/baemin-mobile-git-branch-strategy.html
+
+## :pushpin: 주요 기능
+:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-agora/wiki/01.-Use-Case
 
 ## :pushpin: 프로젝트 중점사항
 
@@ -42,16 +45,16 @@
 :heavy_check_mark: 쿼리 튜닝을 통해 Full-Table Scan이 발생하는 상황을 줄이고자 노력하였습니다.    
 :heavy_check_mark: 스케줄러를 활용하여 Batch Insert를 구현함으로써 DB Connection을 줄이고자 노력하였습니다.    
 
-Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/04.-Large-Traffic-Handling-Task
+:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/04.-Large-Traffic-Handling-Task
 
 ### :white_check_mark: 리펙토링을 통한 코드 개선 작업
 
-Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/05.-Refactoring-Task
+:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/05.-Refactoring-Task
 
 ## :pushpin: API Reference
 
 * API에 대한 자세한 내용을 확인하시려면 Wiki를 참고해주세요.    
-https://github.com/f-lab-edu/sns-project/wiki
+:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki
 
 ## :pushpin: CI 프로세스
 ![ci_process](https://user-images.githubusercontent.com/54772162/101181687-8802af80-3690-11eb-9021-a00ad12c05bf.PNG)
@@ -77,13 +80,13 @@ https://github.com/f-lab-edu/sns-project/wiki
 ## :pushpin: 프로젝트 디자인 설계
 
 * Wiki를 참고하여 주시기 바랍니다.  
-Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/02.-Front-Design
+:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/02.-Front-Design
 
 ## :pushpin: ERD
 
 * Wiki를 참고하여 주시기 바랍니다.  
-Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/03.-ER-Diagram
+:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/03.-ER-Diagram
 
 ## :pushpin: nGrinder 성능 테스트
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
-https://github.com/f-lab-edu/sns-project/wiki/07.-nGrinder-Test-Scenario-&-Analysis
+:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/07.-nGrinder-Test-Scenario-&-Analysis
