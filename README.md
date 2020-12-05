@@ -35,7 +35,7 @@
 * 자세한 내용을 확인하시려면 Wiki에서 확인하실 수 있습니다.
 현재는 작업 중으로 일부 내용이 누락되어 있을 수 있습니다.
 
-### 대규모 트래픽을 고려한 설계 및 성능 튜닝 작업
+### :white_check_mark: 대규모 트래픽을 고려한 설계 및 성능 튜닝 작업
 
 :heavy_check_mark: 세션 서버와 캐시 서버를 분리하여 서버의 부하를 분산하고자 노력하였습니다.    
 :heavy_check_mark: 캐싱을 활용하여 DB Connection을 줄이고자 노력하였습니다.    
@@ -44,7 +44,7 @@
 
 Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/04.-Large-Traffic-Handling-Task
 
-### 리펙토링을 통한 코드 개선 작업
+### :white_check_mark: 리펙토링을 통한 코드 개선 작업
 
 Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/05.-Refactoring-Task
 
