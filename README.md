@@ -94,7 +94,9 @@
 * Wiki를 참고하여 주시기 바랍니다.  
 :bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/02.-Front-Design
 
-## :pushpin: ERD
+## :pushpin: DB 설계
+
+![erd_resize](https://user-images.githubusercontent.com/54772162/101273276-09645a00-37d7-11eb-9039-482cdb499b39.PNG)
 
 * Wiki를 참고하여 주시기 바랍니다.  
 :bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/03.-ER-Diagram
