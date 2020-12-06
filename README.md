@@ -2,9 +2,9 @@
 
 ## :pushpin: 개요
 
-:heavy_check_mark: Instagram, Facebook 과 같이 평소 사용하던 SNS를 직접 제작하여보기    
-:heavy_check_mark: 실행만 되는 서비스가 아닌 대규모 트래픽을 처리할 수 있는 성능적으로 우수한 서비스 제작하기    
-:heavy_check_mark: 프로젝트 진행에 따라 ReadMe 업데이트 예정      
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: Instagram, Facebook 과 같이 평소 사용하던 SNS를 직접 제작하여보기    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: 실행만 되는 서비스가 아닌 대규모 트래픽을 처리할 수 있는 성능적으로 우수한 서비스 제작하기    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: 프로젝트 진행에 따라 ReadMe 업데이트 예정      
 
 ## :pushpin: 사용 기술 및 개발환경
 
@@ -18,17 +18,17 @@
 
 ## :pushpin: 브랜치 관리 전략
 
-* AGORA는 Git-Flow 를 이용하여 브랜치를 관리하였습니다.
+&nbsp;&nbsp;&nbsp;&nbsp; :heavy_check_mark: AGORA는 Git-Flow 를 이용하여 브랜치를 관리하였습니다.
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/54772162/101170794-45d27180-3682-11eb-8c42-6f4bf8ec73c9.PNG?raw=true" alt="Sublime's custom image"/>
 </p>
 
-:heavy_check_mark: master : 배포시 사용할 브랜치. 초기 시행착오에 의하여 몇몇 기능이 merge 되어 있으나, 원래 사용 용도는 완벽히 배포가 가능한 상태에만 merge가 되어야만 합니다.        
-:heavy_check_mark: develop : 다음 버전을 개발하는 브랜치, 완전히 배포가 가능하다고 생각되면 master 브랜치에 merge 합니다.    
-:heavy_check_mark: feature : 기능을 개발하는 브랜치    
-:heavy_check_mark: release : 배포를 준비할 때 사용할 브랜치    
-:heavy_check_mark: hotfix : 배포 후에 발생한 버그를 수정 하는 브랜치    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: master : 배포시 사용할 브랜치. 초기 시행착오에 의하여 몇몇 기능이 merge 되어 있으나, 원래 사용 용도는 완벽히 배포가 가능한 상태에만 merge가 되어야만 합니다.        
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: develop : 다음 버전을 개발하는 브랜치, 완전히 배포가 가능하다고 생각되면 master 브랜치에 merge 합니다.    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: feature : 기능을 개발하는 브랜치    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: release : 배포를 준비할 때 사용할 브랜치    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: hotfix : 배포 후에 발생한 버그를 수정 하는 브랜치    
 
 #### 참고 사이트
 
@@ -36,7 +36,7 @@
 :bookmark_tabs: https://woowabros.github.io/experience/2017/10/30/baemin-mobile-git-branch-strategy.html
 
 ## :pushpin: 주요 기능
-:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-agora/wiki/01.-Use-Case
+&nbsp;&nbsp;&nbsp;&nbsp;:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-agora/wiki/01.-Use-Case
 
 ## :pushpin: 프로젝트 중점사항
 
@@ -45,16 +45,16 @@
 
 ### :white_check_mark: 대규모 트래픽을 고려한 설계 및 성능 튜닝 작업
 
-:heavy_check_mark: 세션 서버와 캐시 서버를 분리하여 서버의 부하를 분산하고자 노력하였습니다.    
-:heavy_check_mark: 캐싱을 활용하여 DB Connection을 줄이고자 노력하였습니다.    
-:heavy_check_mark: 쿼리 튜닝을 통해 Full-Table Scan이 발생하는 상황을 줄이고자 노력하였습니다.    
-:heavy_check_mark: 스케줄러를 활용하여 Batch Insert를 구현함으로써 DB Connection을 줄이고자 노력하였습니다.    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: 세션 서버와 캐시 서버를 분리하여 서버의 부하를 분산하고자 노력하였습니다.    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: 캐싱을 활용하여 DB Connection을 줄이고자 노력하였습니다.    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: 쿼리 튜닝을 통해 Full-Table Scan이 발생하는 상황을 줄이고자 노력하였습니다.    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: 스케줄러를 활용하여 Batch Insert를 구현함으로써 DB Connection을 줄이고자 노력하였습니다.    
 
-:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/04.-Large-Traffic-Handling-Task
+&nbsp;&nbsp;&nbsp;&nbsp;:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/04.-Large-Traffic-Handling-Task
 
 ### :white_check_mark: 리펙토링을 통한 코드 개선 작업
 
-:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/05.-Refactoring-Task
+&nbsp;&nbsp;&nbsp;&nbsp;:bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/05.-Refactoring-Task
 
 ## :pushpin: API Reference
 
@@ -89,7 +89,7 @@
 4. Docker Hub에 업로드합니다.
 5. SSH 명령을 통해 배포 서버에서 Docker Hub에 저장된 Image를 Pull하고 컨테이너를 실행하도록 합니다.
 
-## :pushpin: 프로젝트 디자인 설계
+## :pushpin: ScreenShots
 
 * Wiki를 참고하여 주시기 바랍니다.  
 :bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/02.-Front-Design
