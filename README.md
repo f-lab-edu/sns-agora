@@ -91,6 +91,8 @@
 
 ## :pushpin: ScreenShots
 
+:bookmark_tabs: oven 주소 : https://ovenapp.io/project/eyDVsHTQ7a2E7Y3Nrzw1bR8cQVee42dK#MfGHM
+
 * Wiki를 참고하여 주시기 바랍니다.  
 :bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-agora/wiki/02.-ScreenShots
 
