@@ -105,6 +105,6 @@
 * Wiki를 참고하여 주시기 바랍니다.  
 :bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-agora/wiki/03.-Database-Architecture
 
-## :pushpin: nGrinder 성능 테스트
+## :pushpin: 테스트
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
 :bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/07.-nGrinder-Test-Scenario-&-Analysis
