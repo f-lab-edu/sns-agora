@@ -111,3 +111,6 @@
 
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
 :bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-project/wiki/07.-nGrinder-Test-Scenario-&-Analysis
+
+## :pushpin: Pinpoint(APM Tool)를 통한 성능 모니터링
+
