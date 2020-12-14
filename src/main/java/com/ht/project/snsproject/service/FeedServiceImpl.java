@@ -1,18 +1,18 @@
 package com.ht.project.snsproject.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ht.project.snsproject.enumeration.FriendStatus;
+import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.InvalidApproachException;
 import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,9 +37,6 @@ public class FeedServiceImpl implements FeedService {
   private FriendService friendService;
 
   @Autowired
-  private FeedService feedService;
-
-  @Autowired
   @Qualifier("cacheObjectMapper")
   private ObjectMapper cacheObjectMapper;
 
@@ -47,8 +44,7 @@ public class FeedServiceImpl implements FeedService {
   @Override
   public void feedUpload(List<MultipartFile> files, FeedWriteDto feedWriteDto, String userId) {
 
-    Timestamp date = Timestamp.valueOf(LocalDateTime.now());
-    FeedInsert feedInsert = FeedInsert.create(feedWriteDto, userId, date);
+    FeedInsert feedInsert = FeedInsert.create(feedWriteDto, userId, LocalDateTime.now());
 
     feedMapper.feedUpload(feedInsert);
 
@@ -62,7 +58,12 @@ public class FeedServiceImpl implements FeedService {
   public List<Feed> findFriendsFeedListByUserId(String userId, Pagination pagination) {
 
     List<Feed> feeds = feedMapper.findFriendsFeedListByUserId(new FeedInfoParam(userId, pagination));
-    feedCacheService.setFeedListCache(feeds, userId, 60L);
+
+    if (!feeds.isEmpty()) {
+
+      feedCacheService.setFeedListCache(feeds, userId, 60L);
+    }
+
     return feeds;
   }
 
@@ -119,69 +120,48 @@ public class FeedServiceImpl implements FeedService {
   public Feed findFeedByFeedId(String userId, String targetId, int feedId) {
 
     Object feed;
+    FriendStatus friendStatus = friendService.getFriendStatus(userId, targetId);
 
-    switch(friendService.getFriendStatus(userId, targetId)) {
+    switch(friendStatus) {
 
       case ME:
 
-        feed = feedService.findMyFeedByFeedId(feedId, targetId, userId);
+        feed = feedCacheService.findMyFeedByFeedId(feedId, targetId, userId);
         break;
 
       case FRIEND:
 
-        feed = feedService.findFriendsFeedFeedId(feedId, targetId, userId);
+        feed = feedCacheService.findFriendsFeedByFeedId(feedId, targetId, userId);
         break;
 
       default:
 
-        feed = feedService.findAllFeedByFeedId(feedId, targetId, userId);
+        feed = feedCacheService.findAllFeedByFeedId(feedId, targetId, userId);
     }
 
-    boolean goodPushedStatus = goodService.isGoodPushed(feedId, userId);
+    FeedInfo feedInfo = cacheObjectMapper.convertValue(feed, FeedInfo.class);
 
-    return Feed.create(cacheObjectMapper.convertValue(feed, FeedInfo.class), goodPushedStatus);
+    if(!isValidatedFeedInfo(feedInfo.getPublicScope(), friendStatus)) {
+
+      throw new IllegalArgumentException("일치하는 피드가 존재하지 않습니다.");
+    }
+
+    return Feed.create(feedInfo, goodService.isGoodPushed(feedId, userId));
   }
 
-  @Transactional(readOnly = true)
-  @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
-  public Object findMyFeedByFeedId(int feedId, String targetId, String userId) {
+  private boolean isValidatedFeedInfo(PublicScope publicScope, FriendStatus friendStatus) {
 
-    FeedInfo feed = feedMapper.findMyFeedByFeedId(new FeedParam(feedId, targetId, userId));
+    switch (publicScope) {
 
-    if(feed.getId() == null) {
+      case ME:
+        return friendStatus == FriendStatus.ME;
 
-      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
+      case FRIENDS:
+        return friendStatus == FriendStatus.ME || friendStatus == FriendStatus.FRIEND;
+
+      default:
+        return true;
     }
-
-    return feed;
-  }
-
-  @Transactional(readOnly = true)
-  @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
-  public Object findFriendsFeedFeedId(int feedId, String targetId, String userId) {
-
-    FeedInfo feed = feedMapper.findFriendsFeedByFeedId(new FeedParam(feedId, targetId, userId));
-
-    if(feed.getId() == null) {
-
-      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
-    }
-
-    return feed;
-  }
-
-  @Transactional(readOnly = true)
-  @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
-  public Object findAllFeedByFeedId(int feedId, String targetId, String userId) {
-
-    FeedInfo feed = feedMapper.findAllFeedByFeedId(new FeedParam(feedId, targetId, userId));
-
-    if(feed.getId() == null) {
-
-      throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
-    }
-
-    return feed;
   }
 
   @Override
@@ -192,25 +172,26 @@ public class FeedServiceImpl implements FeedService {
   @Transactional
   @Override
   public void deleteFeed(int id, String userId) {
-    boolean result = feedMapper.deleteFeed(new FeedDeleteParam(id, userId));
+    boolean result = feedCacheService.deleteFeed(id, userId);
 
     if (!result) {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
+
     fileService.deleteAllFiles(id);
   }
 
   @Transactional
   @Override
   public void updateFeed(List<MultipartFile> files,
-                         FeedWriteDto feedUpdateParam, int feedId, String userId) {
+                         FeedWriteDto feedWriteDto, int feedId, String userId) {
 
-    Timestamp date = Timestamp.valueOf(LocalDateTime.now());
+    boolean result = feedCacheService.updateFeed(feedId, userId, feedWriteDto);
 
-    boolean result = feedMapper.updateFeed(FeedUpdate.create(feedId, userId, feedUpdateParam, date));
     if (!result) {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
+
     fileService.updateFiles(files,userId,feedId);
   }
 
