@@ -5,7 +5,6 @@ import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.comment.Comment;
 import com.ht.project.snsproject.model.comment.Reply;
 import com.ht.project.snsproject.model.user.User;
-import com.ht.project.snsproject.repository.comment.CommentRepository;
 import com.ht.project.snsproject.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,8 +19,6 @@ import java.util.List;
 public class CommentController {
 
   private final CommentService commentService;
-
-  private final CommentRepository commentRepository;
 
   /**
    * feed에 댓글을 작성하는 메소드
@@ -52,7 +49,7 @@ public class CommentController {
   public ResponseEntity<List<Comment>> getCommentsOnFeed(@PathVariable int feedId,
                                                          @RequestParam(required = false) Integer cursor) {
 
-    return ResponseEntity.ok(commentRepository.getCommentsOnFeed(feedId, cursor));
+    return ResponseEntity.ok(commentService.getCommentsOnFeed(feedId, cursor));
   }
 
   @PutMapping("/{feedId}/comments/{commentId}")
@@ -61,7 +58,7 @@ public class CommentController {
                                         @RequestBody String content,
                                         @UserInfo User user) {
 
-    commentRepository.updateCommentOnFeed(commentId, user.getUserId(), content);
+    commentService.updateCommentOnFeed(commentId, user.getUserId(), content);
     return HttpStatus.OK;
   }
 
@@ -78,7 +75,7 @@ public class CommentController {
   public ResponseEntity<List<Reply>> getReplyOnComment(@PathVariable int commentId,
                                                        @RequestParam Integer cursor) {
 
-    return ResponseEntity.ok(commentRepository.getRepliesOnComment(commentId, cursor));
+    return ResponseEntity.ok(commentService.getRepliesOnComment(commentId, cursor));
   }
 
   @PostMapping("/{feedId}/comments/{commentId}/replies")
@@ -87,7 +84,7 @@ public class CommentController {
                                   @RequestBody String content,
                                   @UserInfo User user) {
 
-    commentRepository.insertReplyOnComment(commentId, content, user.getUserId());
+    commentService.insertReplyOnComment(commentId, content, user.getUserId());
     return HttpStatus.OK;
   }
 
@@ -97,7 +94,7 @@ public class CommentController {
                                          @RequestBody String content,
                                          @UserInfo User user) {
 
-    commentRepository.updateReplyOnComment(replyId, user.getUserId(), content);
+    commentService.updateReplyOnComment(replyId, user.getUserId(), content);
     return HttpStatus.OK;
   }
 
@@ -116,7 +113,7 @@ public class CommentController {
   public HttpStatus deleteReplyOnComment(@PathVariable int replyId,
                                          @UserInfo User user) {
 
-    commentRepository.deleteReplyOnComment(replyId, user.getUserId());
+    commentService.deleteReplyOnComment(replyId, user.getUserId());
     return HttpStatus.NO_CONTENT;
   }
 }

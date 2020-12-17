@@ -1,9 +1,13 @@
 package com.ht.project.snsproject.service;
 
+import com.ht.project.snsproject.model.comment.Comment;
+import com.ht.project.snsproject.model.comment.Reply;
 import com.ht.project.snsproject.repository.comment.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * interface가 꼭 필요한 곳에만 추상화하기.
@@ -24,7 +28,41 @@ public class CommentService{
     commentRepository.increaseCommentCountInCache(feedId);
   }
 
+  @Transactional
+  public List<Comment> getCommentsOnFeed(int feedId, Integer cursor) {
 
+    return commentRepository.getCommentsOnFeed(feedId, cursor);
+  }
+
+  @Transactional
+  public void updateCommentOnFeed(int commentId, String userId, String content) {
+
+    commentRepository.updateCommentOnFeed(commentId, userId, content);
+  }
+
+  @Transactional
+  public List<Reply> getRepliesOnComment(int commentId, Integer cursor) {
+
+    return commentRepository.getRepliesOnComment(commentId, cursor);
+  }
+
+  @Transactional
+  public void insertReplyOnComment(int commentId, String content, String userId) {
+
+    commentRepository.insertReplyOnComment(commentId, content, userId);
+  }
+
+  @Transactional
+  public void updateReplyOnComment(int replyId, String userId, String content) {
+
+    commentRepository.updateReplyOnComment(replyId, userId, content);
+  }
+
+  @Transactional
+  public void deleteReplyOnComment(int replyId, String userId) {
+
+    commentRepository.deleteReplyOnComment(replyId, userId);
+  }
 
   /**
    * 외래키 설정을 통해 commentId 와 연관된 대댓글까지 삭제 필요.

@@ -51,8 +51,6 @@ public class GoodServiceImpl implements GoodService {
   @Override
   public void addGood(int feedId, String userId) {
 
-    goodRepository.getGood(feedId);
-
     addGoodToCache(feedId, userId, goodRepository.isGoodPushed(feedId, userId));
     increaseGoodCount(feedId);
   }
@@ -70,10 +68,10 @@ public class GoodServiceImpl implements GoodService {
     }
   }
 
-
   @Transactional
   private void increaseGoodCount(int feedId) {
 
+    goodRepository.getGood(feedId);
     String goodKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
     redisTemplate.opsForValue().increment(goodKey);
@@ -82,8 +80,6 @@ public class GoodServiceImpl implements GoodService {
   @Transactional
   @Override
   public void cancelGood(int feedId, String userId) {
-
-    goodRepository.getGood(feedId);
 
     cancelGoodInCache(feedId, userId, goodRepository.isGoodPushed(feedId, userId));
     decreaseGoodCount(feedId);
@@ -104,6 +100,7 @@ public class GoodServiceImpl implements GoodService {
   @Transactional
   private void decreaseGoodCount(int feedId) {
 
+    goodRepository.getGood(feedId);
     String goodKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD, feedId);
 
     redisTemplate.opsForValue().decrement(goodKey);
