@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.FriendStatus;
 import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.InvalidApproachException;
-import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.model.Pagination;
-import com.ht.project.snsproject.model.feed.*;
+import com.ht.project.snsproject.model.feed.Feed;
+import com.ht.project.snsproject.model.feed.FeedInfo;
+import com.ht.project.snsproject.model.feed.FileVo;
+import com.ht.project.snsproject.model.feed.MultiSetTarget;
 import com.ht.project.snsproject.repository.comment.CommentRepository;
 import com.ht.project.snsproject.repository.feed.FeedRepository;
 import com.ht.project.snsproject.repository.good.GoodRepository;
@@ -36,9 +38,6 @@ public class FeedServiceTest {
 
   @Mock
   private FeedRepository feedRepository;
-
-  @Mock
-  private FeedMapper feedMapper;
 
   @Mock
   private RedisCacheService redisCacheService;

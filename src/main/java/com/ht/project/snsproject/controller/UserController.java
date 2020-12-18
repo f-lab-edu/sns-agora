@@ -56,32 +56,25 @@ public class UserController {
   @PostMapping("/login")
   public HttpStatus login(@RequestBody @Valid UserLogin userLogin, HttpSession httpSession) {
 
-    if (!userService.existUser(userLogin, httpSession)) {
-
-      return HttpStatus.BAD_REQUEST;
-    }
+    userService.exists(userLogin, httpSession);
 
     return HttpStatus.OK;
   }
 
   @LoginCheck
   @PostMapping("/logout")
-  public HttpStatus logout(HttpSession httpSession) {
+  public HttpStatus logout(@UserInfo User user, HttpSession httpSession) {
 
-    userService.logout(httpSession);
+    userService.logout(user.getUserId(), httpSession);
     return HttpStatus.NO_CONTENT;
   }
 
   @LoginCheck
   @DeleteMapping("/account")
   public HttpStatus deleteUser(@RequestBody String password,
-                               @UserInfo User user, HttpSession httpSession) {
-    String userId = user.getUserId();
-    if (!userService.verifyPassword(userId, password)) {
+                               @UserInfo User user, HttpSession httpSession) { ;
 
-      return HttpStatus.BAD_REQUEST;
-    }
-    userService.deleteUser(httpSession);
+    userService.deleteUser(user.getUserId(), password, httpSession);
 
     return HttpStatus.NO_CONTENT;
   }
@@ -98,8 +91,8 @@ public class UserController {
 
   @LoginCheck
   @GetMapping("/{targetId}")
-  public ResponseEntity<UserProfile> getUserProfile(@PathVariable String targetId) {
+  public ResponseEntity<User> getUserInfo(@PathVariable String targetId) {
 
-    return ResponseEntity.ok(userService.getUserProfile(targetId));
+    return ResponseEntity.ok(userService.findUserByUserId(targetId));
   }
 }

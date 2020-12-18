@@ -72,7 +72,7 @@ public class UserAspect {
       throw new UnauthorizedException("로그인 정보가 존재하지 않습니다.");
     }
 
-    User userInfo = userService.getUserInfoCache(userId);
+    User userInfo = userService.findUserByUserId(userId);
 
     Object[] args = joinPoint.getArgs();
     MethodSignature signature = (MethodSignature) joinPoint.getSignature();

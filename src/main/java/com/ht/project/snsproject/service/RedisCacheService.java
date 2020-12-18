@@ -55,7 +55,7 @@ public class RedisCacheService {
         break;
 
       case USER_INFO:
-        key = USER_INFO_CACHE_PREFIX + suffix;
+        key = SPRING_CACHE_PREFIX + USER_INFO_CACHE_PREFIX + suffix;
         break;
 
       default:

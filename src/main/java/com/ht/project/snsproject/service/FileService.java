@@ -1,6 +1,6 @@
 package com.ht.project.snsproject.service;
 
-import com.ht.project.snsproject.model.feed.FileForProfile;
+import com.ht.project.snsproject.model.feed.ProfileImage;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -11,7 +11,7 @@ public interface FileService {
 
   void fileUploadForFeed(MultipartFile file, String userId, int feedId);
 
-  FileForProfile fileUploadForProfile(MultipartFile file, String userId);
+  ProfileImage fileUploadForProfile(MultipartFile file, String userId);
 
   void deleteAllFiles(int feedId);
 

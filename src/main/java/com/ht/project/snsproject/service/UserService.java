@@ -13,17 +13,13 @@ public interface UserService {
 
   void updateUserProfile(UserProfileParam userProfileParam,String userId, MultipartFile profile);
 
-  boolean existUser(UserLogin userLogin, HttpSession httpSession);
+  void exists(UserLogin userLogin, HttpSession httpSession);
 
-  User getUserInfoCache(String userId);
+  User findUserByUserId(String userId);
 
-  void logout(HttpSession httpSession);
+  void logout(String userId, HttpSession httpSession);
 
-  boolean verifyPassword(String userId, String password);
-
-  void deleteUser(HttpSession httpSession);
+  void deleteUser(String userId, String password, HttpSession httpSession);
 
   void updateUserPassword(String userId, UserPassword userPassword);
-
-  UserProfile getUserProfile(String targetId);
 }

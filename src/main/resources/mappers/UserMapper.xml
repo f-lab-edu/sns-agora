@@ -22,27 +22,27 @@
         WHERE userId = #{userId}
     </update>
 
-    <select id="getUserProfileImage" parameterType="String"
-            resultType="com.ht.project.snsproject.model.feed.FileForProfile">
+    <select id="findUserProfileImageByUserId" parameterType="String"
+            resultType="com.ht.project.snsproject.model.feed.ProfileImage">
         SELECT filePath, fileName
         FROM users
         WHERE userId = #{userId}
     </select>
 
-    <select id="getAuthenticatedUser" parameterType="com.ht.project.snsproject.model.user.UserLogin"
-            resultType="com.ht.project.snsproject.model.user.User">
-        SELECT id, userId, name, nickname, email, birth, filePath, fileName
+    <select id="isAuthenticatedUser" parameterType="com.ht.project.snsproject.model.user.UserLogin"
+            resultType="boolean">
+        SELECT COUNT(*)
         FROM users
         WHERE userId = #{userId} AND password = #{password}
     </select>
 
-    <select id="getUserFromUserId" parameterType="String" resultType="com.ht.project.snsproject.model.user.User">
+    <select id="findUserByUserId" parameterType="String" resultType="com.ht.project.snsproject.model.user.User">
         SELECT id, userId, name, nickname, email, birth, filePath, fileName
         FROM users
         WHERE userId = #{userId}
     </select>
 
-    <select id="getPassword" parameterType="String" resultType="String">
+    <select id="findPasswordByUserId" parameterType="String" resultType="String">
         SELECT password
         FROM users
         WHERE userId = #{userId}
@@ -58,10 +58,4 @@
         SET password = #{newPw}
         WHERE userId = #{userId} AND password= #{currentPw}
     </update>
-
-    <select id="getUserProfile" parameterType="String" resultType="com.ht.project.snsproject.model.user.UserProfile">
-        SELECT id, nickname, email, birth, filePath, fileName
-        FROM users
-        WHERE userId = #{targetId}
-    </select>
 </mapper>

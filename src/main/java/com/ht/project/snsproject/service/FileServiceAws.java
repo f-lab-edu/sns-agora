@@ -4,8 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.ht.project.snsproject.enumeration.ErrorCode;
-import com.ht.project.snsproject.exception.FileUploadException;
+import com.ht.project.snsproject.exception.FileIOException;
 import com.ht.project.snsproject.mapper.FileMapper;
 import com.ht.project.snsproject.model.feed.*;
 import com.ht.project.snsproject.properites.aws.AwsS3Property;
@@ -89,7 +88,7 @@ public class FileServiceAws implements FileService {
       fileMapper.fileListUpload(fileInfoList);
 
     } catch (IOException ioe) {
-      throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+      throw new FileIOException("파일 업로드에 실패하였습니다.", ioe);
     } finally {
       dateFormat.remove();
     }
@@ -108,7 +107,7 @@ public class FileServiceAws implements FileService {
       s3Client.putObject(awsS3Property.getBucketName(), keyName, file.getInputStream(), metadata);
 
     } catch (IOException ioe) {
-      throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+      throw new FileIOException("파일 업로드에 실패하였습니다.", ioe);
     }
   }
 
@@ -123,14 +122,14 @@ public class FileServiceAws implements FileService {
   }
 
   @Override
-  public FileForProfile fileUploadForProfile(MultipartFile file, String userId) {
+  public ProfileImage fileUploadForProfile(MultipartFile file, String userId) {
 
     String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
     String dirPath = userId + File.separator + time;
 
     fileUpload(file, dirPath);
 
-    return new FileForProfile(dirPath, file.getOriginalFilename());
+    return new ProfileImage(dirPath, file.getOriginalFilename());
   }
 
   @Transactional
@@ -161,7 +160,7 @@ public class FileServiceAws implements FileService {
       s3Client.deleteObject(new DeleteObjectRequest(awsS3Property.getBucketName(),
               filePath + File.separator + fileName));
     } catch (Exception e) {
-      throw new FileUploadException("파일 업로드에 실패하였습니다.", e, ErrorCode.UPLOAD_ERROR);
+      throw new FileIOException("파일 삭제에 실패했습니다.", e);
     }
   }
 
@@ -270,7 +269,7 @@ public class FileServiceAws implements FileService {
 
       return fileInfoList;
     } catch (IOException ioe) {
-      throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+      throw new FileIOException("파일 업로드에 실패하였습니다.", ioe);
     } finally {
       dateFormat.remove();
     }

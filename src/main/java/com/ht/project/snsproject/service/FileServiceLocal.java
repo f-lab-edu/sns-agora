@@ -1,11 +1,10 @@
 package com.ht.project.snsproject.service;
 
-import com.ht.project.snsproject.enumeration.ErrorCode;
-import com.ht.project.snsproject.exception.FileUploadException;
+import com.ht.project.snsproject.exception.FileIOException;
 import com.ht.project.snsproject.mapper.FileMapper;
 import com.ht.project.snsproject.model.feed.FileAdd;
 import com.ht.project.snsproject.model.feed.FileDelete;
-import com.ht.project.snsproject.model.feed.FileForProfile;
+import com.ht.project.snsproject.model.feed.ProfileImage;
 import com.ht.project.snsproject.model.feed.FileInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +71,7 @@ public class FileServiceLocal implements FileService {
       }
       fileMapper.fileListUpload(fileInfoList);
     } catch (IOException ioe) {
-      throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+      throw new FileIOException("파일 업로드에 실패하였습니다.", ioe);
     }
   }
 
@@ -93,7 +92,7 @@ public class FileServiceLocal implements FileService {
 
       file.transferTo(destFile);
     } catch (IOException ioe) {
-      throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+      throw new FileIOException("파일 업로드에 실패하였습니다.", ioe);
     }
   }
 
@@ -108,14 +107,14 @@ public class FileServiceLocal implements FileService {
   }
 
   @Override
-  public FileForProfile fileUploadForProfile(MultipartFile file, String userId) {
+  public ProfileImage fileUploadForProfile(MultipartFile file, String userId) {
 
     String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
     String dirPath = localPath + userId + File.separator + time;
 
     fileUpload(file, dirPath);
 
-    return new FileForProfile(dirPath, file.getOriginalFilename());
+    return new ProfileImage(dirPath, file.getOriginalFilename());
   }
 
   @Transactional
@@ -142,7 +141,7 @@ public class FileServiceLocal implements FileService {
       File file = new File(filePath + File.separator + fileName);
       file.delete();
     } catch (Exception e) {
-      throw new FileUploadException("파일 업로드에 실패하였습니다.", e, ErrorCode.UPLOAD_ERROR);
+      throw new FileIOException("파일 삭제에 실패하였습니다.", e);
     }
   }
 
@@ -165,7 +164,7 @@ public class FileServiceLocal implements FileService {
       }
       return fileInfoList;
     } catch (IOException ioe) {
-      throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+      throw new FileIOException("파일 업로드에 실패하였습니다.", ioe);
     }
   }
 
