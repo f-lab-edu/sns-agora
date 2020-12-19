@@ -7,10 +7,10 @@ import com.ht.project.snsproject.model.feed.FileAdd;
 import com.ht.project.snsproject.model.feed.FileDelete;
 import com.ht.project.snsproject.model.feed.FileForProfile;
 import com.ht.project.snsproject.model.feed.FileInfo;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,13 +27,10 @@ import java.util.List;
 @Slf4j
 @Service
 @Qualifier("localFileService")
+@RequiredArgsConstructor
 public class FileServiceLocal implements FileService {
 
-  @Autowired
-  private FileMapper fileMapper;
-
-  @Autowired
-  private FileServiceLocal fileServiceLocal;
+  private final FileMapper fileMapper;
 
   @Value("${file.windows.path}")
   private String localPath;
@@ -206,7 +203,7 @@ public class FileServiceLocal implements FileService {
     int fileIndex = 0;
 
     if (originFiles.isEmpty()) {
-      fileServiceLocal.fileUpload(files,userId,feedId);
+      fileUpload(files,userId,feedId);
       return;
     }
 
@@ -227,11 +224,11 @@ public class FileServiceLocal implements FileService {
     }
 
     if (!uploadFiles.isEmpty()) {
-      fileInfoList.addAll(fileServiceLocal.addFiles(feedId, path, uploadFiles));
+      fileInfoList.addAll(addFiles(feedId, path, uploadFiles));
     }
 
     if (!originFiles.isEmpty()) {
-      fileServiceLocal.deleteFiles(feedId, path, originFiles);
+      deleteFiles(feedId, path, originFiles);
     }
 
     fileMapper.upsertFiles(fileInfoList);

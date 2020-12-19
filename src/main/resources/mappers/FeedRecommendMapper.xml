@@ -2,54 +2,15 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ht.project.snsproject.mapper.FeedRecommendMapper">
 
-    <resultMap id="feedInfo" type="com.ht.project.snsproject.model.feed.FeedInfo">
-        <id property="id" column="id"/>
-        <result property="userId" column="userId"/>
-        <result property="title" column="title"/>
-        <result property="content" column="content"/>
-        <result property="date" column="date"/>
-        <result property="publicScope" column="publicScope"/>
-        <result property="goodCount" column="goodCount"/>
-        <result property="commentCount" column="commentCount"/>
-        <collection property="files" resultMap="file"/>
-    </resultMap>
-
-    <resultMap id="file" type="com.ht.project.snsproject.model.feed.FileVo">
-        <result property="fileIndex" column="fileIndex"/>
-        <result property="filePath" column="filePath"/>
-        <result property="fileName" column="fileName"/>
-    </resultMap>
-
-    <select id="findLatestAllFeedList" parameterType="com.ht.project.snsproject.model.feed.FeedInfoParam"
-            resultMap="feedInfo">
-
-        SELECT x.id AS id,
-            x.userId AS userId,
-            x.title AS title,
-            x.content AS content,
-            x.date AS date,
-            x.publicScope AS publicScope,
-            x.goodCount AS goodCount,
-            x.commentCount AS commentCount,
-            b.fileIndex AS fileIndex,
-            b.filePath AS filePath,
-            b.fileName AS fileName
-        FROM
-            (SELECT a.id, a.userId,
-                    a.title, a.content,
-                    a.date, a.publicScope,
-                    COUNT(DISTINCT d.id) AS goodCount,
-                    COUNT(DISTINCT e.id) AS commentCount
-            FROM feeds a
-            LEFT OUTER JOIN goods d ON a.id = d.feedId
-            LEFT OUTER JOIN comments e ON a.id = e.feedId
-            WHERE a.publicScope = 'ALL'
-            <if test="pagination.cursor != null">
-                AND a.id<![CDATA[<]]>#{pagination.cursor}
-            </if>
-            GROUP BY a.id
-            LIMIT #{pagination.listSize} ) x
-        LEFT OUTER JOIN images b ON x.id = b.feedId
+    <select id="findFeedIdByLatestOrder" parameterType="com.ht.project.snsproject.model.Pagination" resultType="int">
+        SELECT id
+        FROM feeds
+        WHERE publicScope = 'ALL'
+        <if test="cursor != null">
+            AND id<![CDATA[<]]>#{cursor}
+        </if>
+        GROUP BY id
+        ORDER BY id DESC
+        limit #{listSize};
     </select>
-
 </mapper>

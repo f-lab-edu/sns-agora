@@ -24,4 +24,34 @@
         LIMIT #{limit};
     </select>
 
+    <select id="findGoodCountList" parameterType="java.util.List"
+            resultType="com.ht.project.snsproject.model.good.GoodCount">
+        SELECT a.id,
+        COUNT(b.feedId) AS goodCount
+        FROM feeds a
+        LEFT OUTER JOIN goods b ON a.id = b.feedId
+        WHERE
+        <foreach collection="list" item="item" separator="OR">
+            a.id = #{item}
+        </foreach>
+        GROUP BY a.id
+        ORDER BY a.id DESC
+    </select>
+
+    <select id="findGoodPushedStatusList"
+            parameterType="com.ht.project.snsproject.model.good.GoodPushedStatusListParam"
+            resultType="com.ht.project.snsproject.model.good.GoodPushedStatus">
+
+        SELECT a.id,
+        NOT(ISNULL(b.userId)) AS goodPushed
+        FROM feeds a
+        LEFT OUTER JOIN goods b ON a.id = b.feedId AND b.userId = #{userId}
+        WHERE
+        <foreach collection="feedIdList" item="item" separator="OR">
+            a.id = #{item}
+        </foreach>
+        GROUP BY a.id
+        ORDER BY a.id DESC;
+    </select>
+
 </mapper>

@@ -5,23 +5,19 @@ import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.alarm.Alarm;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.AlarmService;
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/alarms")
+@RequiredArgsConstructor
 public class AlarmController {
 
-  @Autowired
-  AlarmService alarmService;
+  private final AlarmService alarmService;
 
   /**
    * 알람 목록을 가져오는 메소드.

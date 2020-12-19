@@ -2,7 +2,6 @@ package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.enumeration.FriendStatus;
 import com.ht.project.snsproject.model.Pagination;
-import com.ht.project.snsproject.model.friend.Friend;
 import com.ht.project.snsproject.model.friend.FriendList;
 
 import java.util.List;
@@ -31,5 +30,5 @@ public interface FriendService {
 
   List<FriendList> getBlockUserList(String userId, Pagination pagination);
 
-  Friend getFriendRelationStatus(String userId, String targetId);
+  FriendStatus findFriendStatus(int feedId, String userId);
 }

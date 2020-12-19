@@ -1,11 +1,12 @@
 package com.ht.project.snsproject.mapper;
 
-import com.ht.project.snsproject.model.friend.Friend;
+import com.ht.project.snsproject.enumeration.FriendStatus;
 import com.ht.project.snsproject.model.friend.FriendList;
 import com.ht.project.snsproject.model.friend.FriendListParam;
 import com.ht.project.snsproject.model.friend.FriendStatusInsert;
-import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 
 
@@ -24,5 +25,7 @@ public interface FriendMapper {
 
   void deleteBlockUser(String userId, String targetId);
 
-  Friend getFriendRelationStatus(String userId, String targetId);
+  FriendStatus getFriendRelationStatus(String userId, String targetId);
+
+  FriendStatus findFriendStatus(int feedId, String userId);
 }

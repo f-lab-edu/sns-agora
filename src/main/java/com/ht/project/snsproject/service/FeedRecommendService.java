@@ -15,5 +15,5 @@ import java.util.List;
  */
 public interface FeedRecommendService {
 
-  List<FeedInfo> findLatestAllFeedList(String userId, Pagination pagination);
+  List<FeedInfo> findLatestAllFeedList(Pagination pagination);
 }

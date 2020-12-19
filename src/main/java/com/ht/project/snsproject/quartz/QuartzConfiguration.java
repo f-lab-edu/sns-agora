@@ -1,14 +1,14 @@
 package com.ht.project.snsproject.quartz;
 
+import com.ht.project.snsproject.properites.datasource.QuartzDatasourceProperty;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobDetail;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.quartz.QuartzDataSource;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -25,24 +25,19 @@ import javax.sql.DataSource;
 
 @Slf4j
 @Configuration
+@EnableConfigurationProperties(QuartzDatasourceProperty.class)
 @PropertySource("application-good-batch-scheduler.properties")
 public class QuartzConfiguration {
 
+  private final ApplicationContext applicationContext;
 
-  @Autowired
-  private ApplicationContext applicationContext;
+  private final QuartzDatasourceProperty quartzDatasourceProperty;
 
-  @Value("${spring.datasource.quartz.url}")
-  String quartzDbUrl;
-
-  @Value("${spring.datasource.quartz.username}")
-  String quartzDbUsername;
-
-  @Value("${spring.datasource.quartz.password}")
-  String quartzDbPassword;
-
-  @Value("${spring.datasource.quartz.driverName}")
-  String quartzDbDriverName;
+  public QuartzConfiguration(ApplicationContext applicationContext,
+                             QuartzDatasourceProperty quartzDatasourceProperty) {
+    this.applicationContext = applicationContext;
+    this.quartzDatasourceProperty = quartzDatasourceProperty;
+  }
 
   @PostConstruct
   public void init() {
@@ -229,11 +224,11 @@ public class QuartzConfiguration {
   public DataSource quartzDataSource() {
 
     return DataSourceBuilder.create()
-            .url(quartzDbUrl)
-            .username(quartzDbUsername)
-            .password(quartzDbPassword)
+            .url(quartzDatasourceProperty.getUrl())
+            .username(quartzDatasourceProperty.getUsername())
+            .password(quartzDatasourceProperty.getPassword())
             .type(HikariDataSource.class)
-            .driverClassName(quartzDbDriverName)
+            .driverClassName(quartzDatasourceProperty.getDriverName())
             .build();
 
   }
