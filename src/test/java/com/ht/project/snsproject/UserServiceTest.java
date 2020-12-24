@@ -15,8 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,7 +64,7 @@ public class UserServiceTest {
   }
 
   @Test
-  @DisplayName("요청한 사용자가 존재하지 않는다면 IllegalArgumentException을 발생합니다.")
+  @DisplayName("해당 메소드는 회원 등록이 되지 않은 사용자가 요청을 했을 시에 IllegalArgumentException을 발생합니다.")
   public void noExistsUserRequestThrownException() {
 
     Mockito.when((userRepository.isAuthenticatedUser(userLogin))).thenReturn(false);
@@ -73,7 +72,14 @@ public class UserServiceTest {
     assertThrows(IllegalArgumentException.class,
             () -> ReflectionTestUtils.invokeMethod(userService, "exists", userLogin, mockHttpSession));
   }
+  @Test
+  @DisplayName("사용자가 올바른 패스워드를 입력하면 삭제요청이 통과합니다.")
+  public void authenticatedUserDeleteRequestShouldBePassed() {
 
+    Mockito.when(userRepository.findPasswordByUserId(any(String.class))).thenReturn(password);
+
+    userService.deleteUser(userId, password, mockHttpSession);
+  }
   @Test
   @DisplayName("입력한 패스워드가 일치하지 않는 사용자가 탈퇴 요청을 하면 IllegalArgumentException이 발생합니다.")
   public void notAuthenticatedUserDeleteRequestThrownException() {

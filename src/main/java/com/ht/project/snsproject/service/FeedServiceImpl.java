@@ -4,18 +4,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.FriendStatus;
 import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.InvalidApproachException;
-import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.*;
 import com.ht.project.snsproject.repository.comment.CommentRepository;
 import com.ht.project.snsproject.repository.feed.FeedRepository;
 import com.ht.project.snsproject.repository.good.GoodRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +25,6 @@ import java.util.Map;
 
 @Service
 public class FeedServiceImpl implements FeedService {
-
-  private final FeedMapper feedMapper;
 
   private final FileService fileService;
 
@@ -40,15 +40,16 @@ public class FeedServiceImpl implements FeedService {
 
   private final RedisCacheService redisCacheService;
 
-  public FeedServiceImpl(FeedMapper feedMapper,
-                         @Qualifier("awsFileService") FileService fileService,
+  @Value("${file.local.path}")
+  private String localPath;
+
+  public FeedServiceImpl(@Qualifier("awsFileService") FileService fileService,
                          GoodRepository goodRepository,
                          FriendService friendService,
                          @Qualifier("cacheObjectMapper") ObjectMapper cacheObjectMapper,
                          FeedRepository feedRepository,
                          CommentRepository commentRepository,
                          RedisCacheService redisCacheService) {
-    this.feedMapper = feedMapper;
     this.fileService = fileService;
     this.goodRepository = goodRepository;
     this.friendService = friendService;
@@ -64,11 +65,24 @@ public class FeedServiceImpl implements FeedService {
 
     FeedInsert feedInsert = FeedInsert.create(feedWriteDto, userId, LocalDateTime.now());
 
-    feedMapper.feedUpload(feedInsert);
+    feedRepository.insertFeed(feedInsert);
 
     if (!files.isEmpty()) {
-      fileService.fileUpload(files, userId, feedInsert.getId());
+
+      uploadFeedFiles(files, feedWriteDto.getFileDtoList(), userId, feedInsert.getId());
     }
+  }
+
+  private void uploadFeedFiles(List<MultipartFile> files, List<FileDto> fileDtoList, String userId, int feedId) {
+
+    String dirPath = userId + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    File destDir = new File(localPath + dirPath);
+
+    if(!destDir.exists()) { destDir.mkdirs(); }
+
+    fileService.uploadFiles(files, dirPath, destDir);
+
+    fileService.insertFileInfoList(fileDtoList, dirPath, feedId);
   }
 
   @Transactional(readOnly = true)
@@ -104,6 +118,7 @@ public class FeedServiceImpl implements FeedService {
     return findFeedList(userId, feedIdList);
   }
 
+  @Transactional
   private List<Feed> findFeedList(String userId, List<Integer> feedIdList) {
 
     List<Feed> feedList = new ArrayList<>();
@@ -187,7 +202,7 @@ public class FeedServiceImpl implements FeedService {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
 
-    fileService.deleteAllFiles(id);
+    fileService.deleteFiles(id);
   }
 
   @Transactional
@@ -201,7 +216,7 @@ public class FeedServiceImpl implements FeedService {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
 
-    fileService.updateFiles(files,userId,feedId);
+    fileService.updateFiles(files,feedWriteDto.getFileDtoList(), userId, feedId);
   }
 
 }

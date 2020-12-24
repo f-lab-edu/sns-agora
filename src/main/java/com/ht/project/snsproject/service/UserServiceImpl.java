@@ -6,11 +6,17 @@ import com.ht.project.snsproject.model.feed.ProfileImage;
 import com.ht.project.snsproject.model.user.*;
 import com.ht.project.snsproject.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
+import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -21,6 +27,9 @@ public class UserServiceImpl implements UserService {
   private final ObjectMapper cacheObjectMapper;
 
   private final FileService fileService;
+
+  @Value("${file.local.path}")
+  private String localPath;
 
   public UserServiceImpl(UserRepository userRepository,
                          @Qualifier("awsFileService") FileService fileService,
@@ -44,15 +53,18 @@ public class UserServiceImpl implements UserService {
   public void updateUserProfile(UserProfileParam userProfileParam, String userId, MultipartFile profile) {
 
     ProfileImage profileImage = userRepository.findUserProfileImage(userId);
+    String dirPath = userId + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    List<MultipartFile> files = new ArrayList<>();
+    files.add(profile);
 
     if (profileImage != null) {
       fileService.deleteFile(profileImage.getFilePath(), profileImage.getFileName());
     }
 
-    UserProfile userProfile = UserProfile.from(userProfileParam, userId,
-            fileService.fileUploadForProfile(profile, userId));
+    fileService.uploadFiles(files, dirPath, new File(localPath + dirPath));
 
-    userRepository.updateUserProfile(userProfile);
+    userRepository.updateUserProfile(UserProfile.from(userProfileParam, userId,
+            new ProfileImage(dirPath, profile.getOriginalFilename())));
   }
 
   @Override

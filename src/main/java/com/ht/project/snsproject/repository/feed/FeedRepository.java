@@ -39,6 +39,11 @@ public class FeedRepository {
     this.objectMapper = objectMapper;
   }
 
+  public void insertFeed(FeedInsert feedInsert) {
+
+    feedMapper.feedUpload(feedInsert);
+  }
+
   @Transactional(readOnly = true)
   @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
   public Object findMyFeedByFeedId(int feedId) {

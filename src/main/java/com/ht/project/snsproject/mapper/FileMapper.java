@@ -12,17 +12,15 @@ public interface FileMapper {
 
   void fileListUpload(List<FileInfo> fileInfo);
 
-  void fileUpload(FileInfo fileInfo);
+  String findFilePathByFeedId(int feedId);
 
-  String getFilePath(int feedId);
-
-  List<FileVo> getFiles(int feedId);
+  List<FileVo> findFilesByFeedId(int feedId);
 
   void deleteFile(int feedId);
 
   void deleteFiles(List<FileDelete> fileDeleteList);
 
-  List<String> getFileNames(int feedId);
+  List<String> findFileNamesByFeedId(int feedId);
 
   void upsertFiles(List<FileInfo> fileInfoList);
 }

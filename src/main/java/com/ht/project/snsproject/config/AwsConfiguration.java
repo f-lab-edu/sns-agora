@@ -5,10 +5,16 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.ht.project.snsproject.properites.aws.AwsS3Property;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /*
  * AWS S3 설정.
@@ -51,5 +57,26 @@ public class AwsConfiguration {
             .withCredentials(new AWSStaticCredentialsProvider(this.awsCredentials()))
             .withRegion(Regions.AP_NORTHEAST_2)
             .build();
+  }
+
+  @Bean
+  public TransferManager transferManager() {
+
+    return TransferManagerBuilder.standard()
+            .withS3Client(amazonS3Client())
+            .withExecutorFactory(() -> createExecutorService(awsS3Property.getTransferThread())).build();
+  }
+
+  private ThreadPoolExecutor createExecutorService(int threadNumber) {
+    ThreadFactory threadFactory = new ThreadFactory() {
+      private int threadCount = 1;
+
+      public Thread newThread(Runnable r) {
+        Thread thread = new Thread(r);
+        thread.setName("amazon-s3-transfer-manager-worker-" + threadCount++);
+        return thread;
+      }
+    };
+    return (ThreadPoolExecutor) Executors.newFixedThreadPool(threadNumber, threadFactory);
   }
 }
