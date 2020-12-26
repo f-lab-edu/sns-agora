@@ -107,7 +107,7 @@
 
 ## :pushpin: 테스트
 
-&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark:nGrinder를 활용하여 성능테스트를 진행하고 성능 개선에 참고하였습니다.
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark:nGrinder를 활용하여 성능테스트를 진행하고 성능 개선에 참고하였습니다.    
 &nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark:Junit 프레임워크를 활용하여 코드 신뢰성을 높이고자 단위테스트를 작성했습니다.
 
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
