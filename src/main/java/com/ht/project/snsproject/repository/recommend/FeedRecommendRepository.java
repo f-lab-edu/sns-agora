@@ -7,7 +7,6 @@ import com.ht.project.snsproject.repository.feed.FeedRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +32,6 @@ public class FeedRecommendRepository {
     this.feedRecommendMapper = feedRecommendMapper;
   }
 
-  @Transactional(readOnly = true)
   public List<Integer> findLatestAllFeedIdList(Pagination pagination) {
 
     List<Integer> recommendIdx = new ArrayList<>();
@@ -57,9 +55,9 @@ public class FeedRecommendRepository {
     return recommendIdx;
   }
 
-  @Transactional
-  public List<FeedInfo> findLatestAllFeedList(List<FeedInfo> feedInfoList, List<Integer> feedIdList) {
+  public List<FeedInfo> findLatestAllFeedList(List<Integer> feedIdList) {
 
+    List<FeedInfo> feedInfoList = new ArrayList<>();
     List<Integer> feedIdCopyList = new ArrayList<>(feedIdList);
     feedRepository.findFeedInfoListInCache(feedInfoList, feedIdCopyList);
 

@@ -2,7 +2,6 @@ package com.ht.project.snsproject.mapper;
 
 import com.ht.project.snsproject.model.feed.FileDelete;
 import com.ht.project.snsproject.model.feed.FileInfo;
-import com.ht.project.snsproject.model.feed.FileVo;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -11,10 +10,6 @@ import java.util.List;
 public interface FileMapper {
 
   void fileListUpload(List<FileInfo> fileInfo);
-
-  String findFilePathByFeedId(int feedId);
-
-  List<FileVo> findFilesByFeedId(int feedId);
 
   void deleteFile(int feedId);
 

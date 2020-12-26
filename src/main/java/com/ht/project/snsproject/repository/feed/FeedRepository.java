@@ -11,7 +11,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -44,7 +43,6 @@ public class FeedRepository {
     feedMapper.feedUpload(feedInsert);
   }
 
-  @Transactional(readOnly = true)
   @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
   public Object findMyFeedByFeedId(int feedId) {
 
@@ -58,7 +56,6 @@ public class FeedRepository {
     return feed;
   }
 
-  @Transactional(readOnly = true)
   @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
   public Object findFriendsFeedByFeedId(int feedId) {
 
@@ -72,7 +69,6 @@ public class FeedRepository {
     return feed;
   }
 
-  @Transactional(readOnly = true)
   @Cacheable(value = "feedInfo", key = "'feedInfo:' + #feedId")
   public Object findAllFeedByFeedId(int feedId) {
 
@@ -86,39 +82,33 @@ public class FeedRepository {
     return feed;
   }
 
-  @Transactional
   @CacheEvict(value = "feedInfo", key = "'feedInfo:' + #feedId")
   public boolean deleteFeed(int feedId, String userId) {
 
     return feedMapper.deleteFeed(new FeedDeleteParam(feedId, userId));
   }
 
-  @Transactional
   @CacheEvict(value = "feedInfo", key = "'feedInfo:' + #feedId")
   public boolean updateFeed(int feedId, String userId, FeedWriteDto feedWriteDto) {
 
     return feedMapper.updateFeed(FeedUpdate.create(feedId, userId, feedWriteDto, LocalDateTime.now()));
   }
 
-  @Transactional(readOnly = true)
   public List<Integer> findMyFeedIdListByUserId(String targetId, Pagination pagination) {
 
     return feedMapper.findMyFeedIdListByUserId(new FeedIdListParam(targetId, pagination));
   }
 
-  @Transactional(readOnly = true)
   public List<Integer> findFriendFeedIdListByUserId(String targetId, Pagination pagination) {
 
     return feedMapper.findFriendFeedIdListByUserId(new FeedIdListParam(targetId, pagination));
   }
 
-  @Transactional(readOnly = true)
   public List<Integer> findALLFeedIdListByUserId(String targetId, Pagination pagination) {
 
     return feedMapper.findAllFeedIdListByUserId(new FeedIdListParam(targetId, pagination));
   }
 
-  @Transactional
   public List<FeedInfo> findFeedInfoList(List<Integer> feedIdList, List<MultiSetTarget> multiSetTargetList) {
 
     List<Integer> feedIdCopyList = new ArrayList<>(feedIdList);
@@ -129,12 +119,10 @@ public class FeedRepository {
       feedInfoList.addAll(findFeedInfoListInDb(feedIdCopyList));
     }
     redisCacheService.addFeedInfoInCacheList(feedInfoList, multiSetTargetList);
-    //sort 필요
 
     return feedInfoList;
   }
 
-  @Transactional(readOnly = true)
   public List<FeedInfo> findFeedInfoListInDb(List<Integer> feedIdList) {
 
     return feedMapper.findFeedInfoListByFeedIdList(feedIdList);
@@ -162,12 +150,10 @@ public class FeedRepository {
     feedIdList.removeIf(Objects::isNull);
   }
 
-  @Transactional(readOnly = true)
   public List<FeedInfo> findFeedListByFeedIdList(List<Integer> recommendIdx) {
     return feedMapper.findFeedInfoListByFeedIdList(recommendIdx);
   }
 
-  @Transactional(readOnly = true)
   public List<Integer> findFriendsFeedIdList(String userId, Pagination pagination) {
 
     return feedMapper.findFriendsFeedIdList(new FriendsFeedIdParam(userId, pagination));

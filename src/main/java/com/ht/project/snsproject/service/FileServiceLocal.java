@@ -17,8 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +29,7 @@ public class FileServiceLocal implements FileService {
 
   private final FileRepository fileRepository;
 
-  @Value("${file.local.path}")
+  @Value("${file.upload-path}")
   private String localPath;
 
   private static final Logger logger = LoggerFactory.getLogger(FileServiceLocal.class);
@@ -43,8 +41,12 @@ public class FileServiceLocal implements FileService {
    * 쓰레드에 안전하고 빠른 원하는 포맷의 날짜 객체를 사용할 수 있다.
    */
 
+  @Transactional
   @Override
-  public void uploadFiles(List<MultipartFile> files, String dirPath, File destDir) {
+  public void uploadFiles(List<MultipartFile> files, String dirPath) {
+
+    File destDir = new File(localPath + dirPath);
+    if(!destDir.exists()) { destDir.mkdirs(); }
 
     files.forEach(file -> {
       try {
@@ -72,11 +74,12 @@ public class FileServiceLocal implements FileService {
     }
   }
 
+  @Transactional
   @Override
-  public void insertFileInfoList(List<FileDto> fileDtoList, String dirPath, int feedId) {
+  public void insertFileInfoList(List<FileDto> fileDtoList, int feedId) {
 
     List<FileInfo> fileInfoList = new ArrayList<>();
-    makeFileInfoList(fileInfoList, fileDtoList, feedId, dirPath);
+    makeFileInfoList(fileInfoList, fileDtoList, feedId);
 
     if(!fileInfoList.isEmpty()) {
       fileRepository.insertFileInfoList(fileInfoList);
@@ -84,30 +87,16 @@ public class FileServiceLocal implements FileService {
   }
 
   private void makeFileInfoList(List<FileInfo> fileInfoList, List<FileDto> fileDtoList,
-                                int feedId, String dirPath) {
+                                int feedId) {
 
     if (fileDtoList != null) {
       fileDtoList.forEach(fileDto ->
-              fileInfoList.add(new FileInfo(dirPath, fileDto.getFileName(), fileDto.getFileIndex(), feedId)));
+              fileInfoList.add(new FileInfo(String.valueOf(feedId), fileDto.getFileName(),
+                      fileDto.getFileIndex(), feedId)));
     }
   }
 
   @Transactional
-  public void deleteFiles(int feedId, String path, List<String> fileNames) {
-
-    List<FileDelete> fileDeleteList = new ArrayList<>();
-
-    if (path != null) {
-      for (String fileName : fileNames) {
-
-        fileDeleteList.add(FileDelete.create(feedId,fileName));
-        File file = new File(path + File.separator + fileName);
-        file.delete();
-      }
-    }
-    fileRepository.deleteFiles(fileDeleteList);
-  }
-
   @Override
   public void deleteFile(String filePath, String fileName) {
 
@@ -120,28 +109,32 @@ public class FileServiceLocal implements FileService {
     }
   }
 
+  @Transactional
   @Override
-  public void updateFiles(List<MultipartFile> files, List<FileDto> fileDtoList, String userId, int feedId) {
+  public void updateFiles(List<MultipartFile> files, List<FileDto> fileDtoList, int feedId) {
 
-    String filePath = fileRepository.findFilePathByFeedId(feedId);
     List<String> originalFiles = fileRepository.findFileNamesByFeedId(feedId);
 
-    if (filePath == null) {
-      filePath = userId + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-    }
+    String filePath = String.valueOf(feedId);
 
-    File destDir = new File(localPath + filePath);
+    uploadFiles(classifyFiles(files, originalFiles), filePath);
 
-    if(!destDir.exists()) { destDir.mkdirs(); }
+    if (!originalFiles.isEmpty()) { deleteFiles(feedId, originalFiles); }
 
-    uploadFiles(classifyFiles(files, originalFiles), filePath, destDir);
-
-    if (!originalFiles.isEmpty()) { deleteFiles(feedId, filePath, originalFiles); }
-
-    upsertFileInfoList(fileDtoList, filePath, feedId);
+    upsertFileInfoList(fileDtoList, feedId);
   }
 
-  @Transactional
+  private void deleteFiles(int feedId, List<String> fileNames) {
+
+    List<FileDelete> fileDeleteList = new ArrayList<>();
+
+    fileNames.forEach(fileName -> {
+      fileDeleteList.add(FileDelete.create(feedId, fileName));
+      new File(feedId + File.separator + fileName).delete();});
+
+    fileRepository.deleteFiles(fileDeleteList);
+  }
+
   private List<MultipartFile> classifyFiles(List<MultipartFile> files,
                                             List<String> originalFiles) {
 
@@ -162,10 +155,11 @@ public class FileServiceLocal implements FileService {
 
     return uploadingFiles;
   }
-  private void upsertFileInfoList(List<FileDto> fileDtoList, String dirPath, int feedId) {
+
+  private void upsertFileInfoList(List<FileDto> fileDtoList, int feedId) {
 
     List<FileInfo> fileInfoList = new ArrayList<>();
-    makeFileInfoList(fileInfoList, fileDtoList, feedId, dirPath);
+    makeFileInfoList(fileInfoList, fileDtoList, feedId);
 
     if (!fileInfoList.isEmpty()) { fileRepository.upsertFiles(fileInfoList); }
 
@@ -175,11 +169,9 @@ public class FileServiceLocal implements FileService {
   @Override
   public void deleteFiles(int feedId) {
 
-    String path = fileRepository.findFilePathByFeedId(feedId);
+    if (!fileRepository.findFileNamesByFeedId(feedId).isEmpty()) {
 
-    if (path != null) {
-
-      deleteDirectory(new File(path));
+      deleteDirectory(new File(String.valueOf(feedId)));
     }
 
     fileRepository.deleteFile(feedId);

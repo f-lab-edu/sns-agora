@@ -6,15 +6,12 @@ import com.ht.project.snsproject.model.feed.ProfileImage;
 import com.ht.project.snsproject.model.user.*;
 import com.ht.project.snsproject.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
-import java.io.File;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,9 +25,6 @@ public class UserServiceImpl implements UserService {
 
   private final FileService fileService;
 
-  @Value("${file.local.path}")
-  private String localPath;
-
   public UserServiceImpl(UserRepository userRepository,
                          @Qualifier("awsFileService") FileService fileService,
                          @Qualifier("cacheObjectMapper") ObjectMapper cacheObjectMapper) {
@@ -39,34 +33,35 @@ public class UserServiceImpl implements UserService {
     this.cacheObjectMapper = cacheObjectMapper;
   }
 
+  @Transactional
   @Override
   public void joinUser(UserJoinRequest userJoinRequest) {
     userRepository.insertUser(userJoinRequest);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public boolean isDuplicateUserId(String userId) {
     return userRepository.isDuplicateUserId(userId);
   }
 
+  @Transactional
   @Override
   public void updateUserProfile(UserProfileParam userProfileParam, String userId, MultipartFile profile) {
 
     ProfileImage profileImage = userRepository.findUserProfileImage(userId);
-    String dirPath = userId + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
     List<MultipartFile> files = new ArrayList<>();
     files.add(profile);
 
-    if (profileImage != null) {
-      fileService.deleteFile(profileImage.getFilePath(), profileImage.getFileName());
-    }
+    if (profileImage != null) { fileService.deleteFile(profileImage.getFilePath(), profileImage.getFileName()); }
 
-    fileService.uploadFiles(files, dirPath, new File(localPath + dirPath));
+    fileService.uploadFiles(files, userId);
 
     userRepository.updateUserProfile(UserProfile.from(userProfileParam, userId,
-            new ProfileImage(dirPath, profile.getOriginalFilename())));
+            new ProfileImage(userId, profile.getOriginalFilename())));
   }
 
+  @Transactional(readOnly = true)
   @Override
   public void exists(UserLogin userLogin, HttpSession httpSession) {
 
@@ -81,6 +76,7 @@ public class UserServiceImpl implements UserService {
     httpSession.setAttribute("userId", userLogin.getUserId());
   }
 
+  @Transactional(readOnly = true)
   @Override
   public User findUserByUserId(String userId) {
 
@@ -94,6 +90,7 @@ public class UserServiceImpl implements UserService {
     httpSession.invalidate();
   }
 
+  @Transactional
   @Override
   public void deleteUser(String userId, String password, HttpSession httpSession) {
 
@@ -105,6 +102,7 @@ public class UserServiceImpl implements UserService {
 
   }
 
+  @Transactional
   @Override
   public void updateUserPassword(String userId, UserPassword userPassword) {
 

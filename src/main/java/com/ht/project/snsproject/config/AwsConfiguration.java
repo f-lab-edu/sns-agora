@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /*
  * AWS S3 설정.
@@ -69,11 +70,11 @@ public class AwsConfiguration {
 
   private ThreadPoolExecutor createExecutorService(int threadNumber) {
     ThreadFactory threadFactory = new ThreadFactory() {
-      private int threadCount = 1;
+      private final AtomicInteger threadCount = new AtomicInteger(1);
 
       public Thread newThread(Runnable r) {
         Thread thread = new Thread(r);
-        thread.setName("amazon-s3-transfer-manager-worker-" + threadCount++);
+        thread.setName("amazon-s3-transfer-manager-worker-" + threadCount.getAndIncrement());
         return thread;
       }
     };

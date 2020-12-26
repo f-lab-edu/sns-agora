@@ -10,7 +10,6 @@ import com.ht.project.snsproject.exception.FileIOException;
 import com.ht.project.snsproject.model.feed.FileDelete;
 import com.ht.project.snsproject.model.feed.FileDto;
 import com.ht.project.snsproject.model.feed.FileInfo;
-import com.ht.project.snsproject.model.feed.FileVo;
 import com.ht.project.snsproject.properites.aws.AwsS3Property;
 import com.ht.project.snsproject.repository.file.FileRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,15 +38,18 @@ public class FileServiceAws implements FileService {
 
   private final FileRepository fileRepository;
 
-  @Value("${file.local.path}")
-  private String localPath;
+  @Value("${file.upload-path}")
+  private String tempPath;
 
   private static final String S3_SEPARATOR = "/";
 
   @Transactional
-  public void uploadFiles(List<MultipartFile> files, String dirPath, File destDir) {
+  public void uploadFiles(List<MultipartFile> files, String dirPath) {
 
+    File destDir = new File(tempPath + dirPath);
+    if(!destDir.exists()) { destDir.mkdirs(); }
     if (files.isEmpty()) { return; }
+
     writeTempFiles(files, destDir);
     MultipleFileUpload transfer = transferManager.uploadDirectory(awsS3Property.getBucketName(), dirPath,
             destDir, false);
@@ -81,20 +81,21 @@ public class FileServiceAws implements FileService {
   }
 
   private void makeFileInfoList(List<FileInfo> fileInfoList, List<FileDto> fileDtoList,
-                                int feedId, String dirPath) {
+                                int feedId) {
 
     if (fileDtoList != null) {
       fileDtoList.forEach(fileDto ->
-              fileInfoList.add(new FileInfo(dirPath, fileDto.getFileName(), fileDto.getFileIndex(), feedId)));
+              fileInfoList.add(new FileInfo(String.valueOf(feedId), fileDto.getFileName(),
+                      fileDto.getFileIndex(), feedId)));
     }
   }
 
   @Transactional
   @Override
-  public void insertFileInfoList(List<FileDto> fileDtoList, String dirPath, int feedId) {
+  public void insertFileInfoList(List<FileDto> fileDtoList, int feedId) {
 
     List<FileInfo> fileInfoList = new ArrayList<>();
-    makeFileInfoList(fileInfoList, fileDtoList, feedId, dirPath);
+    makeFileInfoList(fileInfoList, fileDtoList, feedId);
 
     if(!fileInfoList.isEmpty()) {
 
@@ -121,14 +122,14 @@ public class FileServiceAws implements FileService {
   @Override
   public void deleteFiles(int feedId) {
 
-    List<FileVo> files = fileRepository.findFilesByFeedId(feedId);
+    List<String> fileNames = fileRepository.findFileNamesByFeedId(feedId);
 
     List<DeleteObjectsRequest.KeyVersion> keyVersions = new ArrayList<>();
 
-    if (!files.isEmpty()) {
+    if (!fileNames.isEmpty()) {
 
-      files.forEach(file -> keyVersions.add(new DeleteObjectsRequest.KeyVersion(file.getFilePath()
-              + S3_SEPARATOR + file.getFileName())));
+      fileNames.forEach(fileName -> keyVersions.add(new DeleteObjectsRequest.KeyVersion(feedId
+              + S3_SEPARATOR + fileName)));
 
       s3Client.deleteObjects(new DeleteObjectsRequest(awsS3Property.getBucketName())
               .withKeys(keyVersions));
@@ -138,18 +139,6 @@ public class FileServiceAws implements FileService {
   }
 
   @Transactional
-  private void deleteFiles(int feedId, String filePath, List<String> fileNames) {
-
-    List<FileDelete> fileDeleteList = new ArrayList<>();
-    List<DeleteObjectsRequest.KeyVersion> keyVersionList = new ArrayList<>();
-
-    fileNames.forEach(fileName -> { fileDeleteList.add(FileDelete.create(feedId, fileName));
-      keyVersionList.add(new DeleteObjectsRequest.KeyVersion(filePath + S3_SEPARATOR + fileName)); });
-
-    fileRepository.deleteFiles(fileDeleteList);
-    s3Client.deleteObjects(new DeleteObjectsRequest(awsS3Property.getBucketName()).withKeys(keyVersionList));
-  }
-
   @Override
   public void deleteFile(String filePath, String fileName) {
 
@@ -164,30 +153,34 @@ public class FileServiceAws implements FileService {
 
   @Transactional
   @Override
-  public void updateFiles(List<MultipartFile> files, List<FileDto> fileDtoList, String userId, int feedId) {
+  public void updateFiles(List<MultipartFile> files, List<FileDto> fileDtoList, int feedId) {
 
-    String filePath = fileRepository.findFilePathByFeedId(feedId);
     List<String> originalFiles = fileRepository.findFileNamesByFeedId(feedId);
+    String filePath = String.valueOf(feedId);
 
-    if (filePath == null) {
-      filePath = userId + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-    }
+    uploadFiles(classifyFiles(files, originalFiles), filePath);
 
-    File destDir = new File(localPath + filePath);
+    if (!originalFiles.isEmpty()) { deleteFiles(feedId, originalFiles); }
 
-    if(!destDir.exists()) { destDir.mkdirs(); }
-
-    uploadFiles(classifyFiles(files, originalFiles), filePath, destDir);
-
-    if (!originalFiles.isEmpty()) { deleteFiles(feedId, filePath, originalFiles); }
-
-    upsertFileInfoList(fileDtoList, filePath, feedId);
+    upsertFileInfoList(fileDtoList, feedId);
   }
 
-  private void upsertFileInfoList(List<FileDto> fileDtoList, String dirPath, int feedId) {
+  private void deleteFiles(int feedId, List<String> fileNames) {
+
+    List<FileDelete> fileDeleteList = new ArrayList<>();
+    List<DeleteObjectsRequest.KeyVersion> keyVersionList = new ArrayList<>();
+
+    fileNames.forEach(fileName -> { fileDeleteList.add(FileDelete.create(feedId, fileName));
+      keyVersionList.add(new DeleteObjectsRequest.KeyVersion(feedId + S3_SEPARATOR + fileName)); });
+
+    fileRepository.deleteFiles(fileDeleteList);
+    s3Client.deleteObjects(new DeleteObjectsRequest(awsS3Property.getBucketName()).withKeys(keyVersionList));
+  }
+
+  private void upsertFileInfoList(List<FileDto> fileDtoList, int feedId) {
 
     List<FileInfo> fileInfoList = new ArrayList<>();
-    makeFileInfoList(fileInfoList, fileDtoList, feedId, dirPath);
+    makeFileInfoList(fileInfoList, fileDtoList, feedId);
 
     if (!fileInfoList.isEmpty()) { fileRepository.upsertFiles(fileInfoList); }
 

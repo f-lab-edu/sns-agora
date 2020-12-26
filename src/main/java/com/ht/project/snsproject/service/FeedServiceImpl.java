@@ -10,14 +10,11 @@ import com.ht.project.snsproject.repository.comment.CommentRepository;
 import com.ht.project.snsproject.repository.feed.FeedRepository;
 import com.ht.project.snsproject.repository.good.GoodRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,9 +36,6 @@ public class FeedServiceImpl implements FeedService {
   private final CommentRepository commentRepository;
 
   private final RedisCacheService redisCacheService;
-
-  @Value("${file.local.path}")
-  private String localPath;
 
   public FeedServiceImpl(@Qualifier("awsFileService") FileService fileService,
                          GoodRepository goodRepository,
@@ -69,20 +63,10 @@ public class FeedServiceImpl implements FeedService {
 
     if (!files.isEmpty()) {
 
-      uploadFeedFiles(files, feedWriteDto.getFileDtoList(), userId, feedInsert.getId());
+      fileService.uploadFiles(files, String.valueOf(feedInsert.getId()));
+
+      fileService.insertFileInfoList(feedWriteDto.getFileDtoList(), feedInsert.getId());
     }
-  }
-
-  private void uploadFeedFiles(List<MultipartFile> files, List<FileDto> fileDtoList, String userId, int feedId) {
-
-    String dirPath = userId + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-    File destDir = new File(localPath + dirPath);
-
-    if(!destDir.exists()) { destDir.mkdirs(); }
-
-    fileService.uploadFiles(files, dirPath, destDir);
-
-    fileService.insertFileInfoList(fileDtoList, dirPath, feedId);
   }
 
   @Transactional(readOnly = true)
@@ -92,7 +76,7 @@ public class FeedServiceImpl implements FeedService {
     return findFeedList(userId, feedRepository.findFriendsFeedIdList(userId, pagination));
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   @Override
   public List<Feed> findFeedListByUserId(String userId, String targetId, Pagination pagination) {
 
@@ -118,7 +102,7 @@ public class FeedServiceImpl implements FeedService {
     return findFeedList(userId, feedIdList);
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   private List<Feed> findFeedList(String userId, List<Integer> feedIdList) {
 
     List<Feed> feedList = new ArrayList<>();
@@ -142,7 +126,7 @@ public class FeedServiceImpl implements FeedService {
     return feedList;
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   @Override
   public Feed findFeedByFeedId(String userId, int feedId) {
 
@@ -216,7 +200,7 @@ public class FeedServiceImpl implements FeedService {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
 
-    fileService.updateFiles(files,feedWriteDto.getFileDtoList(), userId, feedId);
+    fileService.updateFiles(files,feedWriteDto.getFileDtoList(), feedId);
   }
 
 }
