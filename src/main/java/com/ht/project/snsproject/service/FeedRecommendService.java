@@ -1,7 +1,8 @@
 package com.ht.project.snsproject.service;
 
 
-import com.ht.project.snsproject.model.feed.RecommendFeed;
+import com.ht.project.snsproject.model.Pagination;
+import com.ht.project.snsproject.model.feed.FeedInfo;
 
 import java.util.List;
 
@@ -14,6 +15,5 @@ import java.util.List;
  */
 public interface FeedRecommendService {
 
-  List<RecommendFeed> getFeedRecommendListByLatestOrder(Integer cursor);
-
+  List<FeedInfo> findLatestAllFeedList(Pagination pagination);
 }

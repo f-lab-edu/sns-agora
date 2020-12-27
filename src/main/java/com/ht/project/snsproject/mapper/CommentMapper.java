@@ -18,8 +18,6 @@ public interface CommentMapper {
 
   int getCommentCount(int feedId);
 
-  List<CommentCount> getCommentCounts(List<Integer> feedIds);
-
   void insertReplyOnComment(ReplyInsertParam replyInsertParam);
 
   boolean updateReplyOnComment(ReplyUpdateParam replyUpdateParam);
@@ -27,4 +25,6 @@ public interface CommentMapper {
   boolean deleteCommentOnFeed(CommentDeleteParam commentDeleteParam);
 
   boolean deleteReplyOnComment(ReplyDeleteParam replyDeleteParam);
+
+  List<CommentCount> findCommentCountList(List<Integer> feedIdCopyList);
 }

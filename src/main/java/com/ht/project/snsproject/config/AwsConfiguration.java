@@ -5,10 +5,10 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import org.springframework.beans.factory.annotation.Value;
+import com.ht.project.snsproject.properites.aws.AwsS3Property;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 
 /*
  * AWS S3 설정.
@@ -23,19 +23,16 @@ import org.springframework.context.annotation.PropertySource;
  */
 
 @Configuration
-@PropertySource("application-aws.properties")
+@RequiredArgsConstructor
 public class AwsConfiguration {
 
-  @Value("${aws.s3.accessKey}")
-  private String accessKey;
-
-  @Value("${aws.s3.secretKey}")
-  private String secretKey;
+  private final AwsS3Property awsS3Property;
 
   @Bean
   public BasicAWSCredentials awsCredentials() {
 
-    return new BasicAWSCredentials(accessKey,secretKey);
+    return new BasicAWSCredentials(awsS3Property.getAccessKey(),
+            awsS3Property.getSecretKey());
   }
 
   /**

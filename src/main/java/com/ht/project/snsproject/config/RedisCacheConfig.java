@@ -1,8 +1,11 @@
 package com.ht.project.snsproject.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ht.project.snsproject.properites.redis.CacheRedisProperty;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
@@ -46,39 +49,32 @@ import java.time.Duration;
 
 @EnableCaching
 @Configuration
+@RequiredArgsConstructor
 public class RedisCacheConfig extends CachingConfigurerSupport {
 
+  private final CacheRedisProperty cacheRedisProperty;
 
-  @Value("${redis.cache.host}")
-  private String host;
-
-  @Value("${redis.cache.password:@null}")
-  private String password;
-
-  @Value("${redis.cache.port}")
-  private int port;
-
-  @Autowired
-  private ObjectMapper mapper;
-
-  @Bean("cacheRedis")
+  @Bean("cacheRedisConnectionFactory")
   public RedisConnectionFactory cacheRedisConnectionFactory() {
 
     RedisStandaloneConfiguration redisStandaloneConfiguration =
-            new RedisStandaloneConfiguration(host, port);
-    redisStandaloneConfiguration.setPassword(password);
+            new RedisStandaloneConfiguration(cacheRedisProperty.getHost(),
+                    cacheRedisProperty.getPort());
+    redisStandaloneConfiguration.setPassword(cacheRedisProperty.getPassword());
 
-    LettuceConnectionFactory lettuceConnectionFactory =
-            new LettuceConnectionFactory(redisStandaloneConfiguration);
-
-
-    /*개발의 편의성을 위해 레디스의 논리적으로 database 를 분할하였습니다.
-      실제 서비스 시에는 properties 에서 호스트를 변경해야만 합니다.
-    */
-    lettuceConnectionFactory.setDatabase(0);
-
-    return lettuceConnectionFactory;
+    return new LettuceConnectionFactory(redisStandaloneConfiguration);
   }
+
+
+  @Bean("cacheObjectMapper")
+  public ObjectMapper cacheObjectMapper() {
+
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    mapper.registerModules(new JavaTimeModule(), new Jdk8Module());
+    return mapper;
+  }
+
 
   @Bean
   @Override
@@ -102,7 +98,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
             .fromConnectionFactory(cacheRedisConnectionFactory());
     RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
             .serializeValuesWith(RedisSerializationContext.SerializationPair
-                    .fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                    .fromSerializer(new GenericJackson2JsonRedisSerializer(cacheObjectMapper())))
             .prefixKeysWith("spring:")
             .entryTtl(Duration.ofSeconds(60L));
     builder.cacheDefaults(configuration);
@@ -141,7 +137,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
 
     RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
     redisTemplate.setConnectionFactory(cacheRedisConnectionFactory());
-    redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+    redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer(cacheObjectMapper()));
     redisTemplate.setKeySerializer(new StringRedisSerializer());
 
     /*
@@ -152,7 +148,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
     MySql 에 입력할 때 Date 형식에 맞게끔 바꿔 입력하면 해결될 것이라고 생각되므로
     문제 해결 시 변경 후 해당 주석 삭제하겠습니다.
      */
-    redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer(mapper));
+    redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer(cacheObjectMapper()));
 
     return redisTemplate;
   }
@@ -162,7 +158,7 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
 
     StringRedisTemplate strRedisTemplate = new StringRedisTemplate();
     strRedisTemplate.setConnectionFactory(cacheRedisConnectionFactory());
-
+    strRedisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer(cacheObjectMapper()));
     return strRedisTemplate;
   }
 }

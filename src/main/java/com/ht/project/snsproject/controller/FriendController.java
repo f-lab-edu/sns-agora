@@ -2,30 +2,24 @@ package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
 import com.ht.project.snsproject.annotation.UserInfo;
+import com.ht.project.snsproject.enumeration.FriendStatus;
 import com.ht.project.snsproject.model.Pagination;
-import com.ht.project.snsproject.model.friend.Friend;
 import com.ht.project.snsproject.model.friend.FriendList;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.FriendService;
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/friends")
+@RequiredArgsConstructor
 public class FriendController {
 
-  @Autowired
-  FriendService friendService;
+  private final FriendService friendService;
 
   @LoginCheck
   @PostMapping("/{targetId}/requests")
@@ -81,10 +75,10 @@ public class FriendController {
 
   @LoginCheck
   @GetMapping("/{targetId}")
-  public ResponseEntity<Friend> getFriendRelationStatus(@PathVariable String targetId,
-                                                        @UserInfo User user) {
+  public ResponseEntity<FriendStatus> getFriendRelationStatus(@PathVariable String targetId,
+                                                              @UserInfo User user) {
 
-    return ResponseEntity.ok(friendService.getFriendRelationStatus(user.getUserId(), targetId));
+    return ResponseEntity.ok(friendService.getFriendStatus(user.getUserId(), targetId));
   }
 
   @LoginCheck

@@ -1,13 +1,14 @@
 package com.ht.project.snsproject.quartz;
 
+import com.ht.project.snsproject.properites.datasource.QuartzDatasourceProperty;
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobDetail;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.quartz.QuartzDataSource;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -24,12 +25,19 @@ import javax.sql.DataSource;
 
 @Slf4j
 @Configuration
+@EnableConfigurationProperties(QuartzDatasourceProperty.class)
 @PropertySource("application-good-batch-scheduler.properties")
 public class QuartzConfiguration {
 
+  private final ApplicationContext applicationContext;
 
-  @Autowired
-  private ApplicationContext applicationContext;
+  private final QuartzDatasourceProperty quartzDatasourceProperty;
+
+  public QuartzConfiguration(ApplicationContext applicationContext,
+                             QuartzDatasourceProperty quartzDatasourceProperty) {
+    this.applicationContext = applicationContext;
+    this.quartzDatasourceProperty = quartzDatasourceProperty;
+  }
 
   @PostConstruct
   public void init() {
@@ -174,9 +182,9 @@ public class QuartzConfiguration {
 
     /*
       데이터를 캐싱하는 시간을 60sec으로 설정해놓았기 때문에
-      20sec마다 스케줄러를 돌게 하여 '좋아요 리스트'를 DB에 쓰도록 합니다.
+      30sec마다 스케줄러를 돌게 하여 '좋아요 리스트'를 DB에 쓰도록 합니다.
      */
-    int frequencyInSec = 20;
+    int frequencyInSec = 30;
     log.info("Configuring trigger to fire every {} seconds", frequencyInSec);
 
     trigger.setRepeatInterval(frequencyInSec * 1000);
@@ -213,10 +221,15 @@ public class QuartzConfiguration {
    */
   @Bean(name = "quartzDb")
   @QuartzDataSource
-  @ConfigurationProperties(prefix = "spring.quartz.datasource.hikari")
   public DataSource quartzDataSource() {
 
-    return DataSourceBuilder.create().build();
+    return DataSourceBuilder.create()
+            .url(quartzDatasourceProperty.getUrl())
+            .username(quartzDatasourceProperty.getUsername())
+            .password(quartzDatasourceProperty.getPassword())
+            .type(HikariDataSource.class)
+            .driverClassName(quartzDatasourceProperty.getDriverName())
+            .build();
 
   }
 }

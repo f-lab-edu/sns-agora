@@ -4,7 +4,7 @@ import com.ht.project.snsproject.enumeration.PublicScope;
 import lombok.Builder;
 import lombok.Value;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Builder
 @Value
@@ -18,11 +18,11 @@ public class FeedUpdate {
 
   String content;
 
-  Timestamp date;
+  LocalDateTime date;
 
   PublicScope publicScope;
 
-  public static FeedUpdate create (int feedId, String userId, FeedUpdateParam feedUpdateParam, Timestamp date) {
+  public static FeedUpdate create (int feedId, String userId, FeedWriteDto feedUpdateParam, LocalDateTime date) {
 
     return FeedUpdate.builder()
             .id(feedId)

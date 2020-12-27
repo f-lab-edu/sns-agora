@@ -5,11 +5,12 @@ import com.ht.project.snsproject.exception.FileUploadException;
 import com.ht.project.snsproject.mapper.FileMapper;
 import com.ht.project.snsproject.model.feed.FileAdd;
 import com.ht.project.snsproject.model.feed.FileDelete;
+import com.ht.project.snsproject.model.feed.FileForProfile;
 import com.ht.project.snsproject.model.feed.FileInfo;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,13 +27,10 @@ import java.util.List;
 @Slf4j
 @Service
 @Qualifier("localFileService")
+@RequiredArgsConstructor
 public class FileServiceLocal implements FileService {
 
-  @Autowired
-  private FileMapper fileMapper;
-
-  @Autowired
-  private FileServiceLocal fileServiceLocal;
+  private final FileMapper fileMapper;
 
   @Value("${file.windows.path}")
   private String localPath;
@@ -50,7 +48,7 @@ public class FileServiceLocal implements FileService {
   @Transactional
   public void fileUpload(List<MultipartFile> files, String userId, int feedId) {
 
-    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmSS"));
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
     String dirPath = localPath + userId + File.separator + time;
     int fileIndex = 1;// file 순서를 정해줄 index
     List<FileInfo> fileInfoList = new ArrayList<>();
@@ -78,8 +76,49 @@ public class FileServiceLocal implements FileService {
     }
   }
 
-  @Transactional
+  private void fileUpload(MultipartFile file, String dirPath) {
+
+    File destDir = new File(dirPath);
+
+    if(!destDir.exists()) {
+      destDir.mkdirs();
+    }
+
+    String originalFileName = file.getOriginalFilename();
+    String filePath = dirPath + File.separator + originalFileName;
+
+    File destFile = new File(filePath);
+
+    try{
+
+      file.transferTo(destFile);
+    } catch (IOException ioe) {
+      throw new FileUploadException("파일 업로드에 실패하였습니다.", ioe, ErrorCode.UPLOAD_ERROR);
+    }
+  }
+
   @Override
+  public void fileUploadForFeed(MultipartFile file, String userId, int feedId) {
+
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    String dirPath = localPath + userId + File.separator + time;
+
+    fileUpload(file, dirPath);
+    fileMapper.fileUpload(new FileInfo(dirPath, file.getOriginalFilename(), 1, feedId));
+  }
+
+  @Override
+  public FileForProfile fileUploadForProfile(MultipartFile file, String userId) {
+
+    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    String dirPath = localPath + userId + File.separator + time;
+
+    fileUpload(file, dirPath);
+
+    return new FileForProfile(dirPath, file.getOriginalFilename());
+  }
+
+  @Transactional
   public void deleteFiles(int feedId, String path, List<String> fileNames) {
 
     List<FileDelete> fileDeleteList = new ArrayList<>();
@@ -95,8 +134,20 @@ public class FileServiceLocal implements FileService {
     fileMapper.deleteFiles(fileDeleteList);
   }
 
-  @Transactional
   @Override
+  public void deleteFile(String filePath, String fileName) {
+
+    try {
+
+      File file = new File(filePath + File.separator + fileName);
+      file.delete();
+    } catch (Exception e) {
+      throw new FileUploadException("파일 업로드에 실패하였습니다.", e, ErrorCode.UPLOAD_ERROR);
+    }
+  }
+
+
+  @Transactional
   public List<FileInfo> addFiles(int feedId, String path, List<FileAdd> fileAddList) {
 
     List<FileInfo> fileInfoList = new ArrayList<>();
@@ -152,7 +203,7 @@ public class FileServiceLocal implements FileService {
     int fileIndex = 0;
 
     if (originFiles.isEmpty()) {
-      fileServiceLocal.fileUpload(files,userId,feedId);
+      fileUpload(files,userId,feedId);
       return;
     }
 
@@ -164,7 +215,7 @@ public class FileServiceLocal implements FileService {
           fileInfoList.add(new FileInfo(path,fileName,fileIndex,feedId));
           originFiles.remove(fileName);
         } else {
-          uploadFiles.add(FileAdd.create(fileIndex, file));
+          uploadFiles.add(new FileAdd(fileIndex, file));
         }
       }
     } else {
@@ -173,11 +224,11 @@ public class FileServiceLocal implements FileService {
     }
 
     if (!uploadFiles.isEmpty()) {
-      fileInfoList.addAll(fileServiceLocal.addFiles(feedId, path, uploadFiles));
+      fileInfoList.addAll(addFiles(feedId, path, uploadFiles));
     }
 
     if (!originFiles.isEmpty()) {
-      fileServiceLocal.deleteFiles(feedId, path, originFiles);
+      deleteFiles(feedId, path, originFiles);
     }
 
     fileMapper.upsertFiles(fileInfoList);

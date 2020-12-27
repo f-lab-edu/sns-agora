@@ -1,6 +1,7 @@
 package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.model.user.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 
@@ -10,7 +11,7 @@ public interface UserService {
 
   boolean isDuplicateUserId(String userId);
 
-  void updateUserProfile(UserProfile userProfile);
+  void updateUserProfile(UserProfileParam userProfileParam,String userId, MultipartFile profile);
 
   boolean existUser(UserLogin userLogin, HttpSession httpSession);
 

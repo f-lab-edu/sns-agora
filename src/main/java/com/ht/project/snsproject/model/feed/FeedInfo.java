@@ -1,46 +1,30 @@
 package com.ht.project.snsproject.model.feed;
 
 import com.ht.project.snsproject.enumeration.PublicScope;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Value;
+import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
 
+@Getter
+@Setter
 @Builder
-@Value
+@NoArgsConstructor
 @AllArgsConstructor
 public class FeedInfo {
 
-  Integer id;
+  private Integer id;
 
-  String userId;
+  private String userId;
 
-  String title;
+  private String title;
 
-  String content;
+  private String content;
 
-  Timestamp date;
+  private LocalDateTime date;
 
-  PublicScope publicScope;
+  private PublicScope publicScope;
 
-  String filePath;
+  private List<FileVo> files;
 
-  String fileNames;
-
-  boolean goodPushed;
-
-  public static FeedInfo from(FeedInfoCache feedInfoCache, boolean goodPushed){
-
-    return FeedInfo.builder().id(Integer.parseInt(feedInfoCache.getId()))
-            .userId(feedInfoCache.getUserId())
-            .title(feedInfoCache.getTitle())
-            .content(feedInfoCache.getContent())
-            .date(new Timestamp(Long.parseLong(feedInfoCache.getDate())))
-            .publicScope(PublicScope.valueOf(feedInfoCache.getPublicScope()))
-            .filePath(feedInfoCache.getFilePath())
-            .fileNames(feedInfoCache.getFileNames())
-            .goodPushed(goodPushed)
-            .build();
-  }
 }

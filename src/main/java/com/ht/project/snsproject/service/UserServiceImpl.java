@@ -5,13 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.mapper.UserMapper;
+import com.ht.project.snsproject.model.feed.FileForProfile;
 import com.ht.project.snsproject.model.user.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 import java.util.concurrent.TimeUnit;
@@ -20,22 +21,31 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl implements UserService {
 
 
-  @Autowired
-  @Qualifier("cacheRedisTemplate")
-  private RedisTemplate<String, Object> cacheRedisTemplate;
+  private final RedisTemplate<String, Object> cacheRedisTemplate;
 
-  @Autowired
-  private UserMapper userMapper;
+  private final UserMapper userMapper;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  private final FileService fileService;
 
-  @Autowired
-  private RedisCacheService redisCacheService;
+  private final ObjectMapper objectMapper;
 
-  @Autowired
-  @Qualifier("cacheStrRedisTemplate")
-  private StringRedisTemplate cacheStrRedisTemplate;
+  private final RedisCacheService redisCacheService;
+
+  private final StringRedisTemplate cacheStrRedisTemplate;
+
+  public UserServiceImpl(@Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> cacheRedisTemplate,
+                         UserMapper userMapper,
+                         @Qualifier("awsFileService") FileService fileService,
+                         ObjectMapper objectMapper,
+                         RedisCacheService redisCacheService,
+                         @Qualifier("cacheStrRedisTemplate") StringRedisTemplate cacheStrRedisTemplate) {
+    this.cacheRedisTemplate = cacheRedisTemplate;
+    this.userMapper = userMapper;
+    this.fileService = fileService;
+    this.objectMapper = objectMapper;
+    this.redisCacheService = redisCacheService;
+    this.cacheStrRedisTemplate = cacheStrRedisTemplate;
+  }
 
   @Override
   public void joinUser(UserJoinRequest userJoinRequest) {
@@ -48,14 +58,44 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void updateUserProfile(UserProfile userProfile) {
+  public void updateUserProfile(UserProfileParam userProfileParam, String userId, MultipartFile profile) {
+
+    deleteUserProfileImage(userId);
+
+    FileForProfile fileForProfile = fileService.fileUploadForProfile(profile, userId);
+
+    UserProfile userProfile = UserProfile.from(userProfileParam, userId, fileForProfile);
+
     userMapper.updateUserProfile(userProfile);
+
+    updateUserCache(userProfile);
+
+  }
+
+  private void updateUserCache(UserProfile userProfile) {
+
+    String userCacheKey = redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userProfile.getUserId());
+
+    User user = getUserInfoCache(userProfile.getUserId());
+
+    cacheRedisTemplate.opsForValue().setIfPresent(userCacheKey,
+            UserCache.updateFrom(userProfile, user.getId(), user.getName()), 30L, TimeUnit.MINUTES);
+
+  }
+
+  public void deleteUserProfileImage(String userId) {
+
+    FileForProfile fileForProfile = userMapper.getUserProfileImage(userId);
+
+    if (fileForProfile != null) {
+      fileService.deleteFile(fileForProfile.getFilePath(), fileForProfile.getFileName());
+    }
   }
 
   @Override
   public boolean existUser(UserLogin userLogin, HttpSession httpSession) {
 
-    User userInfo = userMapper.getUser(userLogin);
+    User userInfo = userMapper.getAuthenticatedUser(userLogin);
     if (userInfo == null) {
       return false;
     }
@@ -83,7 +123,9 @@ public class UserServiceImpl implements UserService {
 
     String userInfoKey = redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userId);
 
-    if (cacheStrRedisTemplate.hasKey(userInfoKey) != null) {
+    Boolean keyPresence = cacheStrRedisTemplate.hasKey(userInfoKey);
+
+    if ((keyPresence != null) && (keyPresence)) {
 
       try {
         userInfo = User.from(

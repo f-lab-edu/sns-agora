@@ -1,6 +1,7 @@
 package com.ht.project.snsproject.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.ht.project.snsproject.properites.redis.SessionRedisProperty;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -30,17 +31,12 @@ import org.springframework.session.web.context.AbstractHttpSessionApplicationIni
  * saveMode 속성 : redis session 의 Save Mode 를 설정한다. 기본은 ON_SET_ATTRIBUTE 이다.
  */
 @Configuration
-@EnableRedisHttpSession(maxInactiveIntervalInSeconds = 1800)
+@EnableRedisHttpSession
+@RequiredArgsConstructor
 public class RedisSessionConfig extends AbstractHttpSessionApplicationInitializer {
 
-  @Value("${redis.session.host}")
-  private String host;
 
-  @Value("${redis.session.password:@null}")
-  private String password;
-
-  @Value("${redis.session.port}")
-  private int port;
+  private final SessionRedisProperty sessionRedisProperty;
 
   /**
    * Redis 에 접속하기 위한 Connection 들을 생성하는 팩토리 Object.
@@ -64,18 +60,11 @@ public class RedisSessionConfig extends AbstractHttpSessionApplicationInitialize
   public RedisConnectionFactory sessionRedisConnectionFactory() {
 
     RedisStandaloneConfiguration redisStandaloneConfiguration =
-            new RedisStandaloneConfiguration(host, port);
-    redisStandaloneConfiguration.setPassword(password);
+            new RedisStandaloneConfiguration(sessionRedisProperty.getHost(),
+                    sessionRedisProperty.getPort());
+    redisStandaloneConfiguration.setPassword(sessionRedisProperty.getPassword());
 
-    LettuceConnectionFactory lettuceConnectionFactory =
-            new LettuceConnectionFactory(redisStandaloneConfiguration);
-
-    /*개발의 편의성을 위해 레디스의 논리적으로 database 를 분할하였습니다.
-      실제 서비스 시에는 properties 에서 호스트를 변경해야만 합니다.
-    */
-    lettuceConnectionFactory.setDatabase(2);
-
-    return lettuceConnectionFactory;
+    return new LettuceConnectionFactory(redisStandaloneConfiguration);
   }
 
   @Bean("sessionRedisTemplate")

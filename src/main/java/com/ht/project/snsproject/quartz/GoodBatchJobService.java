@@ -5,69 +5,72 @@ import com.ht.project.snsproject.mapper.GoodBachJobMapper;
 import com.ht.project.snsproject.model.good.GoodUser;
 import com.ht.project.snsproject.service.RedisCacheService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
 public class GoodBatchJobService {
 
-  private AtomicInteger count = new AtomicInteger();
   /*
    배열의 인덱스값은 상수로 정의해놓고 사용하는게 유지보수성에 유리.
    */
   private final int FEED_ID = 2;
   private final int USER_ID = 3;
 
+  private final RedisCacheService redisCacheService;
 
-  @Autowired
-  private RedisCacheService redisCacheService;
+  private final GoodBachJobMapper goodBachJobMapper;
 
-  @Autowired
-  private GoodBachJobMapper goodBachJobMapper;
+  private final StringRedisTemplate stringRedisTemplate;
 
-  @Resource(name = "cacheRedisTemplate")
-  private ValueOperations<String, Object> valueOps;
+  public GoodBatchJobService(RedisCacheService redisCacheService,
+                             GoodBachJobMapper goodBachJobMapper,
+                             @Qualifier("cacheStrRedisTemplate") StringRedisTemplate stringRedisTemplate) {
+    this.redisCacheService = redisCacheService;
+    this.goodBachJobMapper = goodBachJobMapper;
+    this.stringRedisTemplate = stringRedisTemplate;
+  }
 
   @Transactional
   public void executeJob() {
 
-    log.info("The batch job has begun...");
-
     List<String> goodPushedKeys = redisCacheService.scanKeys(
             redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, "*"));
 
-    List<Object> values = valueOps.multiGet(goodPushedKeys);
-    List<String> goodAddKeys = new ArrayList<>();
-    List<String> goodDeleteKeys = new ArrayList<>();
+    List<String> values = stringRedisTemplate.opsForValue().multiGet(goodPushedKeys);
 
-    for (int i=0; i<values.size(); i++) {
+    if(values != null && !values.isEmpty()) {
+      log.info("The batch job has begun...");
 
-      Boolean goodPushed = (Boolean) values.get(i);
+      List<String> goodAddKeys = new ArrayList<>();
+      List<String> goodDeleteKeys = new ArrayList<>();
 
-      if(goodPushed != null) {
-        if(goodPushed) {
+      for (int i = 0; i < values.size(); i++) {
 
-          goodAddKeys.add(goodPushedKeys.get(i));
-        } else {
+        String goodPushed = values.get(i);
 
-          goodDeleteKeys.add(goodPushedKeys.get(i));
+        if (goodPushed != null) {
+          if (Boolean.parseBoolean(goodPushed)) {
+
+            goodAddKeys.add(goodPushedKeys.get(i));
+          } else {
+
+            goodDeleteKeys.add(goodPushedKeys.get(i));
+          }
         }
       }
+
+      batchInsertGoodPushedUser(goodAddKeys);
+      batchDeleteGoodPushedUser(goodDeleteKeys);
+
+      log.info("Batch job has finished...");
     }
-
-    batchInsertGoodPushedUser(goodAddKeys);
-    batchDeleteGoodPushedUser(goodDeleteKeys);
-
-    count.incrementAndGet();
-    log.info("Batch job has finished...");
 
   }
 
@@ -115,10 +118,5 @@ public class GoodBatchJobService {
       goodBachJobMapper.batchDeleteGoodUserList(goodUserDeleteList);
     }
   }
-
-  public int getNumberOfInvocations() {
-    return count.get();
-  }
-
 
 }

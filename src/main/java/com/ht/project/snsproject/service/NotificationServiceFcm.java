@@ -1,9 +1,13 @@
 package com.ht.project.snsproject.service;
 
+import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.messaging.*;
+import com.google.firebase.messaging.AndroidConfig;
+import com.google.firebase.messaging.AndroidNotification;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.Message;
 import com.ht.project.snsproject.exception.FcmInitializingException;
 import com.ht.project.snsproject.exception.NoSuchUserIdException;
 import com.ht.project.snsproject.mapper.NotificationMapper;
@@ -13,12 +17,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Android Device ID test data 가 필요하므로,
@@ -38,7 +42,6 @@ import java.io.IOException;
  */
 
 @Slf4j
-@PropertySource("application-fcm.properties")
 @Service
 public class NotificationServiceFcm implements NotificationService {
 
@@ -95,23 +98,23 @@ public class NotificationServiceFcm implements NotificationService {
       throw new NoSuchUserIdException("해당 서비스에 등록된 사용자가 아닙니다.");
     }
 
-    try {
-      Message message = Message.builder()
-              .setAndroidConfig(AndroidConfig.builder()
-                      .setTtl(3600 * 1000)
-                      .setPriority(AndroidConfig.Priority.NORMAL)
-                      .setNotification(AndroidNotification.builder()
-                              .setTitle(notificationRequest.getTitle())
-                              .setBody(notificationRequest.getMessage())
-                              .build())
-                      .build())
-              .setToken(deviceId)
-              .build();
+    Message message = Message.builder()
+            .setAndroidConfig(AndroidConfig.builder()
+                    .setTtl(3600 * 1000)
+                    .setPriority(AndroidConfig.Priority.NORMAL)
+                    .setNotification(AndroidNotification.builder()
+                            .setTitle(notificationRequest.getTitle())
+                            .setBody(notificationRequest.getMessage())
+                            .build())
+                    .build())
+            .setToken(deviceId)
+            .build();
 
-      String response = FirebaseMessaging.getInstance().send(message);
-      logger.info("Successfully sent message: " + response);
-    } catch (FirebaseMessagingException fme) {
-      logger.error(fme.getErrorCode());
+    ApiFuture<String> response = FirebaseMessaging.getInstance().sendAsync(message);
+    try {
+      logger.info("Successfully sent message: " + response.get());
+    } catch (InterruptedException | ExecutionException e) {
+      throw new IllegalStateException("Transfer failed", e);
     }
   }
 }

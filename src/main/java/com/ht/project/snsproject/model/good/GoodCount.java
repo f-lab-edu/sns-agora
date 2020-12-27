@@ -1,13 +1,11 @@
 package com.ht.project.snsproject.model.good;
 
-import lombok.Builder;
 import lombok.Value;
 
 @Value
-@Builder
-public class Good {
+public class GoodCount {
 
   int feedId;
 
-  int good;
+  int goodCount;
 }

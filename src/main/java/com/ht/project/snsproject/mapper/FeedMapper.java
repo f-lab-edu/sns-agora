@@ -1,27 +1,32 @@
 package com.ht.project.snsproject.mapper;
 
-import com.ht.project.snsproject.model.feed.FeedDeleteParam;
-import com.ht.project.snsproject.model.feed.FeedInfo;
-import com.ht.project.snsproject.model.feed.FeedInsert;
-import com.ht.project.snsproject.model.feed.FeedListParam;
-import com.ht.project.snsproject.model.feed.FeedParam;
-import com.ht.project.snsproject.model.feed.FeedUpdate;
-import com.ht.project.snsproject.model.feed.FriendsFeedList;
-import java.util.List;
+import com.ht.project.snsproject.model.feed.*;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 @Mapper
 public interface FeedMapper {
 
   void feedUpload(FeedInsert feedInsert);
 
-  FeedInfo getFeed(FeedParam feedParam);
-
-  List<FeedInfo> getFeedList(FeedListParam feedListParam);
-
-  List<FeedInfo> getFriendsFeedList(FriendsFeedList friendsFeedList);
-
   boolean deleteFeed(FeedDeleteParam feedDeleteParam);
 
   boolean updateFeed(FeedUpdate feedUpdate);
+
+  FeedInfo findMyFeedByFeedId(int feedId);
+
+  FeedInfo findFriendsFeedByFeedId(int feedId);
+
+  FeedInfo findAllFeedByFeedId(int feedId);
+
+  List<Integer> findMyFeedIdListByUserId(FeedIdListParam feedIdListParam);
+
+  List<Integer> findFriendFeedIdListByUserId(FeedIdListParam feedIdListParam);
+
+  List<Integer> findAllFeedIdListByUserId(FeedIdListParam feedIdListParam);
+
+  List<FeedInfo> findFeedInfoListByFeedIdList(List<Integer> feedIdList);
+
+  List<Integer> findFriendsFeedIdList(FriendsFeedIdParam friendsFeedIdParam);
 }

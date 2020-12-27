@@ -13,16 +13,6 @@
         (SELECT userId FROM goods WHERE feedId = #{feedId} AND userId = #{userId})
     </select>
 
-    <select id="getGoods" parameterType="java.util.List" resultType="com.ht.project.snsproject.model.good.Good">
-
-        SELECT feedId, COUNT(*) AS good FROM goods
-        WHERE
-        <foreach item="item" collection="list" index="index" open="(" close=")" separator="OR">
-            feedId = #{item}
-        </foreach>
-        GROUP BY feedId;
-    </select>
-
     <select id="getGoodList" parameterType="com.ht.project.snsproject.model.good.GoodListParam"
             resultType="com.ht.project.snsproject.model.good.GoodUser">
         SELECT id, userId From goods
@@ -32,6 +22,36 @@
         </if>
         ORDER BY id DESC
         LIMIT #{limit};
+    </select>
+
+    <select id="findGoodCountList" parameterType="java.util.List"
+            resultType="com.ht.project.snsproject.model.good.GoodCount">
+        SELECT a.id,
+        COUNT(b.feedId) AS goodCount
+        FROM feeds a
+        LEFT OUTER JOIN goods b ON a.id = b.feedId
+        WHERE
+        <foreach collection="list" item="item" separator="OR">
+            a.id = #{item}
+        </foreach>
+        GROUP BY a.id
+        ORDER BY a.id DESC
+    </select>
+
+    <select id="findGoodPushedStatusList"
+            parameterType="com.ht.project.snsproject.model.good.GoodPushedStatusListParam"
+            resultType="com.ht.project.snsproject.model.good.GoodPushedStatus">
+
+        SELECT a.id,
+        NOT(ISNULL(b.userId)) AS goodPushed
+        FROM feeds a
+        LEFT OUTER JOIN goods b ON a.id = b.feedId AND b.userId = #{userId}
+        WHERE
+        <foreach collection="feedIdList" item="item" separator="OR">
+            a.id = #{item}
+        </foreach>
+        GROUP BY a.id
+        ORDER BY a.id DESC;
     </select>
 
 </mapper>

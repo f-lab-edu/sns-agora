@@ -5,7 +5,7 @@ import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.good.GoodUser;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.service.GoodService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +14,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/goods")
+@RequiredArgsConstructor
 public class GoodController {
 
-  @Autowired
-  GoodService goodService;
+  private final GoodService goodService;
   
   @LoginCheck
   @GetMapping("/{id}")
