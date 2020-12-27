@@ -1,91 +1,105 @@
 package com.ht.project.snsproject.controller;
 
 import com.ht.project.snsproject.annotation.LoginCheck;
+import com.ht.project.snsproject.annotation.UserInfo;
 import com.ht.project.snsproject.model.user.*;
 import com.ht.project.snsproject.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    UserService userService;
+  private final UserService userService;
 
-    @PostMapping
-    public HttpStatus joinUser(@RequestBody @Valid UserJoinRequest userJoinRequest){
-        userService.joinUser(userJoinRequest);
-        return HttpStatus.CREATED;
+  @PostMapping
+  public HttpStatus joinUser(@RequestBody @Valid UserJoinRequest userJoinRequest) {
+
+    userService.joinUser(userJoinRequest);
+
+    return HttpStatus.CREATED;
+  }
+
+  @GetMapping
+  public HttpStatus isDuplicateUserId(@RequestParam String userId) {
+
+    if (!userService.isDuplicateUserId(userId)) {
+
+      return HttpStatus.OK;
+    } else {
+
+      return HttpStatus.CONFLICT;
+    }
+  }
+
+  @LoginCheck
+  @PutMapping("/account")
+  public HttpStatus updateUserProfile(@RequestParam("file") MultipartFile file,
+                                      UserProfileParam userProfileParam,
+                                      @UserInfo User user) {
+
+
+    userService.updateUserProfile(userProfileParam, user.getUserId(), file);
+
+    return HttpStatus.OK;
+  }
+
+
+  @PostMapping("/login")
+  public HttpStatus login(@RequestBody @Valid UserLogin userLogin, HttpSession httpSession) {
+
+    if (!userService.existUser(userLogin, httpSession)) {
+
+      return HttpStatus.BAD_REQUEST;
     }
 
-    @GetMapping
-    public HttpStatus isDuplicateUserId(@RequestParam String userId){
-        if(!userService.isDuplicateUserId(userId)){
-            return HttpStatus.OK;
-        } else {
-            return HttpStatus.CONFLICT;
-        }
+    return HttpStatus.OK;
+  }
+
+  @LoginCheck
+  @PostMapping("/logout")
+  public HttpStatus logout(HttpSession httpSession) {
+
+    userService.logout(httpSession);
+    return HttpStatus.NO_CONTENT;
+  }
+
+  @LoginCheck
+  @DeleteMapping("/account")
+  public HttpStatus deleteUser(@RequestBody String password,
+                               @UserInfo User user, HttpSession httpSession) {
+    String userId = user.getUserId();
+    if (!userService.verifyPassword(userId, password)) {
+
+      return HttpStatus.BAD_REQUEST;
     }
+    userService.deleteUser(httpSession);
 
-    @LoginCheck
-    @PutMapping("/account")
-    public HttpStatus updateUserProfile(@RequestBody UserProfileParam userProfileParam, HttpSession httpSession){
-        User userInfo = (User) httpSession.getAttribute("userInfo");
-        UserProfile userProfile = new UserProfile(userInfo.getId(),
-                userProfileParam.getNickname(),
-                userProfileParam.getEmail(),
-                userProfileParam.getBirth());
-        userService.updateUserProfile(userProfile);
-        return HttpStatus.OK;
-    }
+    return HttpStatus.NO_CONTENT;
+  }
 
+  @LoginCheck
+  @PutMapping("/account/password")
+  public HttpStatus updateUserPassword(@RequestBody @Valid UserPassword userPassword,
+                                       @UserInfo User user) {
 
-    @PostMapping("/login")
-    public HttpStatus login(@RequestBody @Valid UserLogin userLogin, HttpSession httpSession) {
+    userService.updateUserPassword(user.getUserId(), userPassword);
 
-        if(!userService.existUser(userLogin, httpSession)){
-            return HttpStatus.BAD_REQUEST;
-        }
-        return HttpStatus.OK;
-    }
+    return HttpStatus.OK;
+  }
 
-    @LoginCheck
-    @PostMapping("/logout")
-    public HttpStatus logout(HttpSession httpSession) {
-        httpSession.invalidate();
-        return HttpStatus.NO_CONTENT;
-    }
+  @LoginCheck
+  @GetMapping("/{targetId}")
+  public ResponseEntity<UserProfile> getUserProfile(@PathVariable String targetId) {
 
-    @LoginCheck
-    @DeleteMapping("/account")
-    public HttpStatus deleteUser(@RequestBody UserPasswordVerify userPasswordVerify, HttpSession httpSession){
-        User userInfo = (User) httpSession.getAttribute("userInfo");
-        if(!userService.verifyPassword(userInfo.getUserId(), userPasswordVerify.getPassword())){
-            return HttpStatus.BAD_REQUEST;
-        }
-        userService.deleteUser(userInfo.getUserId());
-        httpSession.invalidate();
-        return HttpStatus.NO_CONTENT;
-    }
-
-    @LoginCheck
-    @PutMapping("/account/password")
-    public HttpStatus updateUserPassword(@RequestBody @Valid UserPassword userPassword, HttpSession httpSession){
-        User userInfo = (User) httpSession.getAttribute("userInfo");
-        userService.updateUserPassword(userInfo.getUserId(),userPassword);
-        return HttpStatus.OK;
-    }
-
-    @LoginCheck
-    @GetMapping("/{targetId}")
-    public ResponseEntity<UserProfile> getUserProfile(@PathVariable String targetId){
-        return ResponseEntity.ok(userService.getUserProfile(targetId));
-    }
-
+    return ResponseEntity.ok(userService.getUserProfile(targetId));
+  }
 }

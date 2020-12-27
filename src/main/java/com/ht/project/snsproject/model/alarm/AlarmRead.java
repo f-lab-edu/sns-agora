@@ -4,11 +4,12 @@ import lombok.Value;
 
 @Value
 public class AlarmRead {
-    int id;
 
-    String userId;
+  int id;
 
-    public static AlarmRead create(int id, String userId){
-        return new AlarmRead(id, userId);
-    }
+  String userId;
+
+  public static AlarmRead create(int id, String userId) {
+    return new AlarmRead(id, userId);
+  }
 }

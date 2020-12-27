@@ -8,11 +8,25 @@ import java.util.List;
 @Mapper
 public interface FeedMapper {
 
-    void feedUpload(FeedInsert feedInsert);
+  void feedUpload(FeedInsert feedInsert);
 
-    List<Feed> getFeed(FeedParam feedParam);
+  boolean deleteFeed(FeedDeleteParam feedDeleteParam);
 
-    List<FeedList> getFeedList(FeedListParam feedListParam);
+  boolean updateFeed(FeedUpdate feedUpdate);
 
-    List<FeedList> getFriendsFeedList(FriendsFeedList friendsFeedList);
+  FeedInfo findMyFeedByFeedId(int feedId);
+
+  FeedInfo findFriendsFeedByFeedId(int feedId);
+
+  FeedInfo findAllFeedByFeedId(int feedId);
+
+  List<Integer> findMyFeedIdListByUserId(FeedIdListParam feedIdListParam);
+
+  List<Integer> findFriendFeedIdListByUserId(FeedIdListParam feedIdListParam);
+
+  List<Integer> findAllFeedIdListByUserId(FeedIdListParam feedIdListParam);
+
+  List<FeedInfo> findFeedInfoListByFeedIdList(List<Integer> feedIdList);
+
+  List<Integer> findFriendsFeedIdList(FriendsFeedIdParam friendsFeedIdParam);
 }

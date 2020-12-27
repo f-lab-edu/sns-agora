@@ -112,6 +112,3 @@
 
 * 자세한 내용은 Wiki를 확인해주시길 바랍니다.    
 :bookmark_tabs: Wiki 주소 : https://github.com/f-lab-edu/sns-agora/wiki/07.-%EC%84%B1%EB%8A%A5-%ED%85%8C%EC%8A%A4%ED%8A%B8
-
-## :pushpin: Pinpoint(APM Tool)를 통한 성능 모니터링
-

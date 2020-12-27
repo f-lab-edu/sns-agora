@@ -3,28 +3,47 @@ package com.ht.project.snsproject.model.feed;
 import com.ht.project.snsproject.enumeration.PublicScope;
 import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
+@Value
 @Builder
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class Feed {
 
-    int id;
+  Integer id;
 
-    String userId;
+  String userId;
 
-    String title;
+  String title;
 
-    String content;
+  String content;
 
-    Timestamp date;
+  LocalDateTime date;
 
-    PublicScope publicScope;
+  PublicScope publicScope;
 
-    int recommend;
+  boolean goodPushed;
 
-    List<FileVo> files;
+  int goodCount;
+
+  int commentCount;
+
+  List<FileVo> files;
+
+
+  public static Feed create(FeedInfo feedInfo, int goodCount, int commentCount, boolean goodPushed) {
+
+    return Feed.builder()
+            .id(feedInfo.getId())
+            .userId(feedInfo.getUserId())
+            .title(feedInfo.getTitle())
+            .content(feedInfo.getContent())
+            .date(feedInfo.getDate())
+            .publicScope(feedInfo.getPublicScope())
+            .goodPushed(goodPushed)
+            .goodCount(goodCount)
+            .commentCount(commentCount)
+            .files(feedInfo.getFiles())
+            .build();
+  }
 }

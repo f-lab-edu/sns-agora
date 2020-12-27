@@ -2,11 +2,70 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ht.project.snsproject.mapper.FileMapper">
     <insert id="fileListUpload" parameterType="java.util.List">
-        INSERT INTO images(path, fileName, fileIndex, feedId)
+        INSERT INTO images(filePath, fileName, fileIndex, feedId)
         VALUES
         <foreach item="item" index="index" collection="list" separator=",">
-            (#{item.path}, #{item.fileName}, #{item.fileIndex}, #{item.feedId})
+            (#{item.filePath}, #{item.fileName}, #{item.fileIndex}, #{item.feedId})
         </foreach>
+    </insert>
+
+    <insert id="fileUpload" parameterType="com.ht.project.snsproject.model.feed.FileInfo">
+        INSERT INTO images(filePath, fileName, fileIndex, feedId)
+        VALUES (#{filePath}, #{fileName}, #{fileIndex}, #{feedId})
+    </insert>
+
+    <select id="getFilePath" parameterType="int" resultType="String">
+        SELECT filePath From images
+        WHERE feedId = #{feedId}
+        GROUP BY filePath
+    </select>
+
+    <select id="getFileNames" parameterType="int" resultType="String">
+        SELECT fileName FROM images
+        WHERE feedId = #{feedId}
+    </select>
+
+    <select id="getFiles" parameterType="int" resultType="com.ht.project.snsproject.model.feed.FileVo">
+        SELECT fileIndex, filePath, fileName
+        FROM images
+        WHERE feedId = #{feedId}
+    </select>
+
+    <delete id="deleteFile" parameterType="int">
+        DELETE FROM images
+        WHERE feedId = #{feedId}
+    </delete>
+
+    <delete id="deleteFiles" parameterType="java.util.List">
+        DELETE FROM images
+        WHERE
+        <foreach item="item" index="index" collection="list" separator="OR">
+            (feedId = #{item.feedId} AND fileName=#{item.fileName})
+        </foreach>
+    </delete>
+
+<!--ON DUPLICATE KEY UPDATE 를 사용한 이유 및 주의사항
+    - 중복 값에 대한 오류가 발생하였을 때 UPDATE 문을 실행하고,
+      값이 없을 때에는 INSERT 하기 위해서 사용합니다.
+    - 중복 키 관리를 위해서는 중복 방지를 할 column 이 PRIMARY KEY 이거나 UNIQUE INDEX 로 등록되어 있어야 합니다.
+    - 해당 쿼리에서는 fileName 과 feedId 를 조합한 UNIQUE KEY 를 사용합니다.
+    - INSERT IGNORE : 중복키 에러가 발생했을 때 신규로 입력되는 레코드를 무시하는 방법으로 중복 키 에러가 발생했을 때
+      INSERT 구문 자체는 오류가 발생하지 않고 대신 '0 row affected' 가 출력됩니다. Auto_Increment 에 영향을 미치지 않습니다.
+    - REPLACE INTO : 사용 방법은 INSERT INTO 와 동일하지만 중복 키 오류 발생시 '2 rows affected' 가 출력되고, 동작원리는
+      기존 row 를 삭제하고, 새로운 코드를 입력하는 형식입니다. AUTO_INCREMENT 칼럼의 값이 매번 새롭게 발급됩니다.
+    - ON DUPLICATE UPDATE : 중복 키 오류 발생 시, 사용자가 UPDATE 될 값을 지정할 수 있습니다. UPDATE 되는 행에 있어서는
+      Auto_Increment 값이 유지됩니다.
+    - ON DUPLICATE UPDATE 방식을 사용한 이유는 REPLACE INTO 사용시
+      삭제 후 삽입 연산으로 인한 자동 인덱스 증가를 막을 수 있기 때문에 인덱스가 무분별하게 증가하는 것을 방지할 수 있습니다.
+-->
+    <insert id="upsertFiles" parameterType="java.util.List">
+        INSERT INTO images(filePath, fileName, fileIndex, feedId)
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=",">
+            (#{item.filePath}, #{item.fileName}, #{item.fileIndex}, #{item.feedId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        fileIndex=VALUES(fileIndex)
     </insert>
 
 </mapper>

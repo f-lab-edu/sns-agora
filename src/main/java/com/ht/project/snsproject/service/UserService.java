@@ -1,27 +1,29 @@
 package com.ht.project.snsproject.service;
 
-import com.ht.project.snsproject.model.user.UserJoinRequest;
-import com.ht.project.snsproject.model.user.UserLogin;
-import com.ht.project.snsproject.model.user.UserPassword;
-import com.ht.project.snsproject.model.user.UserProfile;
+import com.ht.project.snsproject.model.user.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 
 public interface UserService {
 
-    void joinUser(UserJoinRequest userJoinRequest);
+  void joinUser(UserJoinRequest userJoinRequest);
 
-    boolean isDuplicateUserId(String userId);
+  boolean isDuplicateUserId(String userId);
 
-    void updateUserProfile(UserProfile userProfile);
+  void updateUserProfile(UserProfileParam userProfileParam,String userId, MultipartFile profile);
 
-    boolean existUser(UserLogin userLogin, HttpSession httpSession);
+  boolean existUser(UserLogin userLogin, HttpSession httpSession);
 
-    boolean verifyPassword(String userId, String password);
+  User getUserInfoCache(String userId);
 
-    void deleteUser(String userId);
+  void logout(HttpSession httpSession);
 
-    void updateUserPassword(String userId, UserPassword userPassword);
+  boolean verifyPassword(String userId, String password);
 
-    UserProfile getUserProfile(String targetId);
+  void deleteUser(HttpSession httpSession);
+
+  void updateUserPassword(String userId, UserPassword userPassword);
+
+  UserProfile getUserProfile(String targetId);
 }

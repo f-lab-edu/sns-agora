@@ -2,93 +2,187 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ht.project.snsproject.mapper.FeedMapper">
 
-    <resultMap id="feedList" type="com.ht.project.snsproject.model.feed.Feed">
+    <insert id="feedUpload" useGeneratedKeys="true" keyProperty="id"
+            parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
+        INSERT INTO feeds(userId, title, content, date, publicScope)
+        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope})
+    </insert>
+
+    <resultMap id="feedInfo" type="com.ht.project.snsproject.model.feed.FeedInfo">
         <id property="id" column="id"/>
         <result property="userId" column="userId"/>
         <result property="title" column="title"/>
         <result property="content" column="content"/>
         <result property="date" column="date"/>
         <result property="publicScope" column="publicScope"/>
-        <result property="recommend" column="recommend"/>
-        <collection property="files" ofType="com.ht.project.snsproject.model.feed.FileVo" resultMap="getFileVo"/>
+        <collection property="files" resultMap="file"/>
     </resultMap>
 
-    <resultMap id="getFileVo" type="com.ht.project.snsproject.model.feed.FileVo">
-        <result property="path" column="path"/>
+    <resultMap id="file" type="com.ht.project.snsproject.model.feed.FileVo">
         <result property="fileIndex" column="fileIndex"/>
+        <result property="filePath" column="filePath"/>
         <result property="fileName" column="fileName"/>
     </resultMap>
 
-    <insert id="feedUpload" useGeneratedKeys="true" keyProperty="id"
-            parameterType="com.ht.project.snsproject.model.feed.FeedInsert">
-        INSERT INTO feeds(userId, title, content, date, publicScope, recommend)
-        VALUES(#{userId}, #{title}, #{content}, #{date}, #{publicScope}, #{recommend})
-    </insert>
+    <!--LEFT JOIN 사용 이유
+    - 피드를 가져오기 위해서는 피드 정보와 파일정보를 동시에 가져와야하기 때문에
+      JOIN 을 사용하여 feeds 테이블과 images 테이블의 정보들을 조회하고자 하였습니다.
+    - INNER JOIN 을 사용하지 않고, LEFT JOIN 을 사용한 이유는
+      모든 피드가 파일 정보를 포함하지 않기 때문에 피드 정보만을 조회할 수 있도록 하기 위해서는
+      LEFT JOIN 을 통해 조회해야겠다고 생각하여 사용하게 되었습니다.-->
+    <select id="findFeedInfoListByFeedIdList" parameterType="java.util.List"
+            resultMap="feedInfo">
 
-    <select id="getFeed" parameterType="com.ht.project.snsproject.model.feed.FeedParam" resultMap="feedList">
-        SELECT a.id, a.userId,
-        a.title, a.content,
-        a.date, a.publicScope, a.recommend,
-        b.path, b.fileName, b.fileIndex
-        FROM feeds a INNER JOIN images b
-        ON (a.id = b.feedId)
-        AND a.id = #{id}
-        AND a.userId = #{userId}
-        WHERE a.publicScope = 'ALL'
-        <if test="friendStatus.name() == 'ME'">
-            OR a.publicScope = 'FRIENDS'
-            OR a.publicScope = 'ME'
-        </if>
-        <if test="friendStatus.name() == 'FRIEND'">
-            OR a.publicScope = 'FRIENDS'
-        </if>
-    </select>
-
-    <select id="getFeedList" parameterType="com.ht.project.snsproject.model.feed.FeedListParam"
-            resultType="com.ht.project.snsproject.model.feed.FeedList">
-        SELECT a.id, a.userId,
-        a.title, a.content,
-        a.date, a.publicScope, a.recommend,
-        b.path,
-        GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
-        FROM feeds a INNER JOIN images b
-        ON (a.id = b.feedId)
-        AND (a.userId = #{userId})
-        WHERE a.publicScope = 'ALL'
-        <if test="publicScope.name() == 'FRIENDS' or publicScope.name() == 'ME'">
-            OR a.publicScope = 'FRIENDS'
-        </if>
-        <if test="publicScope.name() == 'ME'">
-            OR a.publicScope = 'ME'
-        </if>
-        <if test="pagination.cursor != null">
-            AND a.id<![CDATA[<]]>#{pagination.cursor}
-        </if>
-        GROUP BY a.id
+        SELECT a.id AS id,
+        a.userId AS userId,
+        a.title AS title,
+        a.content AS content,
+        a.date AS date,
+        a.publicScope AS publicScope,
+        b.fileIndex AS fileIndex,
+        b.filePath AS filePath,
+        b.fileName AS fileName
+        FROM feeds a
+        LEFT OUTER JOIN images b ON a.id = b.feedId
+        WHERE
+        <foreach collection="list" item="item" separator="OR">
+            a.id = #{item}
+        </foreach>
         ORDER BY a.id DESC
-        LIMIT #{pagination.listSize}
     </select>
 
-    <select id="getFriendsFeedList"
-            parameterType="com.ht.project.snsproject.model.feed.FriendsFeedList"
-            resultType="com.ht.project.snsproject.model.feed.FeedList">
-        SELECT a.id, a.userId,
-        a.title, a.content,
-        a.date, a.publicScope, a.recommend,
-        b.path,
-        GROUP_CONCAT(b.fileName ORDER BY b.fileIndex) AS fileNames
-        FROM feeds a INNER JOIN images b
-        ON (a.id = b.feedId)
-        INNER JOIN friends c
-        ON(a.userId = c.userId)
-        AND (c.targetId = #{userId})
-        WHERE a.publicScope = 'ALL'
+
+    <select id="findAllFeedByFeedId" parameterType="int"
+            resultMap="feedInfo">
+
+        SELECT a.id AS id,
+        a.userId AS userId,
+        a.title AS title,
+        a.content AS content,
+        a.date AS date,
+        a.publicScope AS publicScope,
+        b.fileIndex AS fileIndex,
+        b.filePath AS filePath,
+        b.fileName AS fileName
+        FROM feeds a
+        LEFT OUTER JOIN images b ON a.id = b.feedId
+        WHERE
+        a.id = #{feedId}
+        AND a.publicScope = 'ALL'
+        ORDER BY a.id DESC
+    </select>
+
+    <select id="findFriendsFeedByFeedId" parameterType="int"
+            resultMap="feedInfo">
+
+        SELECT a.id AS id,
+        a.userId AS userId,
+        a.title AS title,
+        a.content AS content,
+        a.date AS date,
+        a.publicScope AS publicScope,
+        b.fileIndex AS fileIndex,
+        b.filePath AS filePath,
+        b.fileName AS fileName
+        FROM feeds a
+        LEFT OUTER JOIN images b ON a.id = b.feedId
+        WHERE a.id = #{feedId}
+        AND (a.publicScope = 'ALL'
+        OR a.publicScope = 'FRIENDS')
+        ORDER BY a.id DESC
+    </select>
+
+    <select id="findMyFeedByFeedId" parameterType="int"
+            resultMap="feedInfo">
+
+        SELECT a.id AS id,
+        a.userId AS userId,
+        a.title AS title,
+        a.content AS content,
+        a.date AS date,
+        a.publicScope AS publicScope,
+        b.fileIndex AS fileIndex,
+        b.filePath AS filePath,
+        b.fileName AS fileName
+        FROM feeds a
+        LEFT OUTER JOIN images b ON a.id = b.feedId
+        WHERE a.id = #{feedId}
+        AND (a.publicScope = 'ALL'
         OR a.publicScope = 'FRIENDS'
+        OR a.publicScope = 'ME')
+        ORDER BY a.id DESC
+    </select>
+
+
+    <delete id="deleteFeed" parameterType="com.ht.project.snsproject.model.feed.FeedDeleteParam">
+        DELETE FROM feeds
+        WHERE id = #{id} AND userId = #{userId}
+    </delete>
+
+    <update id="updateFeed" parameterType="com.ht.project.snsproject.model.feed.FeedUpdate">
+        UPDATE feeds
+        SET title = #{title},
+        content = #{content},
+        date = #{date},
+        publicScope = #{publicScope}
+        WHERE id = #{id} AND userId=#{userId}
+    </update>
+
+    <select id="findMyFeedIdListByUserId" parameterType="com.ht.project.snsproject.model.feed.FeedIdListParam"
+            resultType="int">
+
+        SELECT id FROM feeds
+        WHERE userId = #{targetId}
+        AND (publicScope = 'ALL'
+        OR publicScope = 'FRIENDS'
+        OR publicScope = 'ME')
+        <if test="pagination.cursor != null">
+            AND id<![CDATA[<]]>#{pagination.cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize};
+    </select>
+
+    <select id="findFriendFeedIdListByUserId" parameterType="com.ht.project.snsproject.model.feed.FeedIdListParam"
+            resultType="int">
+
+        SELECT id FROM feeds
+        WHERE userId = #{targetId}
+        AND (publicScope = 'ALL'
+        OR publicScope = 'FRIENDS')
+        <if test="pagination.cursor != null">
+            AND id<![CDATA[<]]>#{pagination.cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize};
+    </select>
+
+    <select id="findAllFeedIdListByUserId" parameterType="com.ht.project.snsproject.model.feed.FeedIdListParam"
+            resultType="int">
+
+        SELECT id FROM feeds
+        WHERE userId = #{targetId}
+        AND publicScope = 'ALL'
+        <if test="pagination.cursor != null">
+            AND id<![CDATA[<]]>#{pagination.cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize};
+    </select>
+
+    <select id="findFriendsFeedIdList" parameterType="com.ht.project.snsproject.model.feed.FriendsFeedIdParam"
+            resultType="int">
+
+        SELECT a.id
+        FROM feeds a
+        WHERE
+        (SELECT b.friendStatus FROM friends b WHERE b.userId = #{userId} AND b.targetId = a.userId) = 'FRIEND'
+        AND (a.publicScope = 'ALL'
+        OR a.publicScope = 'FRIENDS')
         <if test="pagination.cursor != null">
             AND a.id<![CDATA[<]]>#{pagination.cursor}
         </if>
-        GROUP BY a.id
-        ORDER BY a.id DESC
-        LIMIT #{pagination.listSize}
+        ORDER BY id DESC
+        LIMIT #{pagination.listSize};
     </select>
 </mapper>

@@ -1,23 +1,44 @@
 package com.ht.project.snsproject.model.user;
 
-
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Value;
 
-import java.io.Serializable;
 import java.sql.Date;
 
+
+@Builder
+@AllArgsConstructor
 @Value
-public final class User implements Serializable {
+public class User {
 
-    private int id;
+  Integer id;
 
-    private String userId;
+  String userId;
 
-    private String email;
+  String email;
 
-    private String name;
+  String name;
 
-    private String nickname;
+  String nickname;
 
-    private Date birth;
+  Date birth;
+
+  String filePath;
+
+  String fileName;
+
+  public static User from(UserCache userCache){
+
+    return User.builder()
+            .id(Integer.valueOf(userCache.getId()))
+            .userId(userCache.getUserId())
+            .email(userCache.getEmail())
+            .name(userCache.getName())
+            .nickname(userCache.getNickname())
+            .birth(Date.valueOf(userCache.getBirth()))
+            .filePath(userCache.getFilePath())
+            .fileName(userCache.getFileName())
+            .build();
+  }
 }

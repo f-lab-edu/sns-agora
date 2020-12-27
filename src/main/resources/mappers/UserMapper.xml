@@ -16,15 +16,30 @@
         UPDATE users
         SET nickname = #{nickname},
         email = #{email},
-        birth = #{birth}
-        WHERE id = #{id}
+        birth = #{birth},
+        filePath = #{filePath},
+        fileName = #{fileName}
+        WHERE userId = #{userId}
     </update>
 
-    <select id="getUser" parameterType="com.ht.project.snsproject.model.user.UserLogin"
+    <select id="getUserProfileImage" parameterType="String"
+            resultType="com.ht.project.snsproject.model.feed.FileForProfile">
+        SELECT filePath, fileName
+        FROM users
+        WHERE userId = #{userId}
+    </select>
+
+    <select id="getAuthenticatedUser" parameterType="com.ht.project.snsproject.model.user.UserLogin"
             resultType="com.ht.project.snsproject.model.user.User">
-        SELECT id, userId, name, nickname, email, birth
+        SELECT id, userId, name, nickname, email, birth, filePath, fileName
         FROM users
         WHERE userId = #{userId} AND password = #{password}
+    </select>
+
+    <select id="getUserFromUserId" parameterType="String" resultType="com.ht.project.snsproject.model.user.User">
+        SELECT id, userId, name, nickname, email, birth, filePath, fileName
+        FROM users
+        WHERE userId = #{userId}
     </select>
 
     <select id="getPassword" parameterType="String" resultType="String">
@@ -45,7 +60,7 @@
     </update>
 
     <select id="getUserProfile" parameterType="String" resultType="com.ht.project.snsproject.model.user.UserProfile">
-        SELECT id, nickname, email, birth
+        SELECT id, nickname, email, birth, filePath, fileName
         FROM users
         WHERE userId = #{targetId}
     </select>

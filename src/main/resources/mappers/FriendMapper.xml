@@ -8,13 +8,22 @@
     </insert>
 
     <select id="getFriendRelationStatus" parameterType="String"
-            resultType="com.ht.project.snsproject.model.friend.Friend">
+            resultType="com.ht.project.snsproject.enumeration.FriendStatus">
         SELECT IFNULL(MAX(friendStatus),'NONE')
         AS friendStatus
         FROM friends
         WHERE userId = #{userId} AND targetId= #{targetId}
     </select>
 
+    <select id="findFriendStatus" parameterType="com.ht.project.snsproject.model.friend.FriendStatusParam"
+            resultType="com.ht.project.snsproject.enumeration.FriendStatus">
+
+        SELECT IFNULL(MAX(a.friendStatus),'NONE') AS friendStatus
+        FROM friends a
+        INNER JOIN feeds b
+        ON a.targetId = b.userId AND b.id = #{feedId}
+        WHERE a.userId = #{userId}
+    </select>
     <update id="updateFriendRequestToFriend" parameterType="com.ht.project.snsproject.model.friend.FriendStatusInsert">
         UPDATE friends
         SET friendStatus = #{friendStatus}

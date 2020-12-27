@@ -2,23 +2,22 @@ package com.ht.project.snsproject.model.alarm;
 
 import com.ht.project.snsproject.enumeration.AlarmType;
 import com.ht.project.snsproject.enumeration.ReadStatus;
-import lombok.Value;
-
 import java.sql.Timestamp;
+import lombok.Value;
 
 @Value
 public class AlarmInsert {
 
-    String userId;
+  String userId;
 
-    String targetId;
+  String targetId;
 
-    AlarmType alarmType;
+  AlarmType alarmType;
 
-    Timestamp date;
+  Timestamp date;
 
-    Integer feedId = 0;
+  Integer feedId = 0;
 
-    ReadStatus readCheck = ReadStatus.NO_READ;
+  ReadStatus readCheck = ReadStatus.NO_READ;
 
 }

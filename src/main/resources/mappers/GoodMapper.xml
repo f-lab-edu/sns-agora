@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ht.project.snsproject.mapper.GoodMapper">
+
+    <select id="getGood" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM goods
+        WHERE feedId = #{feedId}
+    </select>
+
+    <select id="getGoodPushedStatus" parameterType="com.ht.project.snsproject.model.good.GoodStatusParam"
+            resultType="boolean">
+        SELECT EXISTS
+        (SELECT userId FROM goods WHERE feedId = #{feedId} AND userId = #{userId})
+    </select>
+
+    <select id="getGoodList" parameterType="com.ht.project.snsproject.model.good.GoodListParam"
+            resultType="com.ht.project.snsproject.model.good.GoodUser">
+        SELECT id, userId From goods
+        WHERE feedId = #{feedId}
+        <if test="cursor != null">
+            AND id <![CDATA[<]]> #{cursor}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{limit};
+    </select>
+
+    <select id="findGoodCountList" parameterType="java.util.List"
+            resultType="com.ht.project.snsproject.model.good.GoodCount">
+        SELECT a.id,
+        COUNT(b.feedId) AS goodCount
+        FROM feeds a
+        LEFT OUTER JOIN goods b ON a.id = b.feedId
+        WHERE
+        <foreach collection="list" item="item" separator="OR">
+            a.id = #{item}
+        </foreach>
+        GROUP BY a.id
+        ORDER BY a.id DESC
+    </select>
+
+    <select id="findGoodPushedStatusList"
+            parameterType="com.ht.project.snsproject.model.good.GoodPushedStatusListParam"
+            resultType="com.ht.project.snsproject.model.good.GoodPushedStatus">
+
+        SELECT a.id,
+        NOT(ISNULL(b.userId)) AS goodPushed
+        FROM feeds a
+        LEFT OUTER JOIN goods b ON a.id = b.feedId AND b.userId = #{userId}
+        WHERE
+        <foreach collection="feedIdList" item="item" separator="OR">
+            a.id = #{item}
+        </foreach>
+        GROUP BY a.id
+        ORDER BY a.id DESC;
+    </select>
+
+</mapper>

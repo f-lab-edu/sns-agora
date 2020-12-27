@@ -6,9 +6,9 @@ import lombok.Value;
 @Value
 public class AlarmDelete {
 
-    String userId;
+  String userId;
 
-    String targetId;
+  String targetId;
 
-    AlarmType alarmType;
+  AlarmType alarmType;
 }
