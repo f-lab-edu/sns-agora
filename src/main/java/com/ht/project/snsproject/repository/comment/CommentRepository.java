@@ -38,20 +38,17 @@ public class CommentRepository {
     this.stringRedisTemplate = stringRedisTemplate;
   }
 
-  @Transactional(readOnly = true)
   @Cacheable(value = "commentCount", key = "'commentCount:' + #feedId")
   public int getCommentCount(int feedId) {
 
     return commentMapper.getCommentCount(feedId);
   }
 
-  @Transactional(readOnly = true)
   public List<Comment> getCommentsOnFeed(int feedId, Integer cursor) {
 
     return commentMapper.getCommentsOnFeed(new CommentsParam(feedId, cursor));
   }
 
-  @Transactional
   public Map<Integer, Integer> findCommentCountMap(List<Integer> feedIdList, List<MultiSetTarget> multiSetTargetList) {
 
     Map<Integer, Integer> commentCountMap = new HashMap<>();
@@ -72,7 +69,6 @@ public class CommentRepository {
 
   }
 
-  @Transactional(readOnly = true)
   public List<CommentCount> findCommentCountList(List<Integer> feedIdList) {
 
     return commentMapper.findCommentCountList(feedIdList);
@@ -99,7 +95,6 @@ public class CommentRepository {
     feedIdList.removeIf(Objects::isNull);
   }
 
-  @Transactional
   public void insertCommentOnFeed(int feedId, String content, String userId) {
 
     commentMapper.insertCommentOnFeed(
@@ -117,7 +112,6 @@ public class CommentRepository {
             .increment(redisCacheService.makeCacheKey(CacheKeyPrefix.COMMENT_COUNT, feedId));
   }
 
-  @Transactional
   public void deleteCommentOnFeed(int commentId, String userId) {
 
     if(!commentMapper.deleteCommentOnFeed(new CommentDeleteParam(commentId, userId))) {
@@ -126,14 +120,12 @@ public class CommentRepository {
     }
   }
 
-  @Transactional
   public void decreaseCommentInCache(int feedId) {
 
     redisTemplate.opsForValue()
             .decrement(redisCacheService.makeCacheKey(CacheKeyPrefix.COMMENT_COUNT, feedId));
   }
 
-  @Transactional
   public void updateCommentOnFeed(int commentId, String userId, String content) {
 
     if(!commentMapper.updateCommentOnFeed(CommentUpdateParam.builder()
@@ -147,13 +139,11 @@ public class CommentRepository {
     }
   }
 
-  @Transactional(readOnly = true)
   public List<Reply> getRepliesOnComment(int commentId, Integer cursor) {
 
     return commentMapper.getRepliesOnComment(new RepliesParam(commentId, cursor));
   }
 
-  @Transactional
   public void insertReplyOnComment(int commentId, String content, String userId) {
 
     commentMapper.insertReplyOnComment(ReplyInsertParam.builder()
@@ -164,7 +154,6 @@ public class CommentRepository {
             .build());
   }
 
-  @Transactional
   public void updateReplyOnComment(int replyId, String userId, String content) {
 
     if(!commentMapper.updateReplyOnComment(ReplyUpdateParam.builder()
@@ -178,7 +167,6 @@ public class CommentRepository {
     }
   }
 
-  @Transactional
   public void deleteReplyOnComment(int replyId, String userId) {
 
     if(!commentMapper.deleteReplyOnComment(new ReplyDeleteParam(replyId, userId))) {

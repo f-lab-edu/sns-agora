@@ -1,11 +1,10 @@
 package com.ht.project.snsproject.service;
 
 import com.ht.project.snsproject.exception.FileIOException;
-import com.ht.project.snsproject.mapper.FileMapper;
-import com.ht.project.snsproject.model.feed.FileAdd;
 import com.ht.project.snsproject.model.feed.FileDelete;
-import com.ht.project.snsproject.model.feed.ProfileImage;
+import com.ht.project.snsproject.model.feed.FileDto;
 import com.ht.project.snsproject.model.feed.FileInfo;
+import com.ht.project.snsproject.repository.file.FileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -18,9 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -29,9 +27,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FileServiceLocal implements FileService {
 
-  private final FileMapper fileMapper;
+  private final FileRepository fileRepository;
 
-  @Value("${file.windows.path}")
+  @Value("${file.upload-path}")
   private String localPath;
 
   private static final Logger logger = LoggerFactory.getLogger(FileServiceLocal.class);
@@ -43,96 +41,62 @@ public class FileServiceLocal implements FileService {
    * 쓰레드에 안전하고 빠른 원하는 포맷의 날짜 객체를 사용할 수 있다.
    */
 
-  @Override
   @Transactional
-  public void fileUpload(List<MultipartFile> files, String userId, int feedId) {
+  @Override
+  public void uploadFiles(List<MultipartFile> files, String dirPath) {
 
-    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-    String dirPath = localPath + userId + File.separator + time;
-    int fileIndex = 1;// file 순서를 정해줄 index
+    File destDir = new File(localPath + dirPath);
+    if(!destDir.exists()) { destDir.mkdirs(); }
+
+    files.forEach(file -> {
+      try {
+        file.transferTo(new File(destDir.getPath() + File.separator + file.getOriginalFilename()));
+
+      } catch (IOException ioe) {
+
+        deleteDirectory(destDir);
+        throw new FileIOException("파일 업로드에 실패하였습니다.", ioe);
+      }
+    });
+  }
+
+  private void deleteDirectory(File directory) {
+
+    File[] files = directory.listFiles();
+
+    if (files != null) {
+
+      Arrays.stream(files).forEach(File::delete);
+
+      if (directory.isDirectory()) {
+        directory.delete();
+      }
+    }
+  }
+
+  @Transactional
+  @Override
+  public void insertFileInfoList(List<FileDto> fileDtoList, int feedId) {
+
     List<FileInfo> fileInfoList = new ArrayList<>();
+    makeFileInfoList(fileInfoList, fileDtoList, feedId);
 
-    try {
-      File destDir = new File(dirPath);
-
-      if (!destDir.exists()) {
-        destDir.mkdirs();
-      }
-
-      for (MultipartFile file:files) {
-        String originalFileName = file.getOriginalFilename();
-        String filePath = dirPath + File.separator + originalFileName;
-        File destFile = new File(filePath);
-
-        fileInfoList.add(new FileInfo(dirPath, originalFileName, fileIndex, feedId));
-        file.transferTo(destFile);
-
-        fileIndex++;
-      }
-      fileMapper.fileListUpload(fileInfoList);
-    } catch (IOException ioe) {
-      throw new FileIOException("파일 업로드에 실패하였습니다.", ioe);
+    if(!fileInfoList.isEmpty()) {
+      fileRepository.insertFileInfoList(fileInfoList);
     }
   }
 
-  private void fileUpload(MultipartFile file, String dirPath) {
+  private void makeFileInfoList(List<FileInfo> fileInfoList, List<FileDto> fileDtoList,
+                                int feedId) {
 
-    File destDir = new File(dirPath);
-
-    if(!destDir.exists()) {
-      destDir.mkdirs();
+    if (fileDtoList != null) {
+      fileDtoList.forEach(fileDto ->
+              fileInfoList.add(new FileInfo(String.valueOf(feedId), fileDto.getFileName(),
+                      fileDto.getFileIndex(), feedId)));
     }
-
-    String originalFileName = file.getOriginalFilename();
-    String filePath = dirPath + File.separator + originalFileName;
-
-    File destFile = new File(filePath);
-
-    try{
-
-      file.transferTo(destFile);
-    } catch (IOException ioe) {
-      throw new FileIOException("파일 업로드에 실패하였습니다.", ioe);
-    }
-  }
-
-  @Override
-  public void fileUploadForFeed(MultipartFile file, String userId, int feedId) {
-
-    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-    String dirPath = localPath + userId + File.separator + time;
-
-    fileUpload(file, dirPath);
-    fileMapper.fileUpload(new FileInfo(dirPath, file.getOriginalFilename(), 1, feedId));
-  }
-
-  @Override
-  public ProfileImage fileUploadForProfile(MultipartFile file, String userId) {
-
-    String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-    String dirPath = localPath + userId + File.separator + time;
-
-    fileUpload(file, dirPath);
-
-    return new ProfileImage(dirPath, file.getOriginalFilename());
   }
 
   @Transactional
-  public void deleteFiles(int feedId, String path, List<String> fileNames) {
-
-    List<FileDelete> fileDeleteList = new ArrayList<>();
-
-    if (path != null) {
-      for (String fileName : fileNames) {
-
-        fileDeleteList.add(FileDelete.create(feedId,fileName));
-        File file = new File(path + File.separator + fileName);
-        file.delete();
-      }
-    }
-    fileMapper.deleteFiles(fileDeleteList);
-  }
-
   @Override
   public void deleteFile(String filePath, String fileName) {
 
@@ -145,91 +109,71 @@ public class FileServiceLocal implements FileService {
     }
   }
 
-
   @Transactional
-  public List<FileInfo> addFiles(int feedId, String path, List<FileAdd> fileAddList) {
+  @Override
+  public void updateFiles(List<MultipartFile> files, List<FileDto> fileDtoList, int feedId) {
+
+    List<String> originalFiles = fileRepository.findFileNamesByFeedId(feedId);
+
+    String filePath = String.valueOf(feedId);
+
+    uploadFiles(classifyFiles(files, originalFiles), filePath);
+
+    if (!originalFiles.isEmpty()) { deleteFiles(feedId, originalFiles); }
+
+    upsertFileInfoList(fileDtoList, feedId);
+  }
+
+  private void deleteFiles(int feedId, List<String> fileNames) {
+
+    List<FileDelete> fileDeleteList = new ArrayList<>();
+
+    fileNames.forEach(fileName -> {
+      fileDeleteList.add(FileDelete.create(feedId, fileName));
+      new File(feedId + File.separator + fileName).delete();});
+
+    fileRepository.deleteFiles(fileDeleteList);
+  }
+
+  private List<MultipartFile> classifyFiles(List<MultipartFile> files,
+                                            List<String> originalFiles) {
+
+    if (files.isEmpty()) { return files; }
+
+    if (originalFiles.isEmpty()) { return files; }
+
+    List<MultipartFile> uploadingFiles = new ArrayList<>();
+
+    files.forEach(file -> {
+      String fileName = file.getOriginalFilename();
+      if (!originalFiles.contains(fileName)) {
+        uploadingFiles.add(file);
+      } else {
+        originalFiles.remove(fileName);
+      }
+    });
+
+    return uploadingFiles;
+  }
+
+  private void upsertFileInfoList(List<FileDto> fileDtoList, int feedId) {
 
     List<FileInfo> fileInfoList = new ArrayList<>();
+    makeFileInfoList(fileInfoList, fileDtoList, feedId);
 
-    try {
-      for (FileAdd fileAdd : fileAddList) {
-        MultipartFile file = fileAdd.getFile();
-        String originalFileName = file.getOriginalFilename();
-        String filePath = path + File.separator + originalFileName;
-        File destFile = new File(filePath);
-        int fileIndex = fileAdd.getFileIndex();
+    if (!fileInfoList.isEmpty()) { fileRepository.upsertFiles(fileInfoList); }
 
-        fileInfoList.add(new FileInfo(path, originalFileName, fileIndex, feedId));
-        file.transferTo(destFile);
-      }
-      return fileInfoList;
-    } catch (IOException ioe) {
-      throw new FileIOException("파일 업로드에 실패하였습니다.", ioe);
-    }
   }
 
   @Transactional
   @Override
-  public void deleteAllFiles(int feedId) {
+  public void deleteFiles(int feedId) {
 
-    String path = fileMapper.getFilePath(feedId);
-    if (path != null) {
-      File dir = new File(path);
-      if (dir.exists()) {
-        File[] files = dir.listFiles();
-        if (files != null) {
-          for (File file : files) {
-            file.delete();
-          }
-        }
-        dir.delete();
-      }
+    if (!fileRepository.findFileNamesByFeedId(feedId).isEmpty()) {
+
+      deleteDirectory(new File(String.valueOf(feedId)));
     }
 
-    fileMapper.deleteFile(feedId);
-  }
-
-  @Transactional
-  @Override
-  public void updateFiles(List<MultipartFile> files, String userId, int feedId) {
-
-    List<String> originFiles = fileMapper.getFileNames(feedId);
-    String path = fileMapper.getFilePath(feedId);
-
-    List<FileAdd> uploadFiles = new ArrayList<>();
-    List<FileInfo> fileInfoList = new ArrayList<>();
-
-    int fileIndex = 0;
-
-    if (originFiles.isEmpty()) {
-      fileUpload(files,userId,feedId);
-      return;
-    }
-
-    if (!files.isEmpty()) {
-      for (MultipartFile file : files) {
-        String fileName = file.getOriginalFilename();
-        ++fileIndex;
-        if (originFiles.contains(fileName)) {
-          fileInfoList.add(new FileInfo(path,fileName,fileIndex,feedId));
-          originFiles.remove(fileName);
-        } else {
-          uploadFiles.add(new FileAdd(fileIndex, file));
-        }
-      }
-    } else {
-      deleteAllFiles(feedId);
-      return;
-    }
-
-    if (!uploadFiles.isEmpty()) {
-      fileInfoList.addAll(addFiles(feedId, path, uploadFiles));
-    }
-
-    if (!originFiles.isEmpty()) {
-      deleteFiles(feedId, path, originFiles);
-    }
-
-    fileMapper.upsertFiles(fileInfoList);
+    fileRepository.deleteFile(feedId);
   }
 }

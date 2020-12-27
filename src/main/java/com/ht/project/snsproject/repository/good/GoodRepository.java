@@ -3,16 +3,12 @@ package com.ht.project.snsproject.repository.good;
 import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.mapper.GoodMapper;
 import com.ht.project.snsproject.model.feed.MultiSetTarget;
-import com.ht.project.snsproject.model.good.GoodCount;
-import com.ht.project.snsproject.model.good.GoodPushedStatus;
-import com.ht.project.snsproject.model.good.GoodPushedStatusListParam;
-import com.ht.project.snsproject.model.good.GoodStatusParam;
+import com.ht.project.snsproject.model.good.*;
 import com.ht.project.snsproject.service.RedisCacheService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -33,21 +29,18 @@ public class GoodRepository {
     this.stringRedisTemplate = stringRedisTemplate;
   }
 
-  @Transactional(readOnly = true)
   @Cacheable(value = "good", key = "'good:' + #feedId")
   public int getGood(int feedId) {
 
     return goodMapper.getGood(feedId);
   }
 
-  @Transactional(readOnly = true)
   @Cacheable(value = "goodPushed", key = "'goodPushed:' + #feedId + ':' + #userId")
   public boolean isGoodPushed(int feedId, String userId) {
 
     return goodMapper.getGoodPushedStatus(new GoodStatusParam(feedId, userId));
   }
 
-  @Transactional(readOnly = true)
   public Map<Integer, Integer> findGoodCountMap(List<Integer> feedIdList, List<MultiSetTarget> multiSetTargetList) {
 
     Map<Integer, Integer> goodCountMap = new HashMap<>();
@@ -67,7 +60,6 @@ public class GoodRepository {
     return goodCountMap;
   }
 
-  @Transactional(readOnly = true)
   public List<GoodCount> findGoodCountListInDb(List<Integer> feedIdList) {
 
     return goodMapper.findGoodCountList(feedIdList);
@@ -95,7 +87,6 @@ public class GoodRepository {
   }
 
 
-  @Transactional
   public Map<Integer, Boolean> findGoodPushedStatusMap(String userId, List<Integer> feedIdList,
                                                        List<MultiSetTarget> multiSetTargetList) {
 
@@ -117,7 +108,6 @@ public class GoodRepository {
     return goodPushedStatusMap;
   }
 
-  @Transactional(readOnly = true)
   public List<GoodPushedStatus> findGoodPushedStatusList(String userId, List<Integer> feedIdList) {
 
     return goodMapper.findGoodPushedStatusList(new GoodPushedStatusListParam(userId, feedIdList));
@@ -144,5 +134,13 @@ public class GoodRepository {
     }
 
     feedIdList.removeIf(Objects::isNull);
+  }
+
+  public List<GoodUser> findGoodPushUserList(int feedId, Integer cursor) {
+
+    return goodMapper.getGoodList(GoodListParam.builder()
+            .feedId(feedId)
+            .cursor(cursor)
+            .build());
   }
 }
