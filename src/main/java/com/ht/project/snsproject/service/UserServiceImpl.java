@@ -8,9 +8,12 @@ import com.ht.project.snsproject.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -30,31 +33,35 @@ public class UserServiceImpl implements UserService {
     this.cacheObjectMapper = cacheObjectMapper;
   }
 
+  @Transactional
   @Override
   public void joinUser(UserJoinRequest userJoinRequest) {
     userRepository.insertUser(userJoinRequest);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public boolean isDuplicateUserId(String userId) {
     return userRepository.isDuplicateUserId(userId);
   }
 
+  @Transactional
   @Override
   public void updateUserProfile(UserProfileParam userProfileParam, String userId, MultipartFile profile) {
 
     ProfileImage profileImage = userRepository.findUserProfileImage(userId);
+    List<MultipartFile> files = new ArrayList<>();
+    files.add(profile);
 
-    if (profileImage != null) {
-      fileService.deleteFile(profileImage.getFilePath(), profileImage.getFileName());
-    }
+    if (profileImage != null) { fileService.deleteFile(profileImage.getFilePath(), profileImage.getFileName()); }
 
-    UserProfile userProfile = UserProfile.from(userProfileParam, userId,
-            fileService.fileUploadForProfile(profile, userId));
+    fileService.uploadFiles(files, userId);
 
-    userRepository.updateUserProfile(userProfile);
+    userRepository.updateUserProfile(UserProfile.from(userProfileParam, userId,
+            new ProfileImage(userId, profile.getOriginalFilename())));
   }
 
+  @Transactional(readOnly = true)
   @Override
   public void exists(UserLogin userLogin, HttpSession httpSession) {
 
@@ -69,6 +76,7 @@ public class UserServiceImpl implements UserService {
     httpSession.setAttribute("userId", userLogin.getUserId());
   }
 
+  @Transactional(readOnly = true)
   @Override
   public User findUserByUserId(String userId) {
 
@@ -82,6 +90,7 @@ public class UserServiceImpl implements UserService {
     httpSession.invalidate();
   }
 
+  @Transactional
   @Override
   public void deleteUser(String userId, String password, HttpSession httpSession) {
 
@@ -93,6 +102,7 @@ public class UserServiceImpl implements UserService {
 
   }
 
+  @Transactional
   @Override
   public void updateUserPassword(String userId, UserPassword userPassword) {
 

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ht.project.snsproject.enumeration.FriendStatus;
 import com.ht.project.snsproject.enumeration.PublicScope;
 import com.ht.project.snsproject.exception.InvalidApproachException;
-import com.ht.project.snsproject.mapper.FeedMapper;
 import com.ht.project.snsproject.model.Pagination;
 import com.ht.project.snsproject.model.feed.*;
 import com.ht.project.snsproject.repository.comment.CommentRepository;
@@ -24,8 +23,6 @@ import java.util.Map;
 @Service
 public class FeedServiceImpl implements FeedService {
 
-  private final FeedMapper feedMapper;
-
   private final FileService fileService;
 
   private final GoodRepository goodRepository;
@@ -40,15 +37,13 @@ public class FeedServiceImpl implements FeedService {
 
   private final RedisCacheService redisCacheService;
 
-  public FeedServiceImpl(FeedMapper feedMapper,
-                         @Qualifier("awsFileService") FileService fileService,
+  public FeedServiceImpl(@Qualifier("awsFileService") FileService fileService,
                          GoodRepository goodRepository,
                          FriendService friendService,
                          @Qualifier("cacheObjectMapper") ObjectMapper cacheObjectMapper,
                          FeedRepository feedRepository,
                          CommentRepository commentRepository,
                          RedisCacheService redisCacheService) {
-    this.feedMapper = feedMapper;
     this.fileService = fileService;
     this.goodRepository = goodRepository;
     this.friendService = friendService;
@@ -64,10 +59,13 @@ public class FeedServiceImpl implements FeedService {
 
     FeedInsert feedInsert = FeedInsert.create(feedWriteDto, userId, LocalDateTime.now());
 
-    feedMapper.feedUpload(feedInsert);
+    feedRepository.insertFeed(feedInsert);
 
     if (!files.isEmpty()) {
-      fileService.fileUpload(files, userId, feedInsert.getId());
+
+      fileService.uploadFiles(files, String.valueOf(feedInsert.getId()));
+
+      fileService.insertFileInfoList(feedWriteDto.getFileDtoList(), feedInsert.getId());
     }
   }
 
@@ -78,7 +76,7 @@ public class FeedServiceImpl implements FeedService {
     return findFeedList(userId, feedRepository.findFriendsFeedIdList(userId, pagination));
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   @Override
   public List<Feed> findFeedListByUserId(String userId, String targetId, Pagination pagination) {
 
@@ -104,6 +102,7 @@ public class FeedServiceImpl implements FeedService {
     return findFeedList(userId, feedIdList);
   }
 
+  @Transactional(readOnly = true)
   private List<Feed> findFeedList(String userId, List<Integer> feedIdList) {
 
     List<Feed> feedList = new ArrayList<>();
@@ -127,7 +126,7 @@ public class FeedServiceImpl implements FeedService {
     return feedList;
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   @Override
   public Feed findFeedByFeedId(String userId, int feedId) {
 
@@ -187,7 +186,7 @@ public class FeedServiceImpl implements FeedService {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
 
-    fileService.deleteAllFiles(id);
+    fileService.deleteFiles(id);
   }
 
   @Transactional
@@ -201,7 +200,7 @@ public class FeedServiceImpl implements FeedService {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
 
-    fileService.updateFiles(files,userId,feedId);
+    fileService.updateFiles(files,feedWriteDto.getFileDtoList(), feedId);
   }
 
 }
