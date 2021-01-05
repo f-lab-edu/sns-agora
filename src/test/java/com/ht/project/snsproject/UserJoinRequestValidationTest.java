@@ -5,15 +5,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import javax.validation.*;
 import java.sql.Date;
+import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class UserJoinRequestValidationTest {
@@ -24,6 +21,13 @@ public class UserJoinRequestValidationTest {
   public void setUp() {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     validator = factory.getValidator();
+  }
+
+  private void validateBean(Object bean) throws AssertionError {
+    Optional<ConstraintViolation<Object>> violation = validator.validate(bean).stream().findFirst();
+    violation.ifPresent(v -> {
+      throw new ValidationException(violation.get().getMessage());
+    });
   }
 
   @Test
@@ -40,7 +44,7 @@ public class UserJoinRequestValidationTest {
   }
 
   @Test
-  @DisplayName("userId 첫 문자에 숫자를 입력하면 실패합니다.")
+  @DisplayName("userId 첫 문자에 숫자를 입력하면 ViolationException이 발생합니다.")
   public void enterUserIdWithNumberForFirstCharacterFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("1testuser1",
@@ -48,12 +52,12 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("userId에 특수문자를 입력하면 실패합니다.")
+  @DisplayName("userId에 특수문자를 입력하면 ViolationException이 발생합니다.")
   public void enterUserIdWithSpecialCharacterFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("testuser1@",
@@ -66,7 +70,7 @@ public class UserJoinRequestValidationTest {
   }
 
   @Test
-  @DisplayName("userId를 5자 이내로 입력하면 실패합니다.")
+  @DisplayName("userId를 5자 이내로 입력하면 ViolationException이 발생합니다.")
   public void enterUserIdWithShortStringFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("test1",
@@ -74,12 +78,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("userId를 20자를 초과해서 입력하면 실패합니다.")
+  @DisplayName("userId를 20자를 초과해서 입력하면 ViolationException이 발생합니다.")
   public void enterUserIdLongerThan20LengthFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("testuserTESTUSER12345",
@@ -87,12 +90,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("userId에 공백을 입력하면 실패합니다.")
+  @DisplayName("userId에 공백을 입력하면 ViolationException이 발생합니다.")
   public void enterUserIdWithBlankFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("       ",
@@ -100,12 +102,23 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("userId에 빈 문자열을 입력하면 실패합니다.")
+  @DisplayName("userId에 null을 입력하면 ViolationException이 발생합니다.")
+  public void enterUserIdWithNullFailed() {
+
+    UserJoinRequest userJoinRequest = new UserJoinRequest(null,
+            "Test1234@",
+            "testuser1@gmail.com",
+            "test", "testuser", Date.valueOf("2021-01-01"));
+
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
+  }
+
+  @Test
+  @DisplayName("userId에 빈 문자열을 입력하면 ViolationException이 발생합니다.")
   public void enterUserIdWithEmptyStringFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("",
@@ -113,12 +126,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("userId 문자열 중간에 공백을 입력하면 실패합니다.")
+  @DisplayName("userId 문자열 중간에 공백을 입력하면 ViolationException이 발생합니다.")
   public void enterUserIdWithBlankBetweenStringFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("test user",
@@ -126,8 +138,7 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
@@ -144,7 +155,7 @@ public class UserJoinRequestValidationTest {
   }
 
   @Test
-  @DisplayName("password에 대문자가 최소 1개이상 입력되지 않으면 실패합니다.")
+  @DisplayName("password에 대문자가 최소 1개이상 입력되지 않으면 ViolationException이 발생합니다.")
   public void enterPasswordWithAnyUppercaseCharacterFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -152,12 +163,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("password에 소문자가 최소 1개이상 입력되지 않으면 실패합니다.")
+  @DisplayName("password에 소문자가 최소 1개이상 입력되지 않으면 ViolationException이 발생합니다.")
   public void enterPasswordWithAnyLowercaseCharacterFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -165,12 +175,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("password에 숫자가 최소 1개이상 입력되지 않으면 실패합니다.")
+  @DisplayName("password에 숫자가 최소 1개이상 입력되지 않으면 ViolationException이 발생합니다.")
   public void enterPasswordWithAnyNumberFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -178,12 +187,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("password에 등록된 특수문자가 최소 1개 이상 입력되지 않으면 실패합니다.")
+  @DisplayName("password에 등록된 특수문자가 최소 1개 이상 입력되지 않으면 ViolationException이 발생합니다.")
   public void enterPasswordWithAnySpecialCharacterFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -191,12 +199,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("password에 등록되지 않은 특수문자가 입력되면 실패합니다.")
+  @DisplayName("password에 등록되지 않은 특수문자가 입력되면 ViolationException이 발생합니다.")
   public void enterPasswordWithInvalidSpecialCharacterFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -204,12 +211,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("password가 7자 이내로 입력되면 실패합니다.")
+  @DisplayName("password가 7자 이내로 입력되면 ViolationException이 발생합니다.")
   public void enterPasswordWithShortStringFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -217,12 +223,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("password가 12자를 초과해서 입력되면 실패합니다.")
+  @DisplayName("password가 12자를 초과해서 입력되면 ViolationException이 발생합니다.")
   public void enterPasswordLongerThan12Failed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -230,12 +235,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("password가 공백문자가 입력되면 실패합니다.")
+  @DisplayName("password가 공백문자가 입력되면 ViolationException이 발생합니다.")
   public void enterPasswordWithBlankFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -243,8 +247,19 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
+  }
+
+  @Test
+  @DisplayName("password가 null이 입력되면 ViolationException이 발생합니다.")
+  public void enterPasswordWithNullFailed() {
+
+    UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
+            null,
+            "testuser1@gmail.com",
+            "test", "testuser", Date.valueOf("2021-01-01"));
+
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
@@ -261,7 +276,7 @@ public class UserJoinRequestValidationTest {
   }
 
   @Test
-  @DisplayName("잘못된 email형식을 입력하면 실패합니다.")
+  @DisplayName("잘못된 email형식을 입력하면 ViolationException이 발생합니다.")
   public void enterEmailWithInvalidFormFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -269,12 +284,11 @@ public class UserJoinRequestValidationTest {
             "testuser1_gmail.com",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("email에 공백을 입력하면 실패합니다.")
+  @DisplayName("email에 공백을 입력하면 ViolationException이 발생합니다.")
   public void enterEmailWithBlankFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -282,12 +296,11 @@ public class UserJoinRequestValidationTest {
             " ",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("email에 빈 문자열을 입력하면 실패합니다.")
+  @DisplayName("email에 빈 문자열을 입력하면 ViolationException이 발생합니다.")
   public void enterEmailWithEmptyStringFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -295,8 +308,19 @@ public class UserJoinRequestValidationTest {
             "",
             "test", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
+  }
+
+  @Test
+  @DisplayName("email에 null을 입력하면 ViolationException이 발생합니다.")
+  public void enterEmailWithNullFailed() {
+
+    UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
+            "Test1234@",
+            null,
+            "test", "testuser", Date.valueOf("2021-01-01"));
+
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
@@ -313,7 +337,7 @@ public class UserJoinRequestValidationTest {
   }
 
   @Test
-  @DisplayName("name에 공백문자를 입력하면 실패합니다.")
+  @DisplayName("name에 공백문자를 입력하면 ViolationException이 발생합니다.")
   public void enterNameWithBlankFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -321,12 +345,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             " ", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("name에 빈 문자열을 입력하면 실패합니다.")
+  @DisplayName("name에 빈 문자열을 입력하면 ViolationException이 발생합니다.")
   public void enterNameWithEmptyStringFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -334,8 +357,19 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "", "testuser", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
+  }
+
+  @Test
+  @DisplayName("name에 null을 입력하면 ViolationException이 발생합니다.")
+  public void enterNameWithNullFailed() {
+
+    UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
+            "Test1234@",
+            "testuser1@gmail.com",
+            null, "testuser", Date.valueOf("2021-01-01"));
+
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
@@ -352,7 +386,7 @@ public class UserJoinRequestValidationTest {
   }
 
   @Test
-  @DisplayName("nickname에 빈 문자열을 입력하면 실패합니다.")
+  @DisplayName("nickname에 빈 문자열을 입력하면 ViolationException이 발생합니다.")
   public void enterNicknameWithEmptyStringFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -360,12 +394,11 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", "", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 
   @Test
-  @DisplayName("nickname에 공백 문자를 입력하면 실패합니다.")
+  @DisplayName("nickname에 공백 문자를 입력하면 ViolationException이 발생합니다.")
   public void enterNicknameWithBlankFailed() {
 
     UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
@@ -373,7 +406,18 @@ public class UserJoinRequestValidationTest {
             "testuser1@gmail.com",
             "test", " ", Date.valueOf("2021-01-01"));
 
-    Set<ConstraintViolation<UserJoinRequest>> violations = validator.validate(userJoinRequest);
-    assertFalse(violations.isEmpty());
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
+  }
+
+  @Test
+  @DisplayName("nickname에 null을 입력하면 ViolationException이 발생합니다.")
+  public void enterNicknameWithNullFailed() {
+
+    UserJoinRequest userJoinRequest = new UserJoinRequest("Testuser1",
+            "Test1234@",
+            "testuser1@gmail.com",
+            "test", null, Date.valueOf("2021-01-01"));
+
+    assertThrows(ValidationException.class, () -> validateBean(userJoinRequest));
   }
 }
