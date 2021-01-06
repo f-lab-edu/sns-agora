@@ -17,4 +17,6 @@ public class AwsS3Property {
 
   String bucketName;
 
+  int transferThread;
+
 }

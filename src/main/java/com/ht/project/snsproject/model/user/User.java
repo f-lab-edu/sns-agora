@@ -2,43 +2,31 @@ package com.ht.project.snsproject.model.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.sql.Date;
 
-
+@Getter
 @Builder
 @AllArgsConstructor
-@Value
+@NoArgsConstructor
 public class User {
 
-  Integer id;
+  private Integer id;
 
-  String userId;
+  private String userId;
 
-  String email;
+  private String email;
 
-  String name;
+  private String name;
 
-  String nickname;
+  private String nickname;
 
-  Date birth;
+  private Date birth;
 
-  String filePath;
+  private String filePath;
 
-  String fileName;
+  private String fileName;
 
-  public static User from(UserCache userCache){
-
-    return User.builder()
-            .id(Integer.valueOf(userCache.getId()))
-            .userId(userCache.getUserId())
-            .email(userCache.getEmail())
-            .name(userCache.getName())
-            .nickname(userCache.getNickname())
-            .birth(Date.valueOf(userCache.getBirth()))
-            .filePath(userCache.getFilePath())
-            .fileName(userCache.getFileName())
-            .build();
-  }
 }

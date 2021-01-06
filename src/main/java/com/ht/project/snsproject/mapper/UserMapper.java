@@ -1,6 +1,6 @@
 package com.ht.project.snsproject.mapper;
 
-import com.ht.project.snsproject.model.feed.FileForProfile;
+import com.ht.project.snsproject.model.feed.ProfileImage;
 import com.ht.project.snsproject.model.user.User;
 import com.ht.project.snsproject.model.user.UserJoinRequest;
 import com.ht.project.snsproject.model.user.UserLogin;
@@ -16,21 +16,16 @@ public interface UserMapper {
 
   void updateUserProfile(UserProfile userProfile);
 
-  /*
-  단순히 유저를 가져오는 것이 아닌 인증된 유저의 정보를 가져오는 과정이기 때문에
-  메소드명을 getAuthenticatedUser 로 수정.
-  */
-  User getAuthenticatedUser(UserLogin userLogin);
+  boolean isAuthenticatedUser(UserLogin userLogin);
 
-  FileForProfile getUserProfileImage(String userId);
+  ProfileImage findUserProfileImageByUserId(String userId);
 
-  User getUserFromUserId(String userId);
+  User findUserByUserId(String userId);
 
-  String getPassword(String userId);
+  String findPasswordByUserId(String userId);
 
   void deleteUser(String userId);
 
   void updateUserPassword(String userId, String currentPw, String newPw);
 
-  UserProfile getUserProfile(String targetId);
 }

@@ -28,7 +28,7 @@ public class CommentService{
     commentRepository.increaseCommentCountInCache(feedId);
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   public List<Comment> getCommentsOnFeed(int feedId, Integer cursor) {
 
     return commentRepository.getCommentsOnFeed(feedId, cursor);
@@ -40,7 +40,7 @@ public class CommentService{
     commentRepository.updateCommentOnFeed(commentId, userId, content);
   }
 
-  @Transactional
+  @Transactional(readOnly = true)
   public List<Reply> getRepliesOnComment(int commentId, Integer cursor) {
 
     return commentRepository.getRepliesOnComment(commentId, cursor);

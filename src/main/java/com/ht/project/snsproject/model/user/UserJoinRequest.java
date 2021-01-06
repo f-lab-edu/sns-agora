@@ -1,17 +1,18 @@
 package com.ht.project.snsproject.model.user;
 
-import java.sql.Date;
+import lombok.Value;
+
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
-import lombok.Value;
+import java.sql.Date;
 
 
 @Value
 public class UserJoinRequest {
 
-  @NotBlank(message = "아이디는 필수 입력사항입니다.(영문 소문자, 숫자 6~20자이내)")
-  @Pattern(regexp = "^[0-9a-z].{6,20}$")
+  @NotBlank(message = "아이디는 필수 입력사항입니다.(영문 대소문자, 숫자 6~20자이내, 단, 첫 문자는 영문 대,소문자만 허용)")
+  @Pattern(regexp = "^[a-zA-Z]{1}[0-9a-zA-Z]{5,19}$")
   String userId;
 
   @NotBlank(message = "비밀번호는 필수 입력사항입니다.")

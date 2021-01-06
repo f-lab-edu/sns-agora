@@ -1,183 +1,111 @@
 package com.ht.project.snsproject.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.exception.DuplicateRequestException;
-import com.ht.project.snsproject.mapper.UserMapper;
-import com.ht.project.snsproject.model.feed.FileForProfile;
+import com.ht.project.snsproject.model.feed.ProfileImage;
 import com.ht.project.snsproject.model.user.*;
+import com.ht.project.snsproject.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.serializer.SerializationException;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
 
 
-  private final RedisTemplate<String, Object> cacheRedisTemplate;
+  private final UserRepository userRepository;
 
-  private final UserMapper userMapper;
+  private final ObjectMapper cacheObjectMapper;
 
   private final FileService fileService;
 
-  private final ObjectMapper objectMapper;
-
-  private final RedisCacheService redisCacheService;
-
-  private final StringRedisTemplate cacheStrRedisTemplate;
-
-  public UserServiceImpl(@Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> cacheRedisTemplate,
-                         UserMapper userMapper,
+  public UserServiceImpl(UserRepository userRepository,
                          @Qualifier("awsFileService") FileService fileService,
-                         ObjectMapper objectMapper,
-                         RedisCacheService redisCacheService,
-                         @Qualifier("cacheStrRedisTemplate") StringRedisTemplate cacheStrRedisTemplate) {
-    this.cacheRedisTemplate = cacheRedisTemplate;
-    this.userMapper = userMapper;
+                         @Qualifier("cacheObjectMapper") ObjectMapper cacheObjectMapper) {
+    this.userRepository = userRepository;
     this.fileService = fileService;
-    this.objectMapper = objectMapper;
-    this.redisCacheService = redisCacheService;
-    this.cacheStrRedisTemplate = cacheStrRedisTemplate;
+    this.cacheObjectMapper = cacheObjectMapper;
   }
 
+  @Transactional
   @Override
   public void joinUser(UserJoinRequest userJoinRequest) {
-    userMapper.insertUser(userJoinRequest);
+    userRepository.insertUser(userJoinRequest);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public boolean isDuplicateUserId(String userId) {
-    return userMapper.isDuplicateUserId(userId);
+    return userRepository.isDuplicateUserId(userId);
   }
 
+  @Transactional
   @Override
   public void updateUserProfile(UserProfileParam userProfileParam, String userId, MultipartFile profile) {
 
-    deleteUserProfileImage(userId);
+    ProfileImage profileImage = userRepository.findUserProfileImage(userId);
+    List<MultipartFile> files = new ArrayList<>();
+    files.add(profile);
 
-    FileForProfile fileForProfile = fileService.fileUploadForProfile(profile, userId);
+    if (profileImage != null) { fileService.deleteFile(profileImage.getFilePath(), profileImage.getFileName()); }
 
-    UserProfile userProfile = UserProfile.from(userProfileParam, userId, fileForProfile);
+    fileService.uploadFiles(files, userId);
 
-    userMapper.updateUserProfile(userProfile);
-
-    updateUserCache(userProfile);
-
+    userRepository.updateUserProfile(UserProfile.from(userProfileParam, userId,
+            new ProfileImage(userId, profile.getOriginalFilename())));
   }
 
-  private void updateUserCache(UserProfile userProfile) {
-
-    String userCacheKey = redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userProfile.getUserId());
-
-    User user = getUserInfoCache(userProfile.getUserId());
-
-    cacheRedisTemplate.opsForValue().setIfPresent(userCacheKey,
-            UserCache.updateFrom(userProfile, user.getId(), user.getName()), 30L, TimeUnit.MINUTES);
-
-  }
-
-  public void deleteUserProfileImage(String userId) {
-
-    FileForProfile fileForProfile = userMapper.getUserProfileImage(userId);
-
-    if (fileForProfile != null) {
-      fileService.deleteFile(fileForProfile.getFilePath(), fileForProfile.getFileName());
-    }
-  }
-
+  @Transactional(readOnly = true)
   @Override
-  public boolean existUser(UserLogin userLogin, HttpSession httpSession) {
-
-    User userInfo = userMapper.getAuthenticatedUser(userLogin);
-    if (userInfo == null) {
-      return false;
-    }
+  public void exists(UserLogin userLogin, HttpSession httpSession) {
 
     if (httpSession.getAttribute("userId") != null) {
       throw new DuplicateRequestException("이미 로그인된 상태입니다.");
     }
 
-    String userId = userInfo.getUserId();
-
-    httpSession.setAttribute("userId", userId);
-
-    cacheRedisTemplate.opsForValue()
-            .set(redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userId),
-                    UserCache.from(userInfo),
-                    30L, TimeUnit.MINUTES);
-
-    return true;
-  }
-
-  @Override
-  public User getUserInfoCache(String userId) {
-
-    User userInfo;
-
-    String userInfoKey = redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userId);
-
-    Boolean keyPresence = cacheStrRedisTemplate.hasKey(userInfoKey);
-
-    if ((keyPresence != null) && (keyPresence)) {
-
-      try {
-        userInfo = User.from(
-               objectMapper.readValue(
-                       cacheStrRedisTemplate.boundValueOps(userInfoKey).get(), UserCache.class));
-      } catch (JsonProcessingException e) {
-        throw new SerializationException("변환에 실패하였습니다.", e);
-      }
-
-    } else {
-      userInfo = userMapper.getUserFromUserId(userId);
-      cacheRedisTemplate.opsForValue().set(userInfoKey, UserCache.from(userInfo), 30L, TimeUnit.MINUTES);
+    if (!userRepository.isAuthenticatedUser(userLogin)) {
+      throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
     }
 
-    return userInfo;
+    httpSession.setAttribute("userId", userLogin.getUserId());
+  }
+
+  @Transactional(readOnly = true)
+  @Override
+  public User findUserByUserId(String userId) {
+
+    return cacheObjectMapper.convertValue(userRepository.findUserByUserId(userId), User.class);
   }
 
   @Override
-  public void logout(HttpSession httpSession) {
+  @CacheEvict(value = "userInfo", key = "'userInfo:' + #userId")
+  public void logout(String userId, HttpSession httpSession) {
 
-    String userId = (String) httpSession.getAttribute("userId");
     httpSession.invalidate();
-    cacheRedisTemplate.delete(redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userId));
   }
 
+  @Transactional
   @Override
-  public boolean verifyPassword(String userId, String password) {
+  public void deleteUser(String userId, String password, HttpSession httpSession) {
 
-    String currentPassword = userMapper.getPassword(userId);
-    return currentPassword.equals(password);
-  }
-
-  @Override
-  public void deleteUser(HttpSession httpSession) {
-
-    String userId = (String) httpSession.getAttribute("userId");
-    userMapper.deleteUser(userId);
-    cacheRedisTemplate.delete(redisCacheService.makeCacheKey(CacheKeyPrefix.USER_INFO, userId));
+    if (!userRepository.findPasswordByUserId(userId).equals(password)) {
+      throw new IllegalArgumentException("패스워드가 일치하지 않습니다.");
+    }
+    userRepository.deleteUser(userId);
     httpSession.invalidate();
 
   }
 
+  @Transactional
   @Override
   public void updateUserPassword(String userId, UserPassword userPassword) {
 
-    userMapper.updateUserPassword(userId,
-            userPassword.getCurrentPassword(), userPassword.getNewPassword());
-  }
-
-  @Override
-  public UserProfile getUserProfile(String userId) {
-
-    return userMapper.getUserProfile(userId);
+    userRepository.updateUserPassword(userId, userPassword);
   }
 }

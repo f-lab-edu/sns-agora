@@ -3,8 +3,6 @@ package com.ht.project.snsproject.service;
 import com.ht.project.snsproject.enumeration.CacheKeyPrefix;
 import com.ht.project.snsproject.exception.DuplicateRequestException;
 import com.ht.project.snsproject.exception.InvalidApproachException;
-import com.ht.project.snsproject.mapper.GoodMapper;
-import com.ht.project.snsproject.model.good.GoodListParam;
 import com.ht.project.snsproject.model.good.GoodUser;
 import com.ht.project.snsproject.repository.good.GoodRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,17 +16,13 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class GoodServiceImpl implements GoodService {
 
-  public GoodServiceImpl(GoodMapper goodMapper,
-                         RedisCacheService redisCacheService,
+  public GoodServiceImpl(RedisCacheService redisCacheService,
                          @Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> redisTemplate,
                          GoodRepository goodRepository) {
-    this.goodMapper = goodMapper;
     this.redisCacheService = redisCacheService;
     this.redisTemplate = redisTemplate;
     this.goodRepository = goodRepository;
   }
-
-  private final GoodMapper goodMapper;
 
   private final RedisCacheService redisCacheService;
 
@@ -37,13 +31,11 @@ public class GoodServiceImpl implements GoodService {
   private final GoodRepository goodRepository;
 
 
+  @Transactional(readOnly = true)
   @Override
   public List<GoodUser> getGoodList(int feedId, Integer cursor) {
 
-    return goodMapper.getGoodList(GoodListParam.builder()
-            .feedId(feedId)
-            .cursor(cursor)
-            .build());
+    return goodRepository.findGoodPushUserList(feedId, cursor);
   }
 
 
@@ -55,7 +47,6 @@ public class GoodServiceImpl implements GoodService {
     increaseGoodCount(feedId);
   }
 
-  @Transactional
   private void addGoodToCache(int feedId, String userId, boolean goodPushed) {
 
     String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
@@ -68,7 +59,6 @@ public class GoodServiceImpl implements GoodService {
     }
   }
 
-  @Transactional
   private void increaseGoodCount(int feedId) {
 
     goodRepository.getGood(feedId);
@@ -85,7 +75,6 @@ public class GoodServiceImpl implements GoodService {
     decreaseGoodCount(feedId);
   }
 
-  @Transactional
   private void cancelGoodInCache(int feedId, String userId, boolean goodPushed) {
 
     String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
@@ -97,7 +86,6 @@ public class GoodServiceImpl implements GoodService {
     }
   }
 
-  @Transactional
   private void decreaseGoodCount(int feedId) {
 
     goodRepository.getGood(feedId);

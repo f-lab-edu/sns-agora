@@ -1,6 +1,6 @@
 package com.ht.project.snsproject.model.user;
 
-import com.ht.project.snsproject.model.feed.FileForProfile;
+import com.ht.project.snsproject.model.feed.ProfileImage;
 import lombok.Builder;
 import lombok.Value;
 
@@ -24,15 +24,15 @@ public class UserProfile {
 
   public static UserProfile from(UserProfileParam userProfileParam,
                                  String userId,
-                                 FileForProfile fileForProfile) {
+                                 ProfileImage profileImage) {
 
     return UserProfile.builder()
             .userId(userId)
             .nickname(userProfileParam.getNickname())
             .email(userProfileParam.getEmail())
             .birth(userProfileParam.getBirth())
-            .filePath(fileForProfile.getFilePath())
-            .fileName(fileForProfile.getFileName())
+            .filePath(profileImage.getFilePath())
+            .fileName(profileImage.getFileName())
             .build();
   }
 }
