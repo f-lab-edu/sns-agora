@@ -5,8 +5,10 @@
 &nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: Instagram, Facebook 과 같이 평소 사용하던 SNS를 직접 제작하여보기    
 &nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: 실행만 되는 서비스가 아닌 대규모 트래픽을 처리할 수 있는 성능적으로 우수한 서비스 제작하기    
 &nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: 프로젝트 진행에 따라 ReadMe 업데이트 예정입니다.    
+&nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: Jenkins 주소 : http://27.96.135.12:8080/    
 &nbsp;&nbsp;&nbsp;&nbsp;:heavy_check_mark: 보다 자세한 내용을 알고 싶으시다면 Wiki를 참고해주시길 바랍니다.     
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;❔ Wiki : https://github.com/f-lab-edu/sns-agora/wiki
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;❔ Wiki : https://github.com/f-lab-edu/sns-agora/wiki    
+
 
 ## :pushpin: 사용 기술 및 개발환경
 
