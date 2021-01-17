@@ -24,7 +24,8 @@ public class FeedRecommendRepository {
 
   private final FeedRecommendMapper feedRecommendMapper;
 
-  public FeedRecommendRepository(@Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> redisTemplate,
+  public FeedRecommendRepository(@Qualifier("cacheRedisTemplate")
+                                         RedisTemplate<String, Object> redisTemplate,
                                  FeedRepository feedRepository,
                                  FeedRecommendMapper feedRecommendMapper) {
     this.redisTemplate = redisTemplate;
@@ -36,17 +37,17 @@ public class FeedRecommendRepository {
 
     List<Integer> recommendIdx = new ArrayList<>();
 
-    if(pagination.getCursor() == null && redisTemplate.hasKey(RECOMMEND_LIST) != null) {
+    if (pagination.getCursor() == null && redisTemplate.hasKey(RECOMMEND_LIST) != null) {
 
       recommendIdx = Objects.requireNonNull(
                       redisTemplate.opsForList().range(RECOMMEND_LIST, 0, -1),
                       "추천 목록이 존재하지 않습니다.")
                       .stream()
-                      .map(s->(Integer) s)
+                      .map(s -> (Integer) s)
                       .collect(Collectors.toList());
     }
 
-    if(recommendIdx.isEmpty()) {
+    if (recommendIdx.isEmpty()) {
 
       recommendIdx = feedRecommendMapper.findFeedIdByLatestOrder(pagination);
     }
@@ -61,7 +62,7 @@ public class FeedRecommendRepository {
     List<Integer> feedIdCopyList = new ArrayList<>(feedIdList);
     feedRepository.findFeedInfoListInCache(feedInfoList, feedIdCopyList);
 
-    if(!feedIdList.isEmpty()) {
+    if (!feedIdList.isEmpty()) {
 
       feedInfoList.addAll(feedRepository.findFeedListByFeedIdList(feedIdCopyList));
     }

@@ -25,7 +25,8 @@ public class GoodBatchJob implements Job {
 
   public void execute(JobExecutionContext context) throws JobExecutionException {
 
-    log.info("Job ** {} ** fired @ {}", context.getJobDetail().getKey().getName(), context.getFireTime());
+    log.info("Job ** {} ** fired @ {}",
+            context.getJobDetail().getKey().getName(), context.getFireTime());
     jobService.executeJob();
     log.info("Next job scheduled @ {}", context.getNextFireTime());
 

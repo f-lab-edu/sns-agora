@@ -37,7 +37,7 @@ public class UserAspect {
   @Before("@annotation(com.ht.project.snsproject.annotation.LoginCheck)")
   public void loginCheck(JoinPoint joinPoint) {
 
-    HttpSession httpSession = ((ServletRequestAttributes)RequestContextHolder
+    HttpSession httpSession = ((ServletRequestAttributes) RequestContextHolder
             .getRequestAttributes())
             .getRequest()
             .getSession();
@@ -52,16 +52,15 @@ public class UserAspect {
   /*
   포인트컷 작성시, execution(* *(.., @User (*), ..))
   이러한 방식으로 작성하면,
-  java.lang.IllegalArgumentException: warning no match for this type name: [Xlint:invalidAbsoluteTypeName]
-  Exception 을 발생시킨다.
+  java.lang.IllegalArgumentException: warning no match for this type name 을 발생시킨다.
   해당 annotation 외에도 User 라는 이름의 Class 가 존재하여 정확한 Class 를 찾지 못해서 발생하는 것 같다고 생각하여
   어노테이션의 절대 타입을 적용 시키니 해결되었다.
   */
 
   @Around("execution(* *(.., @com.ht.project.snsproject.annotation.UserInfo (*), ..))")
-  public Object injectUserSession(ProceedingJoinPoint joinPoint) throws Throwable{
+  public Object injectUserSession(ProceedingJoinPoint joinPoint) throws Throwable {
 
-    HttpSession httpSession = ((ServletRequestAttributes)RequestContextHolder
+    HttpSession httpSession = ((ServletRequestAttributes) RequestContextHolder
             .getRequestAttributes())
             .getRequest()
             .getSession();
@@ -92,9 +91,9 @@ public class UserAspect {
      */
     Annotation[][] annotations = method.getParameterAnnotations();
 
-    for(int i=0; i<annotations.length; i++) {
-      for(Annotation annotation : annotations[i]) {
-        if(annotation instanceof UserInfo) {
+    for (int i = 0; i < annotations.length; i++) {
+      for (Annotation annotation : annotations[i]) {
+        if (annotation instanceof UserInfo) {
           args[i] = userInfo;
           break;
         }

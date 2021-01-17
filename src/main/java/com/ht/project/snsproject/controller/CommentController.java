@@ -47,7 +47,8 @@ public class CommentController {
   @GetMapping("/{feedId}/comments")
   @LoginCheck
   public ResponseEntity<List<Comment>> getCommentsOnFeed(@PathVariable int feedId,
-                                                         @RequestParam(required = false) Integer cursor) {
+                                                         @RequestParam(required = false)
+                                                                 Integer cursor) {
 
     return ResponseEntity.ok(commentService.getCommentsOnFeed(feedId, cursor));
   }

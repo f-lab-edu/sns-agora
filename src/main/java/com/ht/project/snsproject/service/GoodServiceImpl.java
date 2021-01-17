@@ -17,7 +17,8 @@ import java.util.concurrent.TimeUnit;
 public class GoodServiceImpl implements GoodService {
 
   public GoodServiceImpl(RedisCacheService redisCacheService,
-                         @Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> redisTemplate,
+                         @Qualifier("cacheRedisTemplate")
+                                 RedisTemplate<String, Object> redisTemplate,
                          GoodRepository goodRepository) {
     this.redisCacheService = redisCacheService;
     this.redisTemplate = redisTemplate;
@@ -49,7 +50,8 @@ public class GoodServiceImpl implements GoodService {
 
   private void addGoodToCache(int feedId, String userId, boolean goodPushed) {
 
-    String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
+    String goodPushedKey = redisCacheService.makeCacheKey(
+            CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
 
     if (!goodPushed) {
       redisTemplate.opsForValue().set(goodPushedKey, true, 60L, TimeUnit.SECONDS);
@@ -77,7 +79,8 @@ public class GoodServiceImpl implements GoodService {
 
   private void cancelGoodInCache(int feedId, String userId, boolean goodPushed) {
 
-    String goodPushedKey = redisCacheService.makeCacheKey(CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
+    String goodPushedKey = redisCacheService.makeCacheKey(
+            CacheKeyPrefix.GOOD_PUSHED, feedId, userId);
 
     if (!goodPushed) {
       throw new InvalidApproachException("비정상적인 요청입니다.");

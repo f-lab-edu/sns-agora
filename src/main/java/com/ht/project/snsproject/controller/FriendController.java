@@ -62,7 +62,8 @@ public class FriendController {
   public ResponseEntity<List<FriendList>> getFriendRequests(
           @RequestParam(required = false) Integer cursor, @UserInfo User user) {
 
-    return ResponseEntity.ok(friendService.getFriendRequests(user.getUserId(),Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(friendService.getFriendRequests(user.getUserId(),
+            Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
@@ -70,7 +71,8 @@ public class FriendController {
   public ResponseEntity<List<FriendList>> getFriendList(
           @RequestParam(required = false) Integer cursor, @UserInfo User user) {
 
-    return ResponseEntity.ok(friendService.getFriendList(user.getUserId(), Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(friendService.getFriendList(user.getUserId(),
+            Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck
@@ -95,7 +97,7 @@ public class FriendController {
   public HttpStatus unblockUser(@PathVariable String targetId,
                                 @UserInfo User user) {
 
-    friendService.unblockUser(user.getUserId(),targetId);
+    friendService.unblockUser(user.getUserId(), targetId);
 
     return HttpStatus.NO_CONTENT;
   }
@@ -105,7 +107,8 @@ public class FriendController {
   public ResponseEntity<List<FriendList>> getBlockUserList(
           @RequestParam(required = false) Integer cursor, @UserInfo User user) {
 
-    return ResponseEntity.ok(friendService.getBlockUserList(user.getUserId(), Pagination.pageInfo(cursor)));
+    return ResponseEntity.ok(friendService.getBlockUserList(user.getUserId(),
+            Pagination.pageInfo(cursor)));
   }
 
   @LoginCheck

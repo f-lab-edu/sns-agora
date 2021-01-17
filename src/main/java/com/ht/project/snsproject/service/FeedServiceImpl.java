@@ -96,7 +96,7 @@ public class FeedServiceImpl implements FeedService {
         throw new InvalidApproachException("유효 하지 않은 접근입니다.");
 
       default:
-        feedIdList = feedRepository.findALLFeedIdListByUserId(targetId, pagination);
+        feedIdList = feedRepository.findAllFeedIdListByUserId(targetId, pagination);
     }
 
     return findFeedList(userId, feedIdList);
@@ -111,8 +111,10 @@ public class FeedServiceImpl implements FeedService {
     Map<Integer, Boolean> goodPushedStatusMap =
             goodRepository.findGoodPushedStatusMap(userId, feedIdList, multiSetTargetList);
 
-    Map<Integer, Integer> goodCountMap = goodRepository.findGoodCountMap(feedIdList, multiSetTargetList);
-    Map<Integer, Integer> commentCountMap = commentRepository.findCommentCountMap(feedIdList, multiSetTargetList);
+    Map<Integer, Integer> goodCountMap = goodRepository.findGoodCountMap(
+            feedIdList, multiSetTargetList);
+    Map<Integer, Integer> commentCountMap = commentRepository.findCommentCountMap(
+            feedIdList, multiSetTargetList);
 
     feedInfoList.forEach(feedInfo -> {
 
@@ -133,7 +135,7 @@ public class FeedServiceImpl implements FeedService {
     Object feed;
     FriendStatus friendStatus = friendService.findFriendStatus(feedId, userId);
 
-    switch(friendStatus) {
+    switch (friendStatus) {
 
       case ME:
 
@@ -152,7 +154,7 @@ public class FeedServiceImpl implements FeedService {
 
     FeedInfo feedInfo = cacheObjectMapper.convertValue(feed, FeedInfo.class);
 
-    if(!isValidatedFeedInfo(feedInfo.getPublicScope(), friendStatus)) {
+    if (!isValidatedFeedInfo(feedInfo.getPublicScope(), friendStatus)) {
 
       throw new IllegalArgumentException("일치하는 피드가 존재하지 않습니다.");
     }
@@ -200,7 +202,7 @@ public class FeedServiceImpl implements FeedService {
       throw new InvalidApproachException("일치하는 데이터가 없습니다.");
     }
 
-    fileService.updateFiles(files,feedWriteDto.getFileDtoList(), feedId);
+    fileService.updateFiles(files, feedWriteDto.getFileDtoList(), feedId);
   }
 
 }

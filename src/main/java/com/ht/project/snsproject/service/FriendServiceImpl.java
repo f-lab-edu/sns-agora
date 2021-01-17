@@ -47,7 +47,7 @@ public class FriendServiceImpl implements FriendService {
   @Override
   public FriendStatus getFriendStatus(String userId, String targetId) {
 
-    if(userId.equals(targetId)) {
+    if (userId.equals(targetId)) {
       return FriendStatus.ME;
     }
 
@@ -117,7 +117,7 @@ public class FriendServiceImpl implements FriendService {
   public List<FriendList> getFriendList(String userId, Pagination pagination) {
 
     return friendMapper.getFriendList(
-            FriendListParam.create(userId,pagination,FriendStatus.FRIEND));
+            FriendListParam.create(userId, pagination, FriendStatus.FRIEND));
   }
 
   @Transactional
@@ -135,7 +135,7 @@ public class FriendServiceImpl implements FriendService {
       case ME:
         throw new InvalidApproachException("유효하지 않은 접근입니다.");
       default:
-        friendMapper.deleteFriend(userId,targetId);
+        friendMapper.deleteFriend(userId, targetId);
         friendMapper.blockUser(userId, targetId);
     }
   }

@@ -23,7 +23,8 @@ public class GoodRepository {
 
   public GoodRepository(GoodMapper goodMapper,
                         RedisCacheService redisCacheService,
-                        @Qualifier("cacheStrRedisTemplate") StringRedisTemplate stringRedisTemplate) {
+                        @Qualifier("cacheStrRedisTemplate")
+                                StringRedisTemplate stringRedisTemplate) {
     this.goodMapper = goodMapper;
     this.redisCacheService = redisCacheService;
     this.stringRedisTemplate = stringRedisTemplate;
@@ -41,7 +42,8 @@ public class GoodRepository {
     return goodMapper.getGoodPushedStatus(new GoodStatusParam(feedId, userId));
   }
 
-  public Map<Integer, Integer> findGoodCountMap(List<Integer> feedIdList, List<MultiSetTarget> multiSetTargetList) {
+  public Map<Integer, Integer> findGoodCountMap(List<Integer> feedIdList,
+                                                List<MultiSetTarget> multiSetTargetList) {
 
     Map<Integer, Integer> goodCountMap = new HashMap<>();
     List<Integer> feedIdCopyList = new ArrayList<>(feedIdList);
@@ -49,11 +51,12 @@ public class GoodRepository {
 
     findGoodCountListInCache(feedIdCopyList, goodCountList);
 
-    if(!feedIdCopyList.isEmpty()) {
+    if (!feedIdCopyList.isEmpty()) {
       goodCountList.addAll(findGoodCountListInDb(feedIdCopyList));
     }
 
-    goodCountList.forEach(goodCount -> goodCountMap.put(goodCount.getFeedId(), goodCount.getGoodCount()));
+    goodCountList.forEach(goodCount ->
+            goodCountMap.put(goodCount.getFeedId(), goodCount.getGoodCount()));
 
     redisCacheService.addGoodCountInCacheList(goodCountList, multiSetTargetList);
 
@@ -71,7 +74,7 @@ public class GoodRepository {
     List<String> goodCountCacheList = stringRedisTemplate.opsForValue().multiGet(cacheKeys);
 
     if (goodCountCacheList != null) {
-      for (int i=0; i<goodCountCacheList.size(); i++) {
+      for (int i = 0; i < goodCountCacheList.size(); i++) {
 
         String goodCount = goodCountCacheList.get(i);
 
@@ -101,9 +104,11 @@ public class GoodRepository {
     }
 
     goodPushedStatusList.forEach(goodPushedStatus ->
-                    goodPushedStatusMap.put(goodPushedStatus.getFeedId(), goodPushedStatus.getPushedStatus()));
+                    goodPushedStatusMap.put(goodPushedStatus.getFeedId(),
+                            goodPushedStatus.getPushedStatus()));
 
-    redisCacheService.addGoodPushedStatusInCacheList(userId, goodPushedStatusList, multiSetTargetList);
+    redisCacheService.addGoodPushedStatusInCacheList(userId,
+            goodPushedStatusList, multiSetTargetList);
 
     return goodPushedStatusMap;
   }
@@ -116,18 +121,20 @@ public class GoodRepository {
   private void findGoodPushedStatusListInCache(List<Integer> feedIdList, String userId,
                                                List<GoodPushedStatus> goodPushedStatusList) {
 
-    List<String> cacheKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.GOOD_PUSHED, userId, feedIdList);
+    List<String> cacheKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.GOOD_PUSHED,
+            userId, feedIdList);
     List<String> goodPushedStatusCacheList = stringRedisTemplate.opsForValue().multiGet(cacheKeys);
 
     if (goodPushedStatusCacheList != null) {
 
-      for (int i=0; i<goodPushedStatusCacheList.size(); i++) {
+      for (int i = 0; i < goodPushedStatusCacheList.size(); i++) {
 
         String goodPushedStatus = goodPushedStatusCacheList.get(i);
 
         if (goodPushedStatus != null) {
 
-          goodPushedStatusList.add(new GoodPushedStatus(feedIdList.get(i), Boolean.parseBoolean(goodPushedStatus)));
+          goodPushedStatusList.add(new GoodPushedStatus(feedIdList.get(i),
+                  Boolean.parseBoolean(goodPushedStatus)));
           feedIdList.set(i, null);
         }
       }

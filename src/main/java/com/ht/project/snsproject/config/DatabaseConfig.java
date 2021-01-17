@@ -1,5 +1,6 @@
 package com.ht.project.snsproject.config;
 
+
 import com.ht.project.snsproject.properites.datasource.MasterDatasourceProperty;
 import com.ht.project.snsproject.properites.datasource.SlaveDatasourceProperty;
 import com.zaxxer.hikari.HikariDataSource;
@@ -9,6 +10,7 @@ import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +24,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
+
+
 
 /**
  * 데이터베이스 설정.
@@ -37,7 +41,7 @@ import java.util.Map;
  *               SqlSessionFactory 와 SqlSessionTemplate 을 사용.
  *
  * @EnableTransactionManagement : 정의되어 있는 어플리케이션 컨텍스트 안에서 빈의 @Transactional 을 찾는다.
- *                                이 설정을 DispatcherServlet 에 대한 WebApplicationContext 에 적용한다면
+ *                                이 설정을 DispatcherServlet 에 대한 WebApplicationContext에 적용한다면
  *                                서비스가 아닌 컨트롤러 안의 빈만을 찾는다.
  *
  */
@@ -62,6 +66,7 @@ public class DatabaseConfig {
 
   @Primary
   @Bean(name = "masterDataSource")
+  @ConfigurationProperties(prefix = "spring.datasource.hikari")
   public DataSource masterDataSource() {
 
     return DataSourceBuilder.create()
@@ -79,6 +84,7 @@ public class DatabaseConfig {
   default 는 false 이다.
    */
   @Bean(name = "slaveDataSource")
+  @ConfigurationProperties(prefix = "spring.datasource.hikari")
   public DataSource slaveDataSource() {
 
     return DataSourceBuilder.create()
@@ -92,15 +98,17 @@ public class DatabaseConfig {
   }
 
   /**
-   * routingDataSource 를 생성해서 리턴.
-   *결국 routingDataSource 여러 개의 Datasource 객체를 Key, Value 형태로 담고 있고
-   * determineCurrentLookupKey라는 메소드에서 리턴하는 Key 값과 매칭되는 Datasource 객체를 반환하게 됩니다.
-   * @param masterDataSource
-   * @param slaveDataSource
-   * @return
+   * @param masterDataSource primary DataSource를 주입받습니다.
+   *
+   * @param slaveDataSource secondary DataSource를 주입받습니다.
+   *
+   * @return routingDataSource 여러 개의 Datasource 객체를 Key, Value 형태로 담고 있고,
+   *     determineCurrentLookupKey라는 메소드에서 리턴하는
+   *     Key 값과 매칭되는 Datasource 객체를 반환하게 됩니다.
    */
   @Bean(name = "routingDataSource")
-  public DataSource routingDataSource(@Qualifier("masterDataSource") DataSource masterDataSource, @Qualifier("slaveDataSource") DataSource slaveDataSource) {
+  public DataSource routingDataSource(@Qualifier("masterDataSource") DataSource masterDataSource,
+                                      @Qualifier("slaveDataSource") DataSource slaveDataSource) {
 
     ReplicationRoutingDataSource routingDataSource = new ReplicationRoutingDataSource();
     Map<Object, Object> dataSourceMap = new HashMap<>();
@@ -113,8 +121,8 @@ public class DatabaseConfig {
   }
 
   /**
-   * 실질적인 쿼리 실행 여부와 상관없이 트랜잭션이 걸리면 무조건 Connection 객체를 확보하는 Spring의 단점을 보완하여
-   * 트랜잭션 시작시에 Connection Proxy 객체를 리턴하고 실제로 쿼리가 발생할 때
+   * 실질적인 쿼리 실행 여부와 상관없이 트랜잭션이 걸리면 무조건 Connection 객체를 확보하는
+   * Spring의 단점을 보완하여 트랜잭션 시작시에 Connection Proxy 객체를 리턴하고 실제로 쿼리가 발생할 때
    * 데이터소스에서 getConnection()을 호출하는 역할을 하는 것.
    *
    * TransactionManager 선별 ->
@@ -136,7 +144,8 @@ public class DatabaseConfig {
 
 
   @Bean(name = "transactionManager")
-  public PlatformTransactionManager transactionManager(@Qualifier("dataSource") DataSource dataSource) {
+  public PlatformTransactionManager transactionManager(
+          @Qualifier("dataSource") DataSource dataSource) {
 
     return new DataSourceTransactionManager(dataSource);
   }
@@ -145,13 +154,14 @@ public class DatabaseConfig {
    * SqlSessionFactory 는 SqlSession 객체를 생성하기 위한 객체이다.
    * SqlSession 객체를 한번 생성하면 매핑구문을 실행하거나 커밋 또는 롤백을 하기 위해 세션을 사용할수 있다.
    * setMapperLocations 을 설정하여 mapper.xml 파일의 경로를 지정할 수있다.
-   * @param dataSource 커넥션 풀의 Connection 을 관리하기 위한 객체,
+   * @param  dataSource 커넥션 풀의 Connection 을 관리하기 위한 객체,
    *                   DataSource 객체를 통해서 필요한 Connection 을 획득, 반납 등의 작업을 한다.
    * @return SqlSessionFactory
    * @throws Exception if fail to create SqlSessionFactory Object
    */
   @Bean(name = "sqlSessionFactory")
-  public SqlSessionFactory sqlSessionFactory(@Qualifier("dataSource") DataSource dataSource) throws Exception {
+  public SqlSessionFactory sqlSessionFactory(
+          @Qualifier("dataSource") DataSource dataSource) throws Exception {
 
     final SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
     sessionFactory.setDataSource(dataSource);
@@ -169,8 +179,8 @@ public class DatabaseConfig {
    * @throws Exception if fail to create SqlSessionTemplate Object
    */
   @Bean(name = "sqlSessionTemplate")
-  public SqlSessionTemplate sqlSessionTemplate(@Qualifier("sqlSessionFactory") SqlSessionFactory sqlSessionFactory)
-          throws Exception {
+  public SqlSessionTemplate sqlSessionTemplate(
+          @Qualifier("sqlSessionFactory") SqlSessionFactory sqlSessionFactory) throws Exception {
 
     return new SqlSessionTemplate(sqlSessionFactory);
   }

@@ -42,15 +42,18 @@ public class FeedController {
                                                 @RequestParam(required = false) Integer cursor,
                                                 @UserInfo User user) {
 
-    return ResponseEntity.ok(feedService.findFeedListByUserId(user.getUserId(), targetId, new Pagination(cursor)));
+    return ResponseEntity.ok(feedService.findFeedListByUserId(user.getUserId(),
+            targetId, new Pagination(cursor)));
   }
 
   @LoginCheck
   @GetMapping("/friends")
-  public ResponseEntity<List<Feed>> getFriendsFeedList(@RequestParam(required = false) Integer cursor,
+  public ResponseEntity<List<Feed>> getFriendsFeedList(@RequestParam(required = false)
+                                                                 Integer cursor,
                                                        @UserInfo User user) {
 
-    return ResponseEntity.ok(feedService.findFriendsFeedListByUserId(user.getUserId(), new Pagination(cursor)));
+    return ResponseEntity.ok(feedService.findFriendsFeedListByUserId(user.getUserId(),
+            new Pagination(cursor)));
   }
 
   @LoginCheck
