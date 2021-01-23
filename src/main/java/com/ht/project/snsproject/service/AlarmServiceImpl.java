@@ -32,7 +32,7 @@ public class AlarmServiceImpl implements AlarmService {
   @Override
   public void deleteRequestAlarm(String userId, String targetId, AlarmType alarmType) {
 
-    alarmMapper.deleteRequestAlarm(new AlarmDelete(userId,targetId,alarmType));
+    alarmMapper.deleteRequestAlarm(new AlarmDelete(userId, targetId, alarmType));
   }
 
   @Override

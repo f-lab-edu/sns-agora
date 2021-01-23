@@ -37,8 +37,10 @@ public class RedisCacheService {
 
   private final ObjectMapper objectMapper;
 
-  public RedisCacheService(@Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> cacheRedisTemplate,
-                           @Qualifier("cacheStrRedisTemplate") StringRedisTemplate cacheStrRedisTemplate,
+  public RedisCacheService(@Qualifier("cacheRedisTemplate")
+                                   RedisTemplate<String, Object> cacheRedisTemplate,
+                           @Qualifier("cacheStrRedisTemplate")
+                                   StringRedisTemplate cacheStrRedisTemplate,
                            ObjectMapper objectMapper) {
     this.cacheRedisTemplate = cacheRedisTemplate;
     this.cacheStrRedisTemplate = cacheStrRedisTemplate;
@@ -67,7 +69,7 @@ public class RedisCacheService {
 
   public String makeCacheKey(CacheKeyPrefix cacheKeyPrefix, int feedId, String userId) {
 
-    if(cacheKeyPrefix != CacheKeyPrefix.GOOD_PUSHED) {
+    if (cacheKeyPrefix != CacheKeyPrefix.GOOD_PUSHED) {
       throw new InvalidApproachException("유효하지 않은 키입니다.");
     }
 
@@ -110,7 +112,8 @@ public class RedisCacheService {
     return  keys;
   }
 
-  public List<String> makeMultiKeyList(CacheKeyPrefix cacheKeyPrefix, String userId, List<Integer> feedIds) {
+  public List<String> makeMultiKeyList(CacheKeyPrefix cacheKeyPrefix,
+                                       String userId, List<Integer> feedIds) {
 
     List<String> keys = new ArrayList<>();
 
@@ -138,7 +141,8 @@ public class RedisCacheService {
   }
 
   @Transactional
-  public void addGoodCountInCacheList(List<GoodCount> goodCountList, List<MultiSetTarget> multiSetTargetList) {
+  public void addGoodCountInCacheList(List<GoodCount> goodCountList,
+                                      List<MultiSetTarget> multiSetTargetList) {
 
     goodCountList.forEach(goodCount -> {
 
@@ -150,8 +154,10 @@ public class RedisCacheService {
                 .build());
 
       } catch (JsonProcessingException e) {
+
         throw new SerializationException("변환에 실패하였습니다.", e);
-      }});
+      }
+    });
   }
 
   @Transactional
@@ -168,13 +174,16 @@ public class RedisCacheService {
                 .build());
 
       } catch (JsonProcessingException e) {
+
         throw new SerializationException("변환에 실패하였습니다.", e);
-      }});
+      }
+    });
   }
 
   @Transactional
-  public void addGoodPushedStatusInCacheList(String userId, List<GoodPushedStatus> goodPushedStatusList,
-                                     List<MultiSetTarget> multiSetTargetList) {
+  public void addGoodPushedStatusInCacheList(String userId,
+                                             List<GoodPushedStatus> goodPushedStatusList,
+                                             List<MultiSetTarget> multiSetTargetList) {
 
     goodPushedStatusList.forEach(goodPushedStatus -> {
 
@@ -238,7 +247,7 @@ public class RedisCacheService {
 
               StringRedisConnection stringRedisConn = (StringRedisConnection) connection;
 
-              for(MultiSetTarget multiSetTarget : multiSetTargetList) {
+              for (MultiSetTarget multiSetTarget : multiSetTargetList) {
 
                 String key = multiSetTarget.getKey();
 

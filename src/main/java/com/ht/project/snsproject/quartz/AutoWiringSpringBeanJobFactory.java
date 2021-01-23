@@ -10,7 +10,8 @@ import org.springframework.scheduling.quartz.SpringBeanJobFactory;
 /**
  * SchedulerFactoryBean 에 스프링의 빈정보 ApplicationContext 를 주입하기 위한 목적으로 생성
  */
-public class AutoWiringSpringBeanJobFactory extends SpringBeanJobFactory implements ApplicationContextAware {
+public class AutoWiringSpringBeanJobFactory extends SpringBeanJobFactory
+        implements ApplicationContextAware {
 
   private transient AutowireCapableBeanFactory beanFactory;
 

@@ -30,7 +30,8 @@ public class FeedRepository {
 
   public FeedRepository(FeedMapper feedMapper,
                         RedisCacheService redisCacheService,
-                        @Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> cacheRedisTemplate,
+                        @Qualifier("cacheRedisTemplate")
+                                RedisTemplate<String, Object> cacheRedisTemplate,
                         @Qualifier("cacheObjectMapper") ObjectMapper objectMapper) {
     this.feedMapper = feedMapper;
     this.redisCacheService = redisCacheService;
@@ -48,7 +49,7 @@ public class FeedRepository {
 
     FeedInfo feed = feedMapper.findMyFeedByFeedId(feedId);
 
-    if(feed.getId() == null) {
+    if (feed.getId() == null) {
 
       throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
     }
@@ -61,7 +62,7 @@ public class FeedRepository {
 
     FeedInfo feed = feedMapper.findFriendsFeedByFeedId(feedId);
 
-    if(feed.getId() == null) {
+    if (feed.getId() == null) {
 
       throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
     }
@@ -74,7 +75,7 @@ public class FeedRepository {
 
     FeedInfo feed = feedMapper.findAllFeedByFeedId(feedId);
 
-    if(feed.getId() == null) {
+    if (feed.getId() == null) {
 
       throw new IllegalArgumentException("일치하는 데이터가 존재하지 않습니다.");
     }
@@ -91,7 +92,8 @@ public class FeedRepository {
   @CacheEvict(value = "feedInfo", key = "'feedInfo:' + #feedId")
   public boolean updateFeed(int feedId, String userId, FeedWriteDto feedWriteDto) {
 
-    return feedMapper.updateFeed(FeedUpdate.create(feedId, userId, feedWriteDto, LocalDateTime.now()));
+    return feedMapper.updateFeed(
+            FeedUpdate.create(feedId, userId, feedWriteDto, LocalDateTime.now()));
   }
 
   public List<Integer> findMyFeedIdListByUserId(String targetId, Pagination pagination) {
@@ -104,16 +106,17 @@ public class FeedRepository {
     return feedMapper.findFriendFeedIdListByUserId(new FeedIdListParam(targetId, pagination));
   }
 
-  public List<Integer> findALLFeedIdListByUserId(String targetId, Pagination pagination) {
+  public List<Integer> findAllFeedIdListByUserId(String targetId, Pagination pagination) {
 
     return feedMapper.findAllFeedIdListByUserId(new FeedIdListParam(targetId, pagination));
   }
 
-  public List<FeedInfo> findFeedInfoList(List<Integer> feedIdList, List<MultiSetTarget> multiSetTargetList) {
+  public List<FeedInfo> findFeedInfoList(List<Integer> feedIdList,
+                                         List<MultiSetTarget> multiSetTargetList) {
 
     List<Integer> feedIdCopyList = new ArrayList<>(feedIdList);
     List<FeedInfo> feedInfoList = new ArrayList<>();
-    findFeedInfoListInCache(feedInfoList,feedIdCopyList);
+    findFeedInfoListInCache(feedInfoList, feedIdCopyList);
 
     if (!feedIdCopyList.isEmpty()) {
       feedInfoList.addAll(findFeedInfoListInDb(feedIdCopyList));
@@ -133,9 +136,9 @@ public class FeedRepository {
     List<String> cacheKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.FEED, feedIdList);
     List<Object> feedInfoCacheList = cacheRedisTemplate.opsForValue().multiGet(cacheKeys);
 
-    if(feedInfoCacheList != null) {
+    if (feedInfoCacheList != null) {
 
-      for (int i=0; i<feedInfoCacheList.size(); i++) {
+      for (int i = 0; i < feedInfoCacheList.size(); i++) {
 
         Object feedInfoCache = feedInfoCacheList.get(i);
 

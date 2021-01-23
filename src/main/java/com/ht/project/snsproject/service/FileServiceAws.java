@@ -47,12 +47,18 @@ public class FileServiceAws implements FileService {
   public void uploadFiles(List<MultipartFile> files, String dirPath) {
 
     File destDir = new File(tempPath + dirPath);
-    if(!destDir.exists()) { destDir.mkdirs(); }
-    if (files.isEmpty()) { return; }
+
+    if (!destDir.exists()) {
+      destDir.mkdirs();
+    }
+
+    if (files.isEmpty()) {
+      return;
+    }
 
     writeTempFiles(files, destDir);
-    MultipleFileUpload transfer = transferManager.uploadDirectory(awsS3Property.getBucketName(), dirPath,
-            destDir, false);
+    MultipleFileUpload transfer = transferManager.uploadDirectory(awsS3Property.getBucketName(),
+            dirPath, destDir, false);
 
     try {
       transfer.waitForCompletion();
@@ -97,7 +103,7 @@ public class FileServiceAws implements FileService {
     List<FileInfo> fileInfoList = new ArrayList<>();
     makeFileInfoList(fileInfoList, fileDtoList, feedId);
 
-    if(!fileInfoList.isEmpty()) {
+    if (!fileInfoList.isEmpty()) {
 
       fileRepository.insertFileInfoList(fileInfoList);
     }
@@ -138,6 +144,21 @@ public class FileServiceAws implements FileService {
     }
   }
 
+  private void deleteFiles(int feedId, List<String> fileNames) {
+
+    List<FileDelete> fileDeleteList = new ArrayList<>();
+    List<DeleteObjectsRequest.KeyVersion> keyVersionList = new ArrayList<>();
+
+    fileNames.forEach(fileName -> {
+      fileDeleteList.add(FileDelete.create(feedId, fileName));
+      keyVersionList.add(new DeleteObjectsRequest.KeyVersion(feedId + S3_SEPARATOR + fileName));
+    });
+
+    fileRepository.deleteFiles(fileDeleteList);
+    s3Client.deleteObjects(
+            new DeleteObjectsRequest(awsS3Property.getBucketName()).withKeys(keyVersionList));
+  }
+
   @Transactional
   @Override
   public void deleteFile(String filePath, String fileName) {
@@ -160,29 +181,22 @@ public class FileServiceAws implements FileService {
 
     uploadFiles(classifyFiles(files, originalFiles), filePath);
 
-    if (!originalFiles.isEmpty()) { deleteFiles(feedId, originalFiles); }
+    if (!originalFiles.isEmpty()) {
+      deleteFiles(feedId, originalFiles);
+    }
 
     upsertFileInfoList(fileDtoList, feedId);
   }
 
-  private void deleteFiles(int feedId, List<String> fileNames) {
-
-    List<FileDelete> fileDeleteList = new ArrayList<>();
-    List<DeleteObjectsRequest.KeyVersion> keyVersionList = new ArrayList<>();
-
-    fileNames.forEach(fileName -> { fileDeleteList.add(FileDelete.create(feedId, fileName));
-      keyVersionList.add(new DeleteObjectsRequest.KeyVersion(feedId + S3_SEPARATOR + fileName)); });
-
-    fileRepository.deleteFiles(fileDeleteList);
-    s3Client.deleteObjects(new DeleteObjectsRequest(awsS3Property.getBucketName()).withKeys(keyVersionList));
-  }
 
   private void upsertFileInfoList(List<FileDto> fileDtoList, int feedId) {
 
     List<FileInfo> fileInfoList = new ArrayList<>();
     makeFileInfoList(fileInfoList, fileDtoList, feedId);
 
-    if (!fileInfoList.isEmpty()) { fileRepository.upsertFiles(fileInfoList); }
+    if (!fileInfoList.isEmpty()) {
+      fileRepository.upsertFiles(fileInfoList);
+    }
 
   }
 
@@ -190,9 +204,14 @@ public class FileServiceAws implements FileService {
   private List<MultipartFile> classifyFiles(List<MultipartFile> files,
                                             List<String> originalFiles) {
 
-    if (files.isEmpty()) { return files; }
+    if (files.isEmpty()) {
+      return files;
+    }
 
-    if (originalFiles.isEmpty()) { return files; }
+    if (originalFiles.isEmpty()) {
+
+      return files;
+    }
 
     List<MultipartFile> uploadingFiles = new ArrayList<>();
 

@@ -87,7 +87,8 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
       redisTemplate 으로 설정하였습니다.
 
       스프링 캐시를 활용하는 방법으로 빈 이름을 다르게 하여 등록하고 사용한다면
-      prefix를 설정하고 @Cacheable 과 같은 어노테이션 기반의 스프링 캐시를 더 편하게 사용할 수 있을 것이라고 생각됩니다.
+      prefix를 설정하고 @Cacheable 과 같은 어노테이션 기반의
+      스프링 캐시를 더 편하게 사용할 수 있을 것이라고 생각됩니다.
       즉, redisTemplate을 직접 활용하지 않더라도 사용이 가능할 것이라고 판단됩니다.
 
       스프링의 캐시기능을 이용하면 레디스를 이용하는 다른 기능들과 키가 우연으로라도 겹칠 가능성이 있습니다.
@@ -109,10 +110,13 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
   /**
    * RedisTemplate : RedisConnection 은 row level 의 메서드를 제공하는 반면
    *                 RedisTemplate 은 커넥션 위에서 값을 조작하는 메서드 제공한다.
-   *                 주어진 객체들과 레디스 저장소 내부의 이진 데이터 사이에서 자동적으로 직렬화와 역직렬화를 수행한다.
+   *                 주어진 객체들과 레디스 저장소 내부의 이진 데이터 사이에서
+   *                 자동적으로 직렬화와 역직렬화를 수행한다.
    *                 RedisCallback interface 를 구현하여 Redis 접근을 지원하는 메소드를 실행한다.
-   *                 RedisTemplate 은 RedisCallback 구현체나 호출한 코드들이 명시적으로 RedisConnection 을 찾거나,
-   *                 닫는 것을 신경쓰지 않고 혹은 Connection 생명주기 예외를 다루지 않도록 Redis Connection 처리를 제공한다.
+   *                 RedisTemplate 은 RedisCallback 구현체나 호출한 코드들이
+   *                 명시적으로 RedisConnection 을 찾거나,
+   *                 닫는 것을 신경쓰지 않고 혹은 Connection 생명주기 예외를 다루지 않도록
+   *                 Redis Connection 처리를 제공한다.
    *                 일단 구성이 되면 이 클래스는 Thread-safe 하다.
    *                 Default 값으로 JDKSerializationRedisSerializer 를 사용한다.
    * StringRedisTemplate: 대부분 레디스 key-value 는 문자열 위주이기 때문에 문자열에 특화된 템플릿을 제공한다.
@@ -124,7 +128,8 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
    *                      serializer 를 StringRedisSerializer 로 설정한다.
    *                      StringRedisSerializer 는 String 타입의 테이터를 byte[] 타입으로
    *                      혹은 그 역으로 직렬화해주는 serializer 이다.
-   * setValueSerializer() : template 에서 사용될 value serializer 를 Jackson2JsonRedisSerializer 로 설정한다.
+   * setValueSerializer() : template 에서 사용될 value serializer 를
+   *                        Jackson2JsonRedisSerializer 로 설정한다.
    *                        Jackson 은 text/html 형태의 문자가 아닌 객체등의 데이터를
    *                        JSON 으로 처리(데이터 바인딩)해 주는 라이브러리이다.
    *                        즉, Jackson 을 사용해서 JSON 을 읽고 쓸 수 있는 RedisSerializer 이다.
@@ -154,11 +159,12 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
   }
 
   @Bean("cacheStrRedisTemplate")
-  public StringRedisTemplate cacheStrRedisTemplate(){
+  public StringRedisTemplate cacheStrRedisTemplate() {
 
     StringRedisTemplate strRedisTemplate = new StringRedisTemplate();
     strRedisTemplate.setConnectionFactory(cacheRedisConnectionFactory());
-    strRedisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer(cacheObjectMapper()));
+    strRedisTemplate.setDefaultSerializer(
+            new GenericJackson2JsonRedisSerializer(cacheObjectMapper()));
     return strRedisTemplate;
   }
 }

@@ -46,7 +46,10 @@ public class FileServiceLocal implements FileService {
   public void uploadFiles(List<MultipartFile> files, String dirPath) {
 
     File destDir = new File(localPath + dirPath);
-    if(!destDir.exists()) { destDir.mkdirs(); }
+
+    if (!destDir.exists()) {
+      destDir.mkdirs();
+    }
 
     files.forEach(file -> {
       try {
@@ -81,7 +84,7 @@ public class FileServiceLocal implements FileService {
     List<FileInfo> fileInfoList = new ArrayList<>();
     makeFileInfoList(fileInfoList, fileDtoList, feedId);
 
-    if(!fileInfoList.isEmpty()) {
+    if (!fileInfoList.isEmpty()) {
       fileRepository.insertFileInfoList(fileInfoList);
     }
   }
@@ -119,7 +122,9 @@ public class FileServiceLocal implements FileService {
 
     uploadFiles(classifyFiles(files, originalFiles), filePath);
 
-    if (!originalFiles.isEmpty()) { deleteFiles(feedId, originalFiles); }
+    if (!originalFiles.isEmpty()) {
+      deleteFiles(feedId, originalFiles);
+    }
 
     upsertFileInfoList(fileDtoList, feedId);
   }
@@ -130,17 +135,34 @@ public class FileServiceLocal implements FileService {
 
     fileNames.forEach(fileName -> {
       fileDeleteList.add(FileDelete.create(feedId, fileName));
-      new File(feedId + File.separator + fileName).delete();});
+      new File(feedId + File.separator + fileName).delete();
+    });
 
     fileRepository.deleteFiles(fileDeleteList);
+  }
+
+  @Transactional
+  @Override
+  public void deleteFiles(int feedId) {
+
+    if (!fileRepository.findFileNamesByFeedId(feedId).isEmpty()) {
+
+      deleteDirectory(new File(String.valueOf(feedId)));
+    }
+
+    fileRepository.deleteFile(feedId);
   }
 
   private List<MultipartFile> classifyFiles(List<MultipartFile> files,
                                             List<String> originalFiles) {
 
-    if (files.isEmpty()) { return files; }
+    if (files.isEmpty()) {
+      return files;
+    }
 
-    if (originalFiles.isEmpty()) { return files; }
+    if (originalFiles.isEmpty()) {
+      return files;
+    }
 
     List<MultipartFile> uploadingFiles = new ArrayList<>();
 
@@ -161,19 +183,9 @@ public class FileServiceLocal implements FileService {
     List<FileInfo> fileInfoList = new ArrayList<>();
     makeFileInfoList(fileInfoList, fileDtoList, feedId);
 
-    if (!fileInfoList.isEmpty()) { fileRepository.upsertFiles(fileInfoList); }
-
-  }
-
-  @Transactional
-  @Override
-  public void deleteFiles(int feedId) {
-
-    if (!fileRepository.findFileNamesByFeedId(feedId).isEmpty()) {
-
-      deleteDirectory(new File(String.valueOf(feedId)));
+    if (!fileInfoList.isEmpty()) {
+      fileRepository.upsertFiles(fileInfoList);
     }
 
-    fileRepository.deleteFile(feedId);
   }
 }

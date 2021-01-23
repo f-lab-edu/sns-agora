@@ -72,7 +72,7 @@ public class UserController {
   @LoginCheck
   @DeleteMapping("/account")
   public HttpStatus deleteUser(@RequestBody String password,
-                               @UserInfo User user, HttpSession httpSession) { ;
+                               @UserInfo User user, HttpSession httpSession) {
 
     userService.deleteUser(user.getUserId(), password, httpSession);
 

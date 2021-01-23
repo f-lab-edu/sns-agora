@@ -11,7 +11,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -30,8 +29,10 @@ public class CommentRepository {
 
   public CommentRepository(CommentMapper commentMapper,
                            RedisCacheService redisCacheService,
-                           @Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> redisTemplate,
-                           @Qualifier("cacheStrRedisTemplate") StringRedisTemplate stringRedisTemplate) {
+                           @Qualifier("cacheRedisTemplate")
+                                   RedisTemplate<String, Object> redisTemplate,
+                           @Qualifier("cacheStrRedisTemplate")
+                                   StringRedisTemplate stringRedisTemplate) {
     this.commentMapper = commentMapper;
     this.redisCacheService = redisCacheService;
     this.redisTemplate = redisTemplate;
@@ -49,7 +50,8 @@ public class CommentRepository {
     return commentMapper.getCommentsOnFeed(new CommentsParam(feedId, cursor));
   }
 
-  public Map<Integer, Integer> findCommentCountMap(List<Integer> feedIdList, List<MultiSetTarget> multiSetTargetList) {
+  public Map<Integer, Integer> findCommentCountMap(List<Integer> feedIdList,
+                                                   List<MultiSetTarget> multiSetTargetList) {
 
     Map<Integer, Integer> commentCountMap = new HashMap<>();
     List<Integer> feedIdCopyList = new ArrayList<>(feedIdList);
@@ -74,17 +76,19 @@ public class CommentRepository {
     return commentMapper.findCommentCountList(feedIdList);
   }
 
-  private void findCommentCountListInCache(List<Integer> feedIdList, List<CommentCount> commentCountList) {
+  private void findCommentCountListInCache(List<Integer> feedIdList,
+                                           List<CommentCount> commentCountList) {
 
-    List<String> cacheKeys = redisCacheService.makeMultiKeyList(CacheKeyPrefix.COMMENT_COUNT, feedIdList);
+    List<String> cacheKeys =
+            redisCacheService.makeMultiKeyList(CacheKeyPrefix.COMMENT_COUNT, feedIdList);
     List<String> commentCountCacheList = stringRedisTemplate.opsForValue().multiGet(cacheKeys);
 
-    if(commentCountCacheList != null) {
-      for (int i=0; i<commentCountCacheList.size(); i++) {
+    if (commentCountCacheList != null) {
+      for (int i = 0; i < commentCountCacheList.size(); i++) {
 
         String commentCount = commentCountCacheList.get(i);
 
-        if(commentCount != null) {
+        if (commentCount != null) {
 
           commentCountList.add(new CommentCount(feedIdList.get(i), Integer.parseInt(commentCount)));
           feedIdList.set(i, null);
@@ -114,7 +118,7 @@ public class CommentRepository {
 
   public void deleteCommentOnFeed(int commentId, String userId) {
 
-    if(!commentMapper.deleteCommentOnFeed(new CommentDeleteParam(commentId, userId))) {
+    if (!commentMapper.deleteCommentOnFeed(new CommentDeleteParam(commentId, userId))) {
 
       throw new InvalidApproachException("올바르지 않은 접근입니다.");
     }
@@ -128,7 +132,7 @@ public class CommentRepository {
 
   public void updateCommentOnFeed(int commentId, String userId, String content) {
 
-    if(!commentMapper.updateCommentOnFeed(CommentUpdateParam.builder()
+    if (!commentMapper.updateCommentOnFeed(CommentUpdateParam.builder()
             .commentId(commentId)
             .userId(userId)
             .content(content)
@@ -156,7 +160,7 @@ public class CommentRepository {
 
   public void updateReplyOnComment(int replyId, String userId, String content) {
 
-    if(!commentMapper.updateReplyOnComment(ReplyUpdateParam.builder()
+    if (!commentMapper.updateReplyOnComment(ReplyUpdateParam.builder()
             .replyId(replyId)
             .userId(userId)
             .content(content)
@@ -169,7 +173,7 @@ public class CommentRepository {
 
   public void deleteReplyOnComment(int replyId, String userId) {
 
-    if(!commentMapper.deleteReplyOnComment(new ReplyDeleteParam(replyId, userId))) {
+    if (!commentMapper.deleteReplyOnComment(new ReplyDeleteParam(replyId, userId))) {
 
       throw new InvalidApproachException("올바르지 않은 접근입니다.");
     }

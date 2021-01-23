@@ -47,13 +47,17 @@ public class UserServiceImpl implements UserService {
 
   @Transactional
   @Override
-  public void updateUserProfile(UserProfileParam userProfileParam, String userId, MultipartFile profile) {
+  public void updateUserProfile(UserProfileParam userProfileParam,
+                                String userId, MultipartFile profile) {
 
     ProfileImage profileImage = userRepository.findUserProfileImage(userId);
     List<MultipartFile> files = new ArrayList<>();
     files.add(profile);
 
-    if (profileImage != null) { fileService.deleteFile(profileImage.getFilePath(), profileImage.getFileName()); }
+    if (profileImage != null) {
+
+      fileService.deleteFile(profileImage.getFilePath(), profileImage.getFileName());
+    }
 
     fileService.uploadFiles(files, userId);
 

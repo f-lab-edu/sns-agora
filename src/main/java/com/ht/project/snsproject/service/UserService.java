@@ -11,7 +11,7 @@ public interface UserService {
 
   boolean isDuplicateUserId(String userId);
 
-  void updateUserProfile(UserProfileParam userProfileParam,String userId, MultipartFile profile);
+  void updateUserProfile(UserProfileParam userProfileParam, String userId, MultipartFile profile);
 
   void exists(UserLogin userLogin, HttpSession httpSession);
 

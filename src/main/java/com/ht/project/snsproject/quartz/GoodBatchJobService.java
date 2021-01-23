@@ -20,8 +20,8 @@ public class GoodBatchJobService {
   /*
    배열의 인덱스값은 상수로 정의해놓고 사용하는게 유지보수성에 유리.
    */
-  private final int FEED_ID = 2;
-  private final int USER_ID = 3;
+  private static final int FEED_ID = 2;
+  private static final int USER_ID = 3;
 
   private final RedisCacheService redisCacheService;
 
@@ -31,7 +31,8 @@ public class GoodBatchJobService {
 
   public GoodBatchJobService(RedisCacheService redisCacheService,
                              GoodBachJobMapper goodBachJobMapper,
-                             @Qualifier("cacheStrRedisTemplate") StringRedisTemplate stringRedisTemplate) {
+                             @Qualifier("cacheStrRedisTemplate")
+                                     StringRedisTemplate stringRedisTemplate) {
     this.redisCacheService = redisCacheService;
     this.goodBachJobMapper = goodBachJobMapper;
     this.stringRedisTemplate = stringRedisTemplate;
@@ -45,7 +46,7 @@ public class GoodBatchJobService {
 
     List<String> values = stringRedisTemplate.opsForValue().multiGet(goodPushedKeys);
 
-    if(values != null && !values.isEmpty()) {
+    if (values != null && !values.isEmpty()) {
       log.info("The batch job has begun...");
 
       List<String> goodAddKeys = new ArrayList<>();

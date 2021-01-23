@@ -23,7 +23,8 @@ public class FeedRecommendCacheService {
   private final RedisTemplate<String, Object> cacheRedisTemplate;
 
   public FeedRecommendCacheService(FeedRecommendCacheMapper feedRecommendCacheMapper,
-                                   @Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> cacheRedisTemplate) {
+                                   @Qualifier("cacheRedisTemplate")
+                                           RedisTemplate<String, Object> cacheRedisTemplate) {
     this.feedRecommendCacheMapper = feedRecommendCacheMapper;
     this.cacheRedisTemplate = cacheRedisTemplate;
   }
@@ -34,7 +35,7 @@ public class FeedRecommendCacheService {
 
     Boolean existKey = cacheRedisTemplate.hasKey(RECOMMEND_LIST);
 
-    if(existKey != null && !existKey) {
+    if (existKey != null && !existKey) {
 
       setFeedRecommendCacheList(getFeedInfoCacheByLatestOrder());
     }
@@ -48,7 +49,7 @@ public class FeedRecommendCacheService {
 
   private void setFeedRecommendCacheList(List<Integer> feedIds) {
 
-      updateList(feedIds);
+    updateList(feedIds);
   }
 
   /*
@@ -61,7 +62,7 @@ public class FeedRecommendCacheService {
 
     cacheRedisTemplate.execute((RedisCallback<Object>) connection -> {
 
-      connection.multi();//트랜잭션 시작
+      connection.multi(); //트랜잭션 시작
 
       try {
 
@@ -69,11 +70,11 @@ public class FeedRecommendCacheService {
           connection.lPush(RECOMMEND_LIST.getBytes(), String.valueOf(feedId).getBytes());
         }
         connection.expire(RECOMMEND_LIST.getBytes(), RECOMMEND_EXPIRE);
-        connection.exec();//트랙잭션 커밋
+        connection.exec(); //트랙잭션 커밋
 
       } catch (Exception e) {
 
-        connection.discard();//트랜잭션 취소
+        connection.discard(); //트랜잭션 취소
         throw new RedisCommandExecutionException("업데이트 오류");
       }
 

@@ -65,7 +65,8 @@ public class AwsConfiguration {
 
     return TransferManagerBuilder.standard()
             .withS3Client(amazonS3Client())
-            .withExecutorFactory(() -> createExecutorService(awsS3Property.getTransferThread())).build();
+            .withExecutorFactory(() -> createExecutorService(awsS3Property.getTransferThread()))
+            .build();
   }
 
   private ThreadPoolExecutor createExecutorService(int threadNumber) {
